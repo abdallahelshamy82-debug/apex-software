@@ -1,0 +1,59 @@
+﻿# ==============================================================================
+# 🛡️ APEX SOFTWARE - ROOT GITIGNORE
+# ==============================================================================
+
+# Dependencies
+node_modules/
+*/node_modules/
+vendor/
+
+# Environment Secrets (CRITICAL)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.jks
+
+# Expo & Build Artifacts
+.expo/
+*/.expo/
+dist/
+web-build/
+*.tsbuildinfo
+example
+
+# Android & iOS Local Builds
+/ios
+/android
+
+# SQLite Runtime & WAL locks
+*.sqlite-shm
+*.sqlite-wal
+
+# Uploaded Media in development
+apex-backend/uploads/*
+!apex-backend/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Legacy and scratch directories
+backend/
+node-backend/
+scratch/
+*.php
+DS.html
+login.html
+new.html
+PS.html
+secure_connect.js
