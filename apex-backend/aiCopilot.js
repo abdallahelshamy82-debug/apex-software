@@ -512,56 +512,122 @@ Output JSON only:
 // -------------------------------------------------------------
 // 2.3 Deep Semantic Chat Consultant (Offline / Fallback)
 // -------------------------------------------------------------
+// -------------------------------------------------------------
+// 2.3 Deep Semantic Chat Consultant (Smart Conversational Engine)
+// -------------------------------------------------------------
 function deepSemanticChatConsultant(messages = [], language = 'ar') {
-  const allUserText = messages
-    .filter(m => m.role === 'user')
-    .map(m => m.text || m.content || '')
-    .join(' ');
-  const lastUserMsg = (messages.filter(m => m.role === 'user').pop()?.text || '').trim();
-  const userMsgCount = messages.filter(m => m.role === 'user').length;
-  const ent = extractKeywordsAndEntities(allUserText || lastUserMsg);
+  const userMessages = messages.filter(m => m.role === 'user');
+  const lastUserMsg = (userMessages[userMessages.length - 1]?.text || '').trim();
+  const allUserText = userMessages.map(m => m.text || '').join(' ');
+  const userMsgCount = userMessages.length;
+
+  const ent = extractKeywordsAndEntities(lastUserMsg);
+  const allEnt = extractKeywordsAndEntities(allUserText);
 
   let reply = '';
   let suggestions = [];
-  const readyForSpec = userMsgCount >= 2;
+  let readyForSpec = false;
 
-  if (ent.isPharmacy) {
-    if (userMsgCount <= 1) {
-      reply = 'أهلاً بك! فكرة تطبيق توصيل الأدوية من الصيدليات فكرة واعدة جداً وتلبي حاجة ماسة وسريعة. لبناء المعمارية الصحيحة، نوصي بربط أقرب صيدلية بالعميل مع كاميرا ذكية لقراءة الروشتات (OCR). هل تخطط للتعاقد مع سلاسل صيدليات محددة أم فتح الانضمام لكافة الصيدليات؟ وما هي طريقة التسعير المقترحة للتوصيل؟';
+  // 1. Identity & Name Questions ("انت مين", "اسمك ايه", "اقولك ايه عشان معرفش اسمك")
+  if (ent.isIdentity) {
+    reply = 'أهلاً بك يا فندم! أنا **مستشار Apex البرمجي الذكي (Apex Software Architect)**.\n\nتقدر تناديني **"مستشار Apex"** أو **"بشمهندس"** زي ما تحب! 😊\n\nأنا مهندسك المعماري التقني هنا في شركة **Apex Software**: أسمع فكرة تطبيقك، أساعدك في اختيار أفضل لغات البرمجة والمعمارية (React Native، Node.js، الخرائط، الدفع الإلكتروني)، وأستخرج لك دراسة جدوى فنية و3 باقات استثمارية واضحة بالتكلفة والمدة.\n\nقول لي، هل في فكرة تطبيق أو مشروع يدور في بالك تحب نبدأ ندردش فيها ونحللها؟';
+    suggestions = [
+      'عندي فكرة تطبيق وأريد استشارتك فيها',
+      'ما هي الخدمات التي تقدمها شركة Apex؟',
+      'كيف يتم تحديد تكلفة ومدة أي مشروع؟'
+    ];
+    readyForSpec = false;
+  }
+  // 2. Apology / Misunderstanding / Complaint Handling ("مش فاهمني", "انت مش فاهم", "محللتش")
+  else if (ent.isComplaint) {
+    reply = 'أعتذر منك بشدة يا فندم، حقك عليّ تماماً! 🙏\n\nأنا هنا الآن بكامل تركيزي معك دون أي افتراضات مسبقة. تفضل باختصار أو بالتفصيل: ما هي الفكرة أو السؤال الذي يدور في ذهنك؟ وسأجيبك عليه بدقة كمهندس برمجيات.';
+    suggestions = [
+      'أريد شرح فكرة تطبيقي بالتفصيل',
+      'عندي استفسار عن تكلفة تطبيق موبايل',
+      'ما هي خطوات التعاقد وتطوير المشروع؟'
+    ];
+    readyForSpec = false;
+  }
+  // 3. Greetings & Casual Welcome ("السلام عليكم", "مرحبا", "ازيك", "صباح الخير")
+  else if (ent.isGreeting && !ent.hasRealProjectIdea) {
+    reply = 'وعليكم السلام ورحمة الله وبركاته! أهلاً وسهلاً بك في **Apex Software**.\n\nأنا مهندسك المعماري ومستشارك التقني المخصص. يسعدني جداً التحدث معك ومساعدتك في تحويل أي فكرة برمجية أو تطبيق في ذهنك إلى خطة عمل ونظام تقني متكامل.\n\nتفضل شاركني فكرتك أو اسألني عن أي استشارة تقنية تحتاجها!';
+    suggestions = [
+      'عندي فكرة تطبيق وأريد معرفة التكلفة التقريبية',
+      'تطبيق توصيل وخدمات مع كباتن وتتبع GPS',
+      'متجر إلكتروني متعدد التجار مع بوابات دفع',
+      'ما هي خطوات العمل والمدة الزمنية للتسليم؟'
+    ];
+    readyForSpec = false;
+  }
+  // 4. Gratitude / Thanks ("شكرا", "تسلم", "الله يخليك")
+  else if (ent.isGratitude) {
+    reply = 'العفو يا فندم، تحت أمرك دائماً! في Apex Software هدفنا تقديم أفضل قيمة واستشارة تقنية بأعلى المعايير.\n\nإذا كان لديك أي استفسار آخر أو ترغب في بدء التخطيط لمشروعك، أنا معك دائماً.';
+    suggestions = [
+      'أريد مناقشة فكرة مشروع جديدة',
+      'عرض خطة المشروع ودراسة الجدوى والـ 3 باقات',
+      'التواصل مباشرة مع فريق التطوير عبر واتساب'
+    ];
+    readyForSpec = false;
+  }
+  // 5. Inquiries about Apex Agency & Services ("مين شركة ايبكس", "خدماتكم ايه", "بتعملوا ايه")
+  else if (ent.isAgencyInquiry) {
+    reply = 'شركة **Apex Software** هي شريكك التقني لتطوير الحلول البرمجية المتكاملة:\n\n1. **تطبيقات الموبايل (iOS & Android):** نطور تطبيقات فائقة السرعة والأمان بتقنية React Native الموحدة.\n2. **المنصات السحابية ولوحات التحكم:** لوحات Super Admin تفاعلية ومؤتمتة لإدارة العمليات والمبيعات.\n3. **البنية التحتية والربط اللحظي:** خوادم Microservices، خرائط وتتبع GPS، وبوابات الدفع (Paymob، فودافون كاش، فيزا، كاش).\n4. **الضمان والدعم الفني:** نقدم عقوداً موثقة وضماناً مجانياً 6 أشهر بعد الإطلاق.\n\nهل تخطط لإطلاق تطبيقك الخاص وتود حساب تكلفته؟';
+    suggestions = [
+      'نعم، عندي فكرة وأريد حساب التكلفة والمدة',
+      'كيف تضمنون جودة الكود واستقرار السيرفر؟',
+      'ما هي مراحل تسليم المشروع والدفعات؟'
+    ];
+    readyForSpec = false;
+  }
+  // 6. General Pricing Inquiries ("اسعاركم كام", "التكلفة كام", "بكام")
+  else if (ent.isPricing && !ent.hasRealProjectIdea) {
+    reply = 'تسعير المشاريع في **Apex Software** يعتمد على حجم المتطلبات والشاشات ونوع المنظومة، ونقسمها عادة إلى 3 باقات استثمارية واضحة:\n\n• **باقة الانطلاق السريع (MVP):** لتجربة السوق بأقل تكلفة وأسرع وقت (تبدأ من 35,000 - 45,000 ج.م / $800 - $1,000).\n• **باقة النمو المتكاملة (Pro):** التطبيقات الكاملة مع كباتن وتتبع GPS ودفع إلكتروني ولوحة تحكم (تبدأ من 60,000 - 75,000 ج.م / $1,300 - $1,600).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية Microservices وخوادم مخصصة وميزات ذكاء اصطناعي.\n\nإذا شاركتني فكرة تطبيقك بكلمات بسيطة، سأقوم فوراً بحساب التكلفة والمدة الدقيقة الخاصة بك!';
+    suggestions = [
+      'تطبيق توصيل وطلبات مع تتبع GPS',
+      'متجر إلكتروني متعدد التجار',
+      'منصة حجز عيادات وخدمات طبية',
+      'فكرة تطبيق مخصصة أخرى'
+    ];
+    readyForSpec = false;
+  }
+  // 7. Domain-Specific Project Ideas (With strict word boundary check!)
+  else if (allEnt.isPharmacy) {
+    if (userMsgCount <= 2 && !lastUserMsg.includes('استخراج')) {
+      reply = 'فكرة ممتازة جداً! تطبيقات توصيل الأدوية والصيدليات (PharmaTech) من أعلى القطاعات طلباً. لبناء معمارية برمجية صحيحة تضمن سرعة الاستجابة:\n\n1. هل ترغب في ربط الكاميرا بقارئ ذكي للروشتات (OCR) لمساعدة العميل في قراءة الوصفة الطبية؟\n2. هل المنظومة ستعتمد على صيدليات محددة أم فتح الانضمام لكافة الصيدليات في المنطقة؟';
       suggestions = [
-        'الانضمام متاح لكافة الصيدليات المعتمدة مع نسبة عمولة 10%',
-        'التوصيل عبر كباتن مخصصين بحقائب حرارية لحفظ الأدوية',
-        'توفير محفظة دفع إلكترونية وفودافون كاش وكاش عند الاستلام',
+        'نعم، نحتاج قارئ ذكي للروشتات OCR مع تتبع GPS',
+        'الانضمام متاح لكافة الصيدليات المعتمدة مع نسبة عمولة',
+        'توفير محفظة دفع إلكترونية وفودافون كاش وكاش',
         'جاهز لاستخراج خطة المشروع والـ 3 باقات الآن'
       ];
     } else {
-      reply = 'عظيم جداً! هذه التفاصيل واضحة ودقيقة. في Apex سنبني لك تطبيق عميل فائق السلاسة، تطبيق كابتن للملاحة بالـ GPS، وتطبيق ويب للصيدليات لمراجعة الروشتات، مع لوحة تحكم Super Admin مركزية لحساب العمولات. أصبحت كافة متطلبات المشروع مكتملة ويمكننا توليد المواصفات المعمارية ودراسة الجدوى والـ 3 باقات فوراً!';
+      reply = 'عظيم جداً! متطلبات مشروع توصيل الصيدليات أصبحت واضحة تماماً: تطبيق عميل، تطبيق كابتن للملاحة بالـ GPS، بوابة ويب للصيدليات لمراجعة الروشتات، ولوحة تحكم مركزية Super Admin لحساب العمولات. نحن جاهزون لاستخراج دراسة الجدوى والـ 3 باقات فوراً!';
       suggestions = [
         'عرض خطة المشروع ودراسة الجدوى والـ 3 باقات الآن',
-        'هل يمكن إضافة ميزة تذكير بمواعيد الدواء للمرضى؟',
         'ما هي مدة تسليم النسخة التجريبية الأولى (MVP)؟'
       ];
+      readyForSpec = true;
     }
-  } else if (ent.isFood) {
-    if (userMsgCount <= 1) {
-      reply = 'مرحباً بك! منصات طلب الطعام والوجبات تحقق نمواً مستمراً. لتحقيق ميزة تنافسية أمام التطبيقات الحالية، ننصح بتخفيض عمولة المطاعم (8-12%) مع نظام تتبع مباشر فائق الدقة للكابتن وتطبيق تابلت للمطابخ. هل سيكون لديك أسطول توصيل خاص أم التوصيل من خلال المطاعم نفسها؟';
+  } else if (allEnt.isFood) {
+    if (userMsgCount <= 2 && !lastUserMsg.includes('استخراج')) {
+      reply = 'منصات طلب الطعام والوجبات تحقق عائداً ممتازاً عند ضبط العمليات اللوجستية. لضمان تفوق تطبيقك:\n\n1. هل سيكون لديك أسطول كباتن خاص بالتطبيق لتوصيل الطلبات أم التوصيل عن طريق المطاعم نفسها؟\n2. هل تحتاج لوحة ويب أو تطبيق تابلت مخصص للمطابخ لتأكيد الطلبات وطباعة الفواتير فورياً؟';
       suggestions = [
         'أسطول كباتن خاص مع تتبع GPS لحظي على الخريطة',
-        'تطبيق تابلت مخصص للمطابخ لاستقبال الطلبات وطباعة الفواتير',
-        'نظام عروض وكوبونات خصم ومحفظة استرداد نقدي (Cashback)',
+        'تطبيق تابلت مخصص للمطابخ لاستقبال الطلبات',
+        'نظام عروض وكوبونات خصم ومحفظة كاش باك',
         'جاهز لاستخراج خطة المشروع ودراسة الجدوى'
       ];
     } else {
-      reply = 'ممتاز! حددنا نموذج العمل التقني بالكامل. النظام سيتضمن تطبيق عميل React Native، تطبيق كابتن مع خوارزميات التوزيع الجغرافي الذكي، وبوابة ويب للمطاعم. متطلباتك جاهزة تماماً لاستخراج وثيقة المشروع ودراسة الجدوى والـ 3 باقات.';
+      reply = 'ممتاز! حددنا نموذج العمل التقني بالكامل لتطبيق المطاعم والوجبات: تطبيق عميل React Native، تطبيق كابتن مع خوارزميات التوزيع الجغرافي، بوابة ويب للمطاعم، ولوحة تحكم مركزية. متطلباتك جاهزة لاستخراج وثيقة المشروع ودراسة الجدوى والـ 3 باقات.';
       suggestions = [
         'عرض خطة المشروع ودراسة الجدوى والـ 3 باقات الآن',
-        'هل يدعم النظام الدفع بـ Apple Pay و Google Pay؟',
-        'ما هي تكلفة باقة النمو المتكاملة (Pro)؟'
+        'هل يدعم النظام الدفع بـ Apple Pay و Google Pay؟'
       ];
+      readyForSpec = true;
     }
-  } else if (ent.isRide) {
-    if (userMsgCount <= 1) {
-      reply = 'أهلاً بك! تطبيقات النقل الذكي ورحلات السيارات تتطلب بنية تحتية فائقة السرعة تتحمل تحديثات الموقع بالثواني (WebSockets + Redis). هل الفكرة مخصصة للسيارات الملاكي فقط أم تشمل التاكسي، السكوتر، والشحن بين المحافظات؟';
+  } else if (allEnt.isRide) {
+    if (userMsgCount <= 2 && !lastUserMsg.includes('استخراج')) {
+      reply = 'تطبيقات النقل والمواصلات الذكية (مثل أوبر وكريم) تحتاج بنية تحتية سريعة جداً لمزامنة الموقع بالثواني (WebSockets + Redis). هل الفكرة مخصصة للسيارات الملاكي فقط أم تشمل التاكسي، السكوتر، والشحن؟';
       suggestions = [
         'سيارات ملاكي وتاكسي وسكوتر مع تسعير ديناميكي',
         'دعم الدفع كاش والمحافظ الرقمية وتقسيم الأجرة',
@@ -569,15 +635,16 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
         'جاهز لاستخراج خطة المشروع والـ 3 باقات'
       ];
     } else {
-      reply = 'رائع جداً! تم تثبيت معمارية التتبع والملاحة ونظام الأمان المالي. نحن جاهزون الآن لاستخراج الخطة المعمارية الكاملة ودراسة الجدوى والـ 3 باقات.';
+      reply = 'رائع جداً! تم تثبيت معمارية التتبع والملاحة ونظام الأمان المالي لمنظومة النقل التشاركي. نحن جاهزون الآن لاستخراج الخطة المعمارية الكاملة ودراسة الجدوى والـ 3 باقات.';
       suggestions = [
         'استخراج خطة المشروع والـ 3 باقات الآن',
-        'ما هي المتطلبات اللازمة لرفع التطبيق على Google Play و App Store؟'
+        'ما هي المتطلبات اللازمة لرفع التطبيق على المتاجر؟'
       ];
+      readyForSpec = true;
     }
-  } else if (ent.isEcommerce) {
-    if (userMsgCount <= 1) {
-      reply = 'مرحباً بك! الأسواق الرقمية المتعددة (Multi-Vendor Marketplace) من أنجح النماذج الاستثمارية. لضمان تجربة مميزة، نحتاج لتحديد آلية شحن المنتجات: هل ستتعاقد مع شركات شحن سريعة عبر API، وهل ترغب في لوحة مخصصة لكل تاجر لمتابعة أرباحه ومخزونه؟';
+  } else if (allEnt.isEcommerce) {
+    if (userMsgCount <= 2 && !lastUserMsg.includes('استخراج')) {
+      reply = 'الأسواق الرقمية المتعددة (Multi-Vendor Marketplace) نموذج استثماري قوي ومربح جداً. لضمان تجربة مميزة للعملاء والتجار:\n\n1. هل ترغب في توفير لوحة خاصة بكل تاجر لإدارة منتجاته وأرباحه ومخزونه؟\n2. هل ستتعاقد مع شركات شحن عبر الـ API لتوليد بوالص الشحن آلياً؟';
       suggestions = [
         'لوحة تاجر متقدمة لإدارة المنتجات والأرباح والطلبات',
         'ربط آلي مع شركات الشحن وتوليد بوالص الشحن تلقائياً',
@@ -585,27 +652,31 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
         'جاهز لاستخراج خطة المشروع والـ 3 باقات'
       ];
     } else {
-      reply = 'اختيارات ممتازة! المعمارية ستعتمد على قاعدة بيانات موثوقة ومحرك دفع آمن ومزامنة للمخزون. المتطلبات واضحة ومكتملة لاستخراج خطة العمل وباقات الأسعار.';
+      reply = 'اختيارات ممتازة! المعمارية ستعتمد على قاعدة بيانات موثوقة ومحرك دفع آمن ومزامنة للمخزون والتجار. المتطلبات مكتملة وجاهزة لتوليد خطة العمل وباقات الأسعار فوراً.';
       suggestions = [
         'عرض خطة المشروع ودراسة الجدوى والـ 3 باقات الآن',
         'هل يمكن ربط النظام مع برنامج الفاتورة الإلكترونية؟'
       ];
+      readyForSpec = true;
     }
   } else {
-    if (userMsgCount <= 1) {
-      reply = 'أهلاً بك! في Apex Software نرحب بفكرتك ونحن متحمسون لتحويلها إلى منتج رقمي استثنائي في السوق. لتصميم أفضل معمارية هندسية وتحديد الميزانية الدقيقة، من هم المستخدمون الرئيسيون للتطبيق؟ وما هي أهم ميزة رقمية تجعل العميل يفضل تطبيقك؟';
+    // General Project Idea Discussion
+    if (userMsgCount <= 1 || !allEnt.hasRealProjectIdea) {
+      reply = `أهلاً بك! في **Apex Software** نرحب بفكرتك ونحن متحمسون لتحويلها إلى منتج رقمي استثنائي في السوق.\n\nلتصميم أفضل معمارية هندسية وتحديد الميزانية بدقة: ما هي أهم الميزات والخدمات التي يقدمها تطبيقك للعميل؟ ومن هم المستخدمون المستهدفون؟`;
       suggestions = [
         'التركيز على إطلاق نسخة أولية (MVP) لاختبار السوق بأسرع وقت',
         'تطبيق موبايل موحد للآيفون والأندرويد مع لوحة تحكم سحابية',
         'إضافة بوابات دفع إلكترونية ومحفظة رقمية للمستخدمين',
         'جاهز لاستخراج خطة المشروع ودراسة الجدوى والـ 3 باقات'
       ];
+      readyForSpec = false;
     } else {
       reply = 'رائع جداً! استوعبنا طبيعة الفكرة وأطراف المنظومة والحلول التقنية المناسبة لها. نحن جاهزون الآن لاستخراج وثيقة المواصفات الفنية الكاملة مع دراسة الجدوى وتفاصيل الباقات الثلاث.';
       suggestions = [
         'عرض خطة المشروع ودراسة الجدوى والـ 3 باقات الآن',
         'ما هي خطة الدفع والمراحل الزمنية للتسليم؟'
       ];
+      readyForSpec = true;
     }
   }
 
@@ -614,7 +685,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
     suggestions,
     readyForSpec,
     isLiveAI: false,
-    engine: 'Apex Deep Semantic Consultation Engine 2.0'
+    engine: 'Apex Intelligent Architectural Consultation Engine 3.0'
   };
 }
 
@@ -631,25 +702,25 @@ async function chatConsultant(messages = [], options = {}) {
   const geminiKey = userApiKey || config.geminiApiKey || process.env.GEMINI_API_KEY;
   const openaiKey = userApiKey || config.openaiApiKey || process.env.OPENAI_API_KEY;
 
-  // 1. If Gemini is requested & key available -> Call Gemini Chat Consultant
-  if (activeProvider === 'gemini' && geminiKey && geminiKey.trim().length > 10) {
-    try {
-      return await callGeminiChatConsultant(messages, geminiKey.trim(), lang);
-    } catch (err) {
-      console.warn('Gemini chat consultant failed, falling back to Deep Semantic:', err.message);
-    }
-  }
-
-  // 2. If OpenAI is requested & key available -> Call OpenAI Chat Consultant
+  // 1. If OpenAI is requested & key available -> Call OpenAI Chat Consultant
   if (activeProvider === 'openai' && openaiKey && openaiKey.trim().length > 10) {
     try {
       return await callOpenAIChatConsultant(messages, openaiKey.trim(), lang);
     } catch (err) {
-      console.warn('OpenAI chat consultant failed, falling back to Deep Semantic:', err.message);
+      console.warn('OpenAI chat consultant failed, falling back to Intelligent Engine:', err.message);
     }
   }
 
-  // 3. Fallback to Deep Generative Semantic Chat Consultant
+  // 2. If Gemini is requested & key available -> Call Gemini Chat Consultant
+  if (activeProvider === 'gemini' && geminiKey && geminiKey.trim().length > 10) {
+    try {
+      return await callGeminiChatConsultant(messages, geminiKey.trim(), lang);
+    } catch (err) {
+      console.warn('Gemini chat consultant failed, falling back to Intelligent Engine:', err.message);
+    }
+  }
+
+  // 3. Fallback to Intelligent Conversational Engine 3.0
   return deepSemanticChatConsultant(messages, lang);
 }
 
@@ -659,24 +730,46 @@ async function chatConsultant(messages = [], options = {}) {
 function extractKeywordsAndEntities(prompt = '') {
   const p = prompt.toLowerCase();
 
+  // Helper: Match full word or clean token (prevents 'اكلمك' from matching 'اكل')
+  const matchWord = (word) => {
+    try {
+      const regex = new RegExp(`(?:^|[^\\p{L}\\p{N}])${word}(?:[^\\p{L}\\p{N}]|$)`, 'iu');
+      return regex.test(p);
+    } catch {
+      return p.includes(word);
+    }
+  };
+
+  const matchAny = (words) => words.some(w => matchWord(w));
+
   const entities = {
-    isPharmacy: p.includes('صيدل') || p.includes('دواء') || p.includes('ادوي') || p.includes('روشت') || p.includes('علاج') || p.includes('pharmacy') || p.includes('medicine'),
-    isFood: p.includes('أكل') || p.includes('اكل') || p.includes('طعام') || p.includes('مطعم') || p.includes('مطاعم') || p.includes('وجب') || p.includes('food') || p.includes('restaurant'),
-    isRide: p.includes('اوبر') || p.includes('أوبر') || p.includes('كريم') || p.includes('تاكسي') || p.includes('سائق') || p.includes('مشوار') || p.includes('رحلات') || p.includes('توصيل ركاب') || p.includes('ride') || p.includes('taxi'),
-    isEcommerce: p.includes('متجر') || p.includes('سوق') || p.includes('منتج') || p.includes('بيع') || p.includes('شراء') || p.includes('تجار') || p.includes('ecommerce') || p.includes('shop') || p.includes('store') || p.includes('marketplace'),
-    isHealth: p.includes('عياد') || p.includes('طبيب') || p.includes('دكتور') || p.includes('كشف') || p.includes('حجز طبي') || p.includes('مرضى') || p.includes('clinic') || p.includes('doctor') || p.includes('health'),
-    isRealEstate: p.includes('عقار') || p.includes('شقق') || p.includes('ايجار') || p.includes('إيجار') || p.includes('سمسار') || p.includes('ارض') || p.includes('real estate') || p.includes('property'),
-    isAuction: p.includes('مزاد') || p.includes('مزايد') || p.includes('سوم') || p.includes('auction'),
-    isEdu: p.includes('كورس') || p.includes('تعليم') || p.includes('مدرس') || p.includes('اكاديمي') || p.includes('دروس') || p.includes('course') || p.includes('learning'),
-    isServices: p.includes('صيان') || p.includes('فني') || p.includes('سباك') || p.includes('كهربا') || p.includes('تنظيف') || p.includes('خدمات منزل') || p.includes('handyman'),
+    // Conversational & Identity Intents
+    isIdentity: matchAny(['اسمك', 'اسمك ايه', 'مين انت', 'انت مين', 'عرفني بنفسك', 'اقولك ايه', 'اناديلك', 'اناديك', 'من انت', 'مين معايا', 'مع مين بتكلم', 'مين بيتكلم', 'who are you', 'your name']),
+    isGreeting: matchAny(['السلام عليكم', 'سلام عليكم', 'مرحبا', 'مرحباً', 'اهلا', 'أهلاً', 'صباح الخير', 'مساء الخير', 'هاي', 'hello', 'hi', 'ازيك', 'عامل ايه', 'اخبارك']),
+    isGratitude: matchAny(['شكرا', 'شكراً', 'تسلم', 'الله يخليك', 'مشكور', 'تمام شكرا', 'thank you', 'thanks']),
+    isComplaint: matchAny(['مش فاهم', 'مش فاهمني', 'انت مش فاهم', 'محللتش', 'غبى', 'غبي', 'ضعيف', 'نفس الكلام', 'كلام تاني', 'روبوت غبي']),
+    isAgencyInquiry: matchAny(['مين ايبكس', 'مين apex', 'شركة ايه', 'خدماتكم', 'بتعملوا ايه', 'عنوانكم', 'مقركم', 'فين شركتكم', 'معلومات عنكم']),
+    isPricing: matchAny(['اسعاركم', 'بكام', 'التكلفة كام', 'باقاتكم', 'طريقة الدفع', 'كم التكلفة', 'اسعار التطبيقات', 'تكلفة المشروع']),
+    hasRealProjectIdea: matchAny(['فكرة', 'تطبيق', 'مشروع', 'منصة', 'موقع', 'سيستم', 'برنامج', 'عايز اعمل', 'عندي فكرة', 'نظام']),
+
+    // Business Domains (Strict word matching to avoid substring collisions!)
+    isPharmacy: matchAny(['صيدلية', 'صيدليات', 'دواء', 'أدوية', 'ادوية', 'روشتة', 'روشتات', 'علاج', 'مستلزمات طبية', 'pharmacy', 'medicine']),
+    isFood: matchAny(['مطعم', 'مطاعم', 'وجبات', 'وجبة', 'طعام', 'دليفري', 'مطبخ', 'أغذية', 'أكلات', 'أكل', 'restaurant', 'food']),
+    isRide: matchAny(['أوبر', 'اوبر', 'كريم', 'تاكسي', 'سائقين', 'كباتن', 'توصيل ركاب', 'مشاوير', 'سكوتر', 'ride', 'taxi']),
+    isEcommerce: matchAny(['متجر', 'متاجر', 'سوق', 'متعدد التجار', 'بيع وشراء', 'منتجات', 'شوبينج', 'ecommerce', 'shop', 'store', 'marketplace']),
+    isHealth: matchAny(['عيادة', 'عيادات', 'طبيب', 'أطباء', 'دكتور', 'كشف طبي', 'حجز مواعيد', 'مرضى', 'clinic', 'doctor', 'health']),
+    isRealEstate: matchAny(['عقارات', 'عقار', 'شقق', 'إيجار', 'ايجار', 'سمسار', 'أراضي', 'real estate', 'property']),
+    isAuction: matchAny(['مزاد', 'مزادات', 'مزايدة', 'مزايدات', 'سوم', 'auction']),
+    isEdu: matchAny(['كورس', 'كورسات', 'تعليم', 'مدرس', 'أكاديمية', 'اكاديمية', 'دروس', 'course', 'learning']),
+    isServices: matchAny(['صيانة', 'فني', 'سباك', 'كهربائي', 'تنظيف', 'خدمات منزلية', 'handyman']),
     
     // Feature flags
-    hasDelivery: p.includes('توصيل') || p.includes('مندوب') || p.includes('كابتن') || p.includes('شحن') || p.includes('دليفري'),
-    hasMaps: p.includes('خريط') || p.includes('خرائط') || p.includes('gps') || p.includes('تتبع') || p.includes('موقع'),
-    hasPayment: p.includes('دفع') || p.includes('فيزا') || p.includes('كاش') || p.includes('محفظ') || p.includes('pay') || p.includes('فودافون'),
-    hasChat: p.includes('شات') || p.includes('محادث') || p.includes('رسائل') || p.includes('دردش') || p.includes('chat'),
-    hasVideo: p.includes('فيديو') || p.includes('كاميرا') || p.includes('بث') || p.includes('مكالم') || p.includes('video'),
-    hasAI: p.includes('ذكاء') || p.includes('ai') || p.includes('روشت') || p.includes('تعرف') || p.includes('ocr')
+    hasDelivery: matchAny(['توصيل', 'مندوب', 'كابتن', 'شحن', 'دليفري']),
+    hasMaps: matchAny(['خريطة', 'خرائط', 'gps', 'تتبع', 'موقع']),
+    hasPayment: matchAny(['دفع', 'فيزا', 'كاش', 'محفظة', 'pay', 'فودافون كاش']),
+    hasChat: matchAny(['شات', 'محادثة', 'رسائل', 'دردشة', 'chat']),
+    hasVideo: matchAny(['فيديو', 'كاميرا', 'بث حي', 'مكالمة', 'video']),
+    hasAI: matchAny(['ذكاء اصطناعي', 'ai', 'روشتات', 'تعرف على الصوت', 'ocr'])
   };
 
   return entities;
