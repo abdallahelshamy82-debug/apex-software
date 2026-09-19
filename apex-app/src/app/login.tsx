@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, Pressable } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -14,6 +15,8 @@ import { haptics } from '../utils/haptics';
 import { biometrics } from '../utils/biometrics';
 import { notifications } from '../utils/notifications';
 import { useResponsive } from '../hooks/useResponsive';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -33,10 +36,10 @@ export default function LoginScreen() {
   const [biometryType, setBiometryType] = useState('Fingerprint');
   const [hasSavedSession, setHasSavedSession] = useState(false);
   const [boundBiometricUser, setBoundBiometricUser] = useState<any>(null);
-
-  // Google Modal State for Mobile & Non-localhost
-  const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
+  const bioScale = useSharedValue(1);
+  const animatedBioStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bioScale.value }],
+  }));
 
   const checkBiometricsAndSession = useCallback(async () => {
     const bio = await biometrics.isAvailable();
@@ -233,6 +236,17 @@ export default function LoginScreen() {
         script.defer = true;
         document.head.appendChild(script);
       }
+    } else {
+      // 📱 Initialize native GoogleSignin on mobile
+      try {
+        const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+        GoogleSignin.configure({
+          webClientId: GOOGLE_CLIENT_ID,
+          offlineAccess: false,
+        });
+      } catch (e) {
+        console.log('GoogleSignin configure notice:', e);
+      }
     }
   }, []);
 
@@ -241,7 +255,6 @@ export default function LoginScreen() {
   const executeGoogleLogin = async (selectedEmail: string, selectedName?: string, selectedPic?: string) => {
     try {
       setGoogleLoading(true);
-      setShowGoogleModal(false);
       const cleanEmail = selectedEmail.trim().toLowerCase();
 
       // 🛡️ Web restriction: Only admin allowed via web Google sign-in
@@ -295,6 +308,7 @@ export default function LoginScreen() {
   const handleGoogleSignIn = async () => {
     await haptics.selection();
 
+    // 1. Web Flow
     if (Platform.OS === 'web') {
       if (typeof window !== 'undefined' && (window as any).google?.accounts?.oauth2) {
         try {
@@ -320,58 +334,80 @@ export default function LoginScreen() {
             error_callback: (error: any) => {
               setGoogleLoading(false);
               console.error('Google OAuth error:', error);
-              Alert.alert(
-                isRTL ? 'تنبيه Google OAuth' : 'Google OAuth Notice',
-                isRTL 
-                  ? 'تعذر فتح نافذة Google الرسمية بسبب قيود النطاق. يرجى اختيار حسابك مباشرة من القائمة.'
-                  : 'Could not open Google popup. Please select your account directly from the list.'
-              );
-              setShowGoogleModal(true);
             }
           });
           tokenClient.requestAccessToken({ prompt: 'select_account' });
         } catch (e: any) {
           setGoogleLoading(false);
-          setShowGoogleModal(true);
         }
-      } else {
-        Alert.alert(
-          isRTL ? 'جاري تحميل Google OAuth' : 'Google OAuth Loading',
-          isRTL 
-            ? 'مكتبة Google الرسمية غير متوفرة على هذا المتصفح حالياً. يرجى اختيار حسابك مباشرة من القائمة بالأسفل.'
-            : 'Google library is not ready. Please select your account directly from the list.'
-        );
-        setShowGoogleModal(true);
       }
-    } else {
-      // Native Mobile (Android / iOS)
-      Alert.alert(
-        isRTL ? 'التحقق عبر Google على الموبايل' : 'Google Sign-In on Mobile',
-        isRTL 
-          ? 'نظام أمان Google يتطلب العمل عبر المتصفح للنوافذ المنبثقة.\n\nعلى الموبايل، يمكنك تسجيل الدخول فوراً بضغطة واحدة من الحسابات بالأعلى دون كتابة باسورد، أو فتح صفحة حسابات Google بالمتصفح.'
-          : 'Google OAuth popups run natively on Web browsers. On mobile, tap your account above for 1-click sign in, or open Google in browser.',
-        [
-          {
-            text: isRTL ? 'دخول بحسابي فوراً' : '1-Tap Sign In',
-            onPress: () => executeGoogleLogin('abdallahelshamy82@gmail.com', 'AbdAllah Elshamy')
-          },
-          {
-            text: isRTL ? 'فتح متصفح Google' : 'Open Google in Browser',
-            onPress: async () => {
-              try {
-                await WebBrowser.openBrowserAsync('https://accounts.google.com');
-              } catch (e) {
-                Alert.alert('Browser', 'Could not open browser');
+      return;
+    }
+
+    // 2. 📱 Native Mobile Flow (Android & iOS): Native Google Play Services Bottom Sheet
+    try {
+      setGoogleLoading(true);
+      const { GoogleSignin, statusCodes } = require('@react-native-google-signin/google-signin');
+
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const signInResult = await GoogleSignin.signIn();
+      const user = signInResult.data?.user || signInResult.user || signInResult;
+
+      if (user && user.email) {
+        await executeGoogleLogin(user.email, user.name || user.givenName, user.photo);
+      } else {
+        setGoogleLoading(false);
+      }
+    } catch (error: any) {
+      setGoogleLoading(false);
+      let statusCodes: any;
+      try {
+        statusCodes = require('@react-native-google-signin/google-signin').statusCodes;
+      } catch (e) {}
+
+      if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User closed or dismissed the native Google bottom sheet
+        return;
+      }
+      if (statusCodes && error.code === statusCodes.IN_PROGRESS) {
+        return;
+      }
+      if (statusCodes && error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert(
+          isRTL ? 'خدمات Google' : 'Google Play Services',
+          isRTL ? 'يرجى التأكد من توفر وتحديث خدمات Google Play على الهاتف.' : 'Google Play Services are not available.'
+        );
+        return;
+      }
+
+      // If running inside standard Expo Go development client:
+      // Fallback directly to Google OAuth consent via WebBrowser without any fake modal!
+      try {
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&scope=email%20profile%20openid&redirect_uri=https://auth.expo.io/@anonymous/apex-app&prompt=select_account`;
+        const result = await WebBrowser.openAuthSessionAsync(authUrl, 'apexapp://');
+        if (result.type === 'success' && result.url) {
+          const hash = result.url.split('#')[1];
+          if (hash) {
+            const params = new URLSearchParams(hash);
+            const accessToken = params.get('access_token');
+            if (accessToken) {
+              const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${accessToken}` }
+              }).then(r => r.json());
+              if (userInfo && userInfo.email) {
+                await executeGoogleLogin(userInfo.email, userInfo.name, userInfo.picture);
+                return;
               }
             }
-          },
-          { text: isRTL ? 'إلغاء' : 'Cancel', style: 'cancel' }
-        ]
-      );
+          }
+        }
+      } catch (fallbackErr) {
+        console.log('Google AuthSession notice:', fallbackErr);
+      }
+
+      console.error('Google Sign-in error:', error);
     }
   };
-
-  const handleOfficialGooglePopup = handleGoogleSignIn;
 
   const handleAppleSignIn = () => {
     Alert.alert('Apple ID', isRTL ? 'تسجيل الدخول عبر Apple قيد الإعداد' : 'Apple Sign-In coming soon');
@@ -491,51 +527,6 @@ export default function LoginScreen() {
                 </Text>
               </TouchableOpacity>
 
-              {isLogin && (
-                <TouchableOpacity 
-                  style={[
-                    styles.biometricBtn, 
-                    { 
-                      borderColor: theme.primary, 
-                      backgroundColor: `${theme.primary}15`,
-                      flexDirection: isRTL ? 'row-reverse' : 'row',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      paddingVertical: boundBiometricUser ? 10 : 14,
-                    }
-                  ]}
-                  onPress={handleBiometricLogin}
-                >
-                  <Ionicons 
-                    name={biometryType === 'FaceID' && Platform.OS === 'ios' ? 'scan-outline' : 'finger-print-outline'} 
-                    size={22} 
-                    color={theme.primary} 
-                  />
-                  <View style={{ marginHorizontal: 8, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-                    <Text style={[styles.biometricBtnText, { color: theme.primary, marginHorizontal: 0 }]}>
-                      {isRTL 
-                        ? (Platform.OS === 'web' 
-                            ? 'تسجيل الدخول بالمستشعرات الحيوية (المتصفح)' 
-                            : (biometryType === 'FaceID' && Platform.OS === 'ios' 
-                                ? 'تسجيل الدخول بالتعرف على الوجه (Face ID)' 
-                                : 'تسجيل الدخول بالمستشعرات الحيوية (البصمة)'))
-                        : (Platform.OS === 'web'
-                            ? 'Biometric Sensor Login (Browser)'
-                            : (biometryType === 'FaceID' && Platform.OS === 'ios' 
-                                ? 'Sign in with Face ID' 
-                                : 'Sign in with Biometric Sensor'))}
-                    </Text>
-                    {boundBiometricUser && (
-                      <Text style={{ fontSize: 11, color: theme.textMuted, marginTop: 2, textAlign: isRTL ? 'right' : 'left' }}>
-                        {isRTL 
-                          ? `الحساب المربوط: ${boundBiometricUser.fullName || boundBiometricUser.email}` 
-                          : `Bound Account: ${boundBiometricUser.fullName || boundBiometricUser.email}`}
-                      </Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              )}
-
               <View style={styles.dividerRow}>
                 <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
                 <Text style={[styles.dividerText, { color: theme.textMuted }]}>
@@ -544,21 +535,61 @@ export default function LoginScreen() {
                 <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
               </View>
 
-              <TouchableOpacity 
-                style={[styles.googleBtn, { borderColor: theme.border, backgroundColor: theme.btnBg, opacity: googleLoading ? 0.7 : 1 }]}
-                onPress={handleGoogleSignIn}
-                disabled={googleLoading}
-              >
-                <Ionicons name="logo-google" size={20} color="#EA4335" style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} />
-                <Text style={[styles.googleBtnText, { color: theme.text }]}>
-                  {googleLoading ? (isRTL ? 'جاري الاتصال...' : 'Connecting...') : (isRTL ? 'تسجيل الدخول عبر Google' : 'Sign in with Google')}
-                </Text>
-              </TouchableOpacity>
+              {/* Modern Balanced Action Row (Option A) */}
+              <View style={[styles.actionRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                <TouchableOpacity 
+                  style={[
+                    styles.googleBtnFlex, 
+                    { 
+                      borderColor: theme.border, 
+                      backgroundColor: theme.btnBg, 
+                      opacity: googleLoading ? 0.7 : 1,
+                    }
+                  ]}
+                  onPress={handleGoogleSignIn}
+                  disabled={googleLoading}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="logo-google" size={20} color="#EA4335" style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} />
+                  <Text style={[styles.googleBtnText, { color: theme.text }]}>
+                    {googleLoading ? (isRTL ? 'جاري الاتصال...' : 'Connecting...') : (isRTL ? 'المتابعة باستخدام Google' : 'Continue with Google')}
+                  </Text>
+                </TouchableOpacity>
+
+                {isLogin && biometricsAvailable && (
+                  <AnimatedPressable
+                    onPressIn={() => {
+                      bioScale.value = withSpring(0.92, { damping: 15, stiffness: 300 });
+                    }}
+                    onPressOut={() => {
+                      bioScale.value = withSpring(1, { damping: 15, stiffness: 300 });
+                    }}
+                    onPress={handleBiometricLogin}
+                    style={[
+                      styles.biometricSquareBtn,
+                      {
+                        borderColor: `${theme.primary}40`,
+                        backgroundColor: `${theme.primary}12`,
+                      },
+                      animatedBioStyle,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={biometryType === 'FaceID' && Platform.OS === 'ios' ? 'Face ID Login' : 'Fingerprint Login'}
+                  >
+                    <Ionicons 
+                      name={biometryType === 'FaceID' && Platform.OS === 'ios' ? 'scan-outline' : 'finger-print-outline'} 
+                      size={24} 
+                      color={theme.primary} 
+                    />
+                  </AnimatedPressable>
+                )}
+              </View>
 
               <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginTop: 10, width: '100%' }}>
                 <TouchableOpacity 
                   style={[styles.socialSmallBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
                   onPress={handleAppleSignIn}
+                  activeOpacity={0.8}
                 >
                   <Ionicons name="logo-apple" size={18} color={theme.text} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
                   <Text style={[styles.socialSmallText, { color: theme.text }]}>Apple</Text>
@@ -567,6 +598,7 @@ export default function LoginScreen() {
                 <TouchableOpacity 
                   style={[styles.socialSmallBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
                   onPress={handleGitHubSignIn}
+                  activeOpacity={0.8}
                 >
                   <Ionicons name="logo-github" size={18} color={theme.text} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
                   <Text style={[styles.socialSmallText, { color: theme.text }]}>GitHub</Text>
@@ -598,156 +630,6 @@ export default function LoginScreen() {
 
           </View>
       </KeyboardAwareScrollView>
-
-      {/* Google Account Selector Modal for Mobile */}
-      <Modal
-        visible={showGoogleModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowGoogleModal(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 14 }}>
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="logo-google" size={24} color="#EA4335" />
-                <Text style={{ fontSize: 17, fontWeight: 'bold', color: theme.text }}>
-                  {isRTL ? 'تسجيل الدخول عبر Google' : 'Sign in with Google'}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowGoogleModal(false)}>
-                <Ionicons name="close-circle-outline" size={26} color={theme.textMuted} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={{ color: theme.textMuted, fontSize: 13, marginBottom: 14, textAlign: isRTL ? 'right' : 'left' }}>
-              {isRTL 
-                ? 'اختر حسابك للدخول الفوري بنقرة واحدة:'
-                : 'Choose your account for instant 1-click sign in:'}
-            </Text>
-
-            {/* Account 1: abdallahelshamy82@gmail.com (Primary) */}
-            <TouchableOpacity 
-              onPress={() => executeGoogleLogin('abdallahelshamy82@gmail.com', 'AbdAllah Elshamy')}
-              style={[
-                styles.googleAccountItem, 
-                { 
-                  backgroundColor: `${theme.primary}12`, 
-                  borderColor: theme.primary, 
-                  borderWidth: 1.5,
-                  flexDirection: isRTL ? 'row-reverse' : 'row' 
-                }
-              ]}
-            >
-              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: `${theme.primary}25`, alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="logo-google" size={22} color={theme.primary} />
-              </View>
-              <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start', marginHorizontal: 10 }}>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 14 }}>abdallahelshamy82@gmail.com</Text>
-                  <View style={{ backgroundColor: theme.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                    <Ionicons name="ribbon-outline" size={11} color="#000" />
-                    <Text style={{ color: '#000', fontSize: 10, fontWeight: '900' }}>Admin</Text>
-                  </View>
-                </View>
-                <Text style={{ color: theme.primary, fontSize: 11, fontWeight: '600', marginTop: 2 }}>
-                  {isRTL ? 'اضغط هنا للدخول الفوري بحسابك' : 'Tap here to sign in instantly'}
-                </Text>
-              </View>
-              <Text style={{ color: theme.primary, fontSize: 18, fontWeight: 'bold' }}>{isRTL ? '←' : '→'}</Text>
-            </TouchableOpacity>
-
-            {/* Account 2: auabdullah973@gmail.com (Client) */}
-            <TouchableOpacity 
-              onPress={() => executeGoogleLogin('auabdullah973@gmail.com', 'Abdullah (Client)')}
-              style={[styles.googleAccountItem, { backgroundColor: theme.bg, borderColor: theme.border, marginTop: 10, flexDirection: isRTL ? 'row-reverse' : 'row' }]}
-            >
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#10B98115', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="person-circle-outline" size={22} color="#10B981" />
-              </View>
-              <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start', marginHorizontal: 10 }}>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 13 }}>auabdullah973@gmail.com</Text>
-                  <View style={{ backgroundColor: '#10B98120', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                    <Text style={{ color: '#10B981', fontSize: 10, fontWeight: 'bold' }}>Client</Text>
-                  </View>
-                </View>
-                <Text style={{ color: theme.textMuted, fontSize: 11 }}>{isRTL ? 'حساب العميل (متابعة المشروع والفواتير)' : 'Client Account (Project & Invoices)'}</Text>
-              </View>
-              <Text style={{ color: theme.primary, fontSize: 16 }}>{isRTL ? '←' : '→'}</Text>
-            </TouchableOpacity>
-
-            {/* Custom Google Email Input */}
-            <View style={{ width: '100%', marginTop: 14 }}>
-              <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 6, textAlign: isRTL ? 'right' : 'left' }}>
-                {isRTL ? 'أو أدخل بريد Google آخر:' : 'Or enter another Google email:'}
-              </Text>
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8 }}>
-                <TextInput
-                  placeholder="yourname@gmail.com"
-                  placeholderTextColor={theme.textMuted}
-                  value={customGoogleEmail}
-                  onChangeText={setCustomGoogleEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={[styles.input, { flex: 1, marginBottom: 0, padding: 12, backgroundColor: theme.bg, borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}
-                />
-                <TouchableOpacity
-                  onPress={() => {
-                    if (!customGoogleEmail.trim()) return;
-                    executeGoogleLogin(customGoogleEmail.trim());
-                  }}
-                  style={{ backgroundColor: theme.primary, paddingHorizontal: 16, justifyContent: 'center', borderRadius: 12 }}
-                >
-                  <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 13 }}>{isRTL ? 'دخول' : 'Go'}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Official Web Popup only when on Web */}
-            {Platform.OS === 'web' && (
-              <TouchableOpacity 
-                onPress={handleOfficialGooglePopup}
-                style={{ 
-                  marginTop: 14, 
-                  paddingVertical: 10, 
-                  paddingHorizontal: 14,
-                  borderRadius: 12, 
-                  backgroundColor: `${theme.primary}12`,
-                  borderWidth: 1,
-                  borderColor: `${theme.primary}35`,
-                  alignItems: 'center',
-                  width: '100%'
-                }}
-              >
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="open-outline" size={14} color={theme.primary} />
-                  <Text style={{ color: theme.primary, fontSize: 12, fontWeight: '700' }}>
-                    {isRTL ? 'محاولة فتح نافذة Google الرسمية (Web Popup)' : 'Try opening official Google popup'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-
-            {/* Helpful Note */}
-            <View style={{ backgroundColor: `${theme.primary}08`, padding: 12, borderRadius: 12, marginTop: 14, width: '100%' }}>
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <Ionicons name="information-circle-outline" size={16} color={theme.primary} />
-                <Text style={{ color: theme.primary, fontSize: 12, fontWeight: 'bold' }}>
-                  {isRTL ? 'معلومة هامة:' : 'Important Note:'}
-                </Text>
-              </View>
-              <Text style={{ color: theme.textMuted, fontSize: 11, lineHeight: 16, textAlign: isRTL ? 'right' : 'left' }}>
-                {isRTL 
-                  ? 'بمجرد الضغط على بطاقة حسابك abdallahelshamy82@gmail.com بالأعلى، سيتم نقلك مباشرة إلى لوحة تحكم المدير دون الحاجة لكتابة أي كلمة مرور.'
-                  : 'Simply tap your account card above to enter the Admin dashboard instantly without entering any password.'}
-              </Text>
-            </View>
-
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -826,24 +708,39 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     fontSize: 13,
   },
-  googleBtn: {
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     width: '100%',
-    padding: 16,
-    borderRadius: 12,
+    marginTop: 2,
+  },
+  googleBtnFlex: {
+    flex: 1,
+    height: 52,
+    borderRadius: 14,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
+    paddingHorizontal: 14,
   },
   googleBtnText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  biometricSquareBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   socialSmallBtn: {
     flex: 1,
-    padding: 12,
-    borderRadius: 12,
+    height: 46,
+    borderRadius: 14,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -851,7 +748,7 @@ const styles = StyleSheet.create({
   },
   socialSmallText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   switchModeContainer: {
     marginTop: 30,
@@ -861,47 +758,6 @@ const styles = StyleSheet.create({
   switchModeText: {
     fontWeight: 'bold',
     fontSize: 16,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 18,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 440,
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 22,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 25,
-    elevation: 20,
-  },
-  googleAccountItem: {
-    width: '100%',
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  biometricBtn: {
-    width: '100%',
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-    gap: 8,
-  },
-  biometricBtnText: {
-    fontSize: 15,
-    fontWeight: 'bold',
   },
   inputGroup: {
     width: '100%',
