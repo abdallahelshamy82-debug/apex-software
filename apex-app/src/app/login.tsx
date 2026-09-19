@@ -237,13 +237,17 @@ export default function LoginScreen() {
         document.head.appendChild(script);
       }
     } else {
-      // 📱 Initialize native GoogleSignin on mobile
+      // 📱 Initialize native GoogleSignin on mobile (only if native module is present in binary)
       try {
-        const { GoogleSignin } = require('@react-native-google-signin/google-signin');
-        GoogleSignin.configure({
-          webClientId: GOOGLE_CLIENT_ID,
-          offlineAccess: false,
-        });
+        const { TurboModuleRegistry, NativeModules } = require('react-native');
+        const hasNative = !!TurboModuleRegistry?.get?.('RNGoogleSignin') || !!NativeModules?.RNGoogleSignin;
+        if (hasNative) {
+          const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+          GoogleSignin.configure({
+            webClientId: GOOGLE_CLIENT_ID,
+            offlineAccess: false,
+          });
+        }
       } catch (e) {
         console.log('GoogleSignin configure notice:', e);
       }
@@ -344,68 +348,79 @@ export default function LoginScreen() {
       return;
     }
 
-    // 2. 📱 Native Mobile Flow (Android & iOS): Native Google Play Services Bottom Sheet
+    // 2. 📱 Check if Native Google Play Services module is compiled in binary
+    let hasNative = false;
+    try {
+      const { TurboModuleRegistry, NativeModules } = require('react-native');
+      hasNative = !!TurboModuleRegistry?.get?.('RNGoogleSignin') || !!NativeModules?.RNGoogleSignin;
+    } catch {
+      hasNative = false;
+    }
+
+    if (hasNative) {
+      try {
+        setGoogleLoading(true);
+        const { GoogleSignin, statusCodes } = require('@react-native-google-signin/google-signin');
+
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        const signInResult = await GoogleSignin.signIn();
+        const user = signInResult.data?.user || signInResult.user || signInResult;
+
+        if (user && user.email) {
+          await executeGoogleLogin(user.email, user.name || user.givenName, user.photo);
+        } else {
+          setGoogleLoading(false);
+        }
+      } catch (error: any) {
+        setGoogleLoading(false);
+        let statusCodes: any;
+        try {
+          statusCodes = require('@react-native-google-signin/google-signin').statusCodes;
+        } catch (e) {}
+
+        if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {
+          return;
+        }
+        if (statusCodes && error.code === statusCodes.IN_PROGRESS) {
+          return;
+        }
+        if (statusCodes && error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+          Alert.alert(
+            isRTL ? 'خدمات Google' : 'Google Play Services',
+            isRTL ? 'يرجى التأكد من توفر وتحديث خدمات Google Play على الهاتف.' : 'Google Play Services are not available.'
+          );
+          return;
+        }
+        console.error('Google Sign-in error:', error);
+      }
+      return;
+    }
+
+    // 3. Fallback for Expo Go (where native TurboModules are not compiled into the APK)
     try {
       setGoogleLoading(true);
-      const { GoogleSignin, statusCodes } = require('@react-native-google-signin/google-signin');
-
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const signInResult = await GoogleSignin.signIn();
-      const user = signInResult.data?.user || signInResult.user || signInResult;
-
-      if (user && user.email) {
-        await executeGoogleLogin(user.email, user.name || user.givenName, user.photo);
-      } else {
-        setGoogleLoading(false);
-      }
-    } catch (error: any) {
-      setGoogleLoading(false);
-      let statusCodes: any;
-      try {
-        statusCodes = require('@react-native-google-signin/google-signin').statusCodes;
-      } catch (e) {}
-
-      if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // User closed or dismissed the native Google bottom sheet
-        return;
-      }
-      if (statusCodes && error.code === statusCodes.IN_PROGRESS) {
-        return;
-      }
-      if (statusCodes && error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert(
-          isRTL ? 'خدمات Google' : 'Google Play Services',
-          isRTL ? 'يرجى التأكد من توفر وتحديث خدمات Google Play على الهاتف.' : 'Google Play Services are not available.'
-        );
-        return;
-      }
-
-      // If running inside standard Expo Go development client:
-      // Fallback directly to Google OAuth consent via WebBrowser without any fake modal!
-      try {
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&scope=email%20profile%20openid&redirect_uri=https://auth.expo.io/@anonymous/apex-app&prompt=select_account`;
-        const result = await WebBrowser.openAuthSessionAsync(authUrl, 'apexapp://');
-        if (result.type === 'success' && result.url) {
-          const hash = result.url.split('#')[1];
-          if (hash) {
-            const params = new URLSearchParams(hash);
-            const accessToken = params.get('access_token');
-            if (accessToken) {
-              const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: { Authorization: `Bearer ${accessToken}` }
-              }).then(r => r.json());
-              if (userInfo && userInfo.email) {
-                await executeGoogleLogin(userInfo.email, userInfo.name, userInfo.picture);
-                return;
-              }
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&scope=email%20profile%20openid&redirect_uri=https://auth.expo.io/@anonymous/apex-app&prompt=select_account`;
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, 'apexapp://');
+      if (result.type === 'success' && result.url) {
+        const hash = result.url.split('#')[1];
+        if (hash) {
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get('access_token');
+          if (accessToken) {
+            const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${accessToken}` }
+            }).then(r => r.json());
+            if (userInfo && userInfo.email) {
+              await executeGoogleLogin(userInfo.email, userInfo.name, userInfo.picture);
+              return;
             }
           }
         }
-      } catch (fallbackErr) {
-        console.log('Google AuthSession notice:', fallbackErr);
       }
-
-      console.error('Google Sign-in error:', error);
+      setGoogleLoading(false);
+    } catch (fallbackErr) {
+      setGoogleLoading(false);
+      console.log('Google AuthSession notice:', fallbackErr);
     }
   };
 
