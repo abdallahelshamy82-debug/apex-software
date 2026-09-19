@@ -59,7 +59,7 @@ function saveAiConfig(newConfig) {
 // 1. Google Gemini Flash API Caller (Gemini 3.6 / 3.5 / Flash-latest)
 // -------------------------------------------------------------
 async function callGeminiAI(prompt, apiKey, language = 'ar') {
-  const modelsToTry = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
+  const modelsToTry = ['gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.6-flash', 'gemini-3-flash-preview'];
   let lastError = null;
 
   const systemPrompt = `You are an elite Principal Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
@@ -280,13 +280,9 @@ The JSON must follow this exact schema:
 
       if (!response.ok) {
         const errText = await response.text();
-        // If 404 model not found, continue to next model in the list
-        if (response.status === 404) {
-          console.warn(`Model ${model} returned 404, trying next...`);
-          lastError = new Error(`Gemini API HTTP ${response.status}: ${errText.slice(0, 300)}`);
-          continue;
-        }
-        throw new Error(`Gemini API HTTP ${response.status}: ${errText.slice(0, 300)}`);
+        console.warn(`Model ${model} returned HTTP ${response.status}, trying next model...`);
+        lastError = new Error(`Gemini API HTTP ${response.status}: ${errText.slice(0, 300)}`);
+        continue;
       }
 
       const data = await response.json();
@@ -302,9 +298,7 @@ The JSON must follow this exact schema:
       return parsed;
     } catch (err) {
       lastError = err;
-      if (!err.message?.includes('404')) {
-        throw err;
-      }
+      console.warn(`Attempt with ${model} failed:`, err.message);
     }
   }
 
@@ -355,22 +349,29 @@ Language: ${language === 'ar' ? 'Arabic' : 'English'}.`;
 }
 
 // -------------------------------------------------------------
+// -------------------------------------------------------------
 // 2.1 Google Gemini Interactive Chat Consultant
 // -------------------------------------------------------------
 async function callGeminiChatConsultant(messages, apiKey, language = 'ar') {
-  const modelsToTry = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
+  // Reliable models ordered by current availability & performance
+  const modelsToTry = ['gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.6-flash', 'gemini-3-flash-preview'];
   let lastError = null;
 
   const systemInstruction = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency (شركة إيبكس لحلول البرمجيات وتطوير التطبيقات).
 You are having an interactive live consultation discussion with a client exploring a new software, mobile app, or SaaS idea.
-Your mission:
-1. Speak with the authority, clarity, empathy, and deep technical knowledge of a world-class software architect.
-2. If this is the start of the chat, warmly welcome the client, acknowledge their specific idea, highlight what makes it interesting, and ask 1 to 2 sharp clarifying questions about their business model, target audience, or essential workflows (such as real-time tracking, multi-vendor payout, payment gateways, offline mode).
-3. If the user provides details, provide tailored architectural advice and either ask the next clarifying question or validate that the specifications are ready.
-4. Output 2 to 4 quick-reply suggestion chips ("suggestions") in Arabic that the user can tap immediately to answer or guide the conversation.
-5. Set "readyForSpec" to true if the client has shared enough fundamental requirements (or after 2+ turns of discussion) to generate the full formal contract blueprint, architecture, and 3 investment packages. Otherwise set to false.
 
-Language: ${language === 'ar' ? 'Professional Modern Arabic (العربية الفصحى التقنية الراقية والودودة)' : 'English'}.
+Core Behavioral Guidelines:
+1. Speak with the authority, clarity, warmth, empathy, and deep technical knowledge of a world-class software architect.
+2. If the user asks who you are, what your name is, or what they should call you, answer warmly and directly: tell them you are "مستشار Apex البرمجي الذكي" (Apex Software Architect) and they can call you "مستشار Apex" or "بشمهندس".
+3. If the user greets you or says hi, greet them back warmly and ask how you can assist with their software idea or technical question today.
+4. If the user describes an idea, engage deeply with THEIR specific idea: analyze its core value, suggest modern tech stack elements (React Native, Node.js, real-time sockets, cloud databases), and ask 1 to 2 sharp clarifying questions.
+5. NEVER assume or invent a project domain (like food delivery or restaurants) that the user did not explicitly mention!
+6. Suggest 2 to 4 quick-reply chips ("suggestions") in Arabic that the user can tap to answer or guide the conversation.
+7. CRITICAL RULE FOR "readyForSpec":
+   - Set "readyForSpec" to true ONLY IF the client has genuinely described a concrete project idea and its core workflow, OR if the client explicitly requests to generate the contract / blueprint / packages.
+   - NEVER set "readyForSpec" to true for greetings, questions about your identity/name, complaints, or general questions!
+
+Language: ${language === 'ar' ? 'Professional, natural Modern Arabic (العربية الفصحى التقنية الراقية والودودة بطابع مهندس خبير)' : 'English'}.
 You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, no wrapping text):
 {
   "reply": "نص الرد الاستشاري الحواري...",
@@ -422,11 +423,9 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
 
       if (!response.ok) {
         const errText = await response.text();
-        if (response.status === 404) {
-          lastError = new Error(`Gemini API HTTP ${response.status}: ${errText.slice(0, 300)}`);
-          continue;
-        }
-        throw new Error(`Gemini API HTTP ${response.status}: ${errText.slice(0, 300)}`);
+        console.warn(`Model ${model} returned HTTP ${response.status}, trying next model...`);
+        lastError = new Error(`Gemini API HTTP ${response.status}: ${errText.slice(0, 300)}`);
+        continue;
       }
 
       const data = await response.json();
@@ -446,9 +445,7 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
       };
     } catch (err) {
       lastError = err;
-      if (!err.message?.includes('404')) {
-        throw err;
-      }
+      console.warn(`Attempt with ${model} failed:`, err.message);
     }
   }
 
@@ -1215,7 +1212,7 @@ async function transcribeAudio(audioBufferOrBase64, mimeType = 'audio/m4a', lang
     }
 
     const cleanMime = (mimeType || 'audio/m4a').split(';')[0].trim();
-    const modelsToTry = ['gemini-3.5-transcribe', 'gemini-flash-latest', 'gemini-3.6-flash'];
+    const modelsToTry = ['gemini-flash-latest', 'gemini-3.5-transcribe', 'gemini-3.1-flash-lite', 'gemini-3.6-flash'];
     let lastError = null;
 
     for (const model of modelsToTry) {

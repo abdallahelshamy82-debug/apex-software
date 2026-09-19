@@ -1231,9 +1231,10 @@ export default function CopilotScreen() {
                   ]}
                 >
                   <Ionicons
-                    name={isRTL ? "arrow-back" : "arrow-forward"}
-                    size={18}
+                    name="send"
+                    size={17}
                     color="#0B132B"
+                    style={isRTL ? { transform: [{ scaleX: -1 }] } : undefined}
                   />
                 </TouchableOpacity>
               </View>
