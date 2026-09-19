@@ -975,6 +975,28 @@ app.post('/api/ai/chat-consultant', async (req, res) => {
   }
 });
 
+// Transcribe Voice Note to Text (High-accuracy Gemini 3.5 Transcribe / Flash)
+app.post('/api/ai/transcribe-voice', async (req, res) => {
+  try {
+    const { audioBase64, mimeType, language } = req.body;
+    if (!audioBase64) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'محتوى التسجيل الصوتي مطلوب للتحويل' 
+      });
+    }
+
+    const result = await aiCopilot.transcribeAudio(audioBase64, mimeType || 'audio/m4a', language || 'ar');
+    return res.json(result);
+  } catch (err) {
+    console.error('AI Voice Transcription route error:', err);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'حدث خطأ أثناء تحويل الصوت إلى نص: ' + err.message 
+    });
+  }
+});
+
 // Analyze Project Prompt (Voice, Text, or Chat History, Live Gemini / OpenAI / Deep Semantic)
 app.post('/api/ai/analyze-project', async (req, res) => {
   try {

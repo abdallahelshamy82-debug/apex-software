@@ -31,6 +31,32 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+// Safe loader for expo-av
+let SafeAudio: any = null;
+try {
+  const { NativeModules, Platform: RNPlatform } = require('react-native');
+  if (RNPlatform.OS === 'web' || NativeModules?.ExponentAV || NativeModules?.ExpoAudio) {
+    const av = require('expo-av');
+    if (av && av.Audio) {
+      SafeAudio = av.Audio;
+    }
+  }
+} catch (e) {
+  SafeAudio = null;
+}
+
+// Safe loader for expo-file-system
+let SafeFileSystem: any = null;
+try {
+  SafeFileSystem = require('expo-file-system/legacy');
+} catch (e) {
+  try {
+    SafeFileSystem = require('expo-file-system');
+  } catch (e2) {
+    SafeFileSystem = null;
+  }
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -129,6 +155,10 @@ export default function CopilotScreen() {
   const [converting, setConverting] = useState(false);
   const [analysis, setAnalysis] = useState<any | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [recording, setRecording] = useState<any | null>(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<any>(null);
+  const audioChunksRef = useRef<any[]>([]);
   const [currency, setCurrency] = useState<'EGP' | 'USD'>('EGP');
 
   // Blueprint Tabs: strategy | platforms | architecture | tech | budget | roadmap
@@ -235,16 +265,19 @@ export default function CopilotScreen() {
     }
   }, [isListening, micPulseAnim]);
 
-  // Voice recording toggle
-  const toggleVoiceRecording = () => {
+  // Voice recording toggle (Web Speech API / Native SafeAudio Recording + AI Transcription)
+  const toggleVoiceRecording = async () => {
     haptics.medium();
 
+    // -------------------------------------------------------------
+    // 1. WEB FLOW: Web Speech API (Live real-time speech-to-text)
+    // -------------------------------------------------------------
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         if (isListening) {
           if (recognitionRef.current) {
-            recognitionRef.current.stop();
+            try { recognitionRef.current.stop(); } catch (e) {}
           }
           setIsListening(false);
           return;
@@ -252,12 +285,17 @@ export default function CopilotScreen() {
 
         try {
           const recognition = new SpeechRecognition();
-          recognition.lang = 'ar-EG';
+          recognition.lang = isRTL ? 'ar-EG' : 'en-US';
           recognition.continuous = false;
           recognition.interimResults = true;
 
           recognition.onstart = () => {
             setIsListening(true);
+            showToast({
+              type: 'info',
+              title: isRTL ? 'المستشار يستمع إليك...' : 'Listening...',
+              message: isRTL ? 'تحدث الآن، وسيتم كتابة كلامك تلقائياً.' : 'Speak now, your words will appear live.',
+            });
           };
 
           recognition.onresult = (event: any) => {
@@ -270,7 +308,10 @@ export default function CopilotScreen() {
           };
 
           recognition.onerror = () => setIsListening(false);
-          recognition.onend = () => setIsListening(false);
+          recognition.onend = () => {
+            setIsListening(false);
+            haptics.success();
+          };
 
           recognitionRef.current = recognition;
           recognition.start();
@@ -279,24 +320,211 @@ export default function CopilotScreen() {
           console.error('Speech recognition error', e);
         }
       }
+
+      // If Web Speech API is not supported on this browser -> use MediaRecorder to record and transcribe via AI
+      if (isListening && mediaRecorderRef.current) {
+        setIsListening(false);
+        setIsTranscribing(true);
+        try {
+          const recorder = mediaRecorderRef.current;
+          if (recorder.stream) {
+            recorder.stream.getTracks().forEach((t: any) => t.stop());
+          }
+          const stopPromise = new Promise<void>((resolve) => {
+            recorder.onstop = () => resolve();
+            if (recorder.state !== 'inactive') recorder.stop();
+            else resolve();
+          });
+          await stopPromise;
+
+          if (audioChunksRef.current.length > 0) {
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+              const base64data = reader.result as string;
+              const res = await api.transcribeAudio(base64data, 'audio/webm', isRTL ? 'ar' : 'en');
+              setIsTranscribing(false);
+              if (res.success && res.text) {
+                haptics.success();
+                setChatInput(res.text);
+                showToast({
+                  type: 'success',
+                  title: isRTL ? 'تم تحويل الصوت بنجاح' : 'Voice Transcribed',
+                  message: res.text,
+                });
+              } else {
+                showToast({
+                  type: 'warning',
+                  title: isRTL ? 'تنبيه' : 'Notice',
+                  message: res.message || (isRTL ? 'تعذر التعرف على الكلمات، يرجى المحاولة ثانية.' : 'Could not transcribe speech.'),
+                });
+              }
+            };
+          } else {
+            setIsTranscribing(false);
+          }
+        } catch (err) {
+          setIsTranscribing(false);
+        }
+        return;
+      }
+
+      // Start Web MediaRecorder
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunksRef.current = [];
+        const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        recorder.ondataavailable = (e: any) => {
+          if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+        recorder.start(100);
+        mediaRecorderRef.current = recorder;
+        setIsListening(true);
+        showToast({
+          type: 'info',
+          title: isRTL ? 'جاري التسجيل...' : 'Recording...',
+          message: isRTL ? 'تحدث الآن، واضغط على المايك مرة أخرى عند الانتهاء.' : 'Speak now, tap mic again when done.',
+        });
+        return;
+      } catch (err) {
+        showToast({
+          type: 'error',
+          title: isRTL ? 'إذن الميكروفون' : 'Microphone Permission',
+          message: isRTL ? 'يرجى إعطاء صلاحية الميكروفون في المتصفح.' : 'Please allow microphone access.',
+        });
+        return;
+      }
     }
 
-    // Fallback simulation
+    // -------------------------------------------------------------
+    // 2. MOBILE FLOW (Android & iOS in Expo Go & Standalone)
+    // -------------------------------------------------------------
     if (isListening) {
+      // STOP recording and transcribe!
       setIsListening(false);
-    } else {
-      setIsListening(true);
-      setTimeout(() => {
-        setIsListening(false);
-        haptics.success();
-        const demoIdea = 'عندي فكرة تطبيق زي أوبر لتوصيل الأدوية من الصيدليات مع كباتن وتتبع GPS ودفع إلكتروني';
-        setChatInput(demoIdea);
+      if (!recording) return;
+
+      setIsTranscribing(true);
+      try {
+        await recording.stopAndUnloadAsync();
+        const uri = recording.getURI();
+        setRecording(null);
+
+        if (!uri) {
+          setIsTranscribing(false);
+          return;
+        }
+
+        // Read audio as base64
+        let base64Audio = '';
+        if (SafeFileSystem && SafeFileSystem.readAsStringAsync) {
+          base64Audio = await SafeFileSystem.readAsStringAsync(uri, {
+            encoding: SafeFileSystem.EncodingType?.Base64 || 'base64',
+          });
+        } else {
+          const response = await fetch(uri);
+          const blob = await response.blob();
+          base64Audio = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+              resolve((reader.result as string).replace(/^data:audio\/[a-z0-9]+;base64,/, ''));
+            };
+          });
+        }
+
+        if (!base64Audio) {
+          setIsTranscribing(false);
+          showToast({
+            type: 'error',
+            title: isRTL ? 'خطأ' : 'Error',
+            message: isRTL ? 'تعذر قراءة التسجيل الصوتي.' : 'Failed to read audio file.',
+          });
+          return;
+        }
+
         showToast({
-          type: 'success',
-          title: isRTL ? 'تم التقاط الصوت بنجاح' : 'Voice Captured',
-          message: isRTL ? 'تم تسجيل فكرتك وتحويلها لنص. اضغط إرسال لمناقشتها مع مستشار Apex.' : 'Voice transcribed! Press Send to discuss with AI Architect.',
+          type: 'info',
+          title: isRTL ? 'جاري تحويل صوتك...' : 'Transcribing...',
+          message: isRTL ? 'يقوم الذكاء الاصطناعي الآن بتحويل كلماتك إلى نص...' : 'AI is transcribing your voice...',
         });
-      }, 2500);
+
+        const res = await api.transcribeAudio(base64Audio, 'audio/m4a', isRTL ? 'ar' : 'en');
+        setIsTranscribing(false);
+
+        if (res.success && res.text) {
+          await haptics.success();
+          setChatInput(res.text);
+          showToast({
+            type: 'success',
+            title: isRTL ? 'تم تحويل صوتك بنجاح' : 'Voice Transcribed',
+            message: res.text,
+          });
+        } else {
+          await haptics.error();
+          showToast({
+            type: 'warning',
+            title: isRTL ? 'تنبيه' : 'Notice',
+            message: res.message || (isRTL ? 'لم نتمكن من التقاط صوت واضح، يرجى التحدث بصوت أعلى.' : 'Could not transcribe speech.'),
+          });
+        }
+      } catch (err: any) {
+        setIsTranscribing(false);
+        console.error('Stop and transcribe error:', err);
+        showToast({
+          type: 'error',
+          title: isRTL ? 'خطأ في التحويل' : 'Error',
+          message: isRTL ? 'حدث خطأ أثناء معالجة الصوت.' : 'Failed to process voice.',
+        });
+      }
+    } else {
+      // START recording on mobile!
+      if (!SafeAudio) {
+        showToast({
+          type: 'warning',
+          title: isRTL ? 'تسجيل الصوت' : 'Audio Recording',
+          message: isRTL ? 'مكتبة الصوت غير متوفرة في هذه البيئة.' : 'Audio module unavailable.',
+        });
+        return;
+      }
+
+      try {
+        const perm = await SafeAudio.requestPermissionsAsync();
+        if (perm.status !== 'granted') {
+          showToast({
+            type: 'warning',
+            title: isRTL ? 'إذن الميكروفون' : 'Permission Required',
+            message: isRTL ? 'يرجى إعطاء صلاحية الميكروفون للتحدث مع المستشار.' : 'Microphone permission is required.',
+          });
+          return;
+        }
+
+        await SafeAudio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+
+        const { recording: newRecording } = await SafeAudio.Recording.createAsync(
+          SafeAudio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+
+        setRecording(newRecording);
+        setIsListening(true);
+
+        showToast({
+          type: 'info',
+          title: isRTL ? 'المستشار يستمع إليك...' : 'Listening...',
+          message: isRTL ? 'تحدث الآن بفكرتك... واضغط المايك مرة أخرى عند الانتهاء.' : 'Speak your idea now, tap mic when done.',
+        });
+      } catch (err: any) {
+        console.error('Failed to start recording:', err);
+        showToast({
+          type: 'error',
+          title: isRTL ? 'خطأ' : 'Error',
+          message: isRTL ? 'فشل بدء تسجيل الصوت. تأكد من إعطاء صلاحيات المايك.' : 'Failed to start recording.',
+        });
+      }
     }
   };
 
@@ -937,22 +1165,28 @@ export default function CopilotScreen() {
                 {/* Voice Input Button */}
                 <TouchableOpacity
                   activeOpacity={0.8}
+                  disabled={isTranscribing}
                   onPress={toggleVoiceRecording}
                   style={[
                     styles.chatMicBtn,
                     {
                       backgroundColor: isListening ? '#EF4444' : theme.btnBg,
                       borderColor: isListening ? '#EF4444' : theme.border,
+                      opacity: isTranscribing ? 0.7 : 1,
                     }
                   ]}
                 >
-                  <Animated.View style={{ transform: [{ scale: micPulseAnim }] }}>
-                    <Ionicons
-                      name={isListening ? 'mic' : 'mic-outline'}
-                      size={20}
-                      color={isListening ? '#FFF' : theme.primary}
-                    />
-                  </Animated.View>
+                  {isTranscribing ? (
+                    <ActivityIndicator size="small" color={theme.primary} />
+                  ) : (
+                    <Animated.View style={{ transform: [{ scale: micPulseAnim }] }}>
+                      <Ionicons
+                        name={isListening ? 'stop' : 'mic-outline'}
+                        size={20}
+                        color={isListening ? '#FFF' : theme.primary}
+                      />
+                    </Animated.View>
+                  )}
                 </TouchableOpacity>
 
                 {/* Text Input */}

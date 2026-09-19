@@ -1092,6 +1092,105 @@ async function analyzeProjectPrompt(promptOrMessages = '', options = {}) {
   return deepSemanticAnalysis(prompt, lang);
 }
 
+// -------------------------------------------------------------
+// 5. Audio Transcription (Gemini 3.5 Transcribe / Gemini Flash)
+// -------------------------------------------------------------
+async function transcribeAudio(audioBufferOrBase64, mimeType = 'audio/m4a', language = 'ar') {
+  const config = getAiConfig();
+  const apiKey = config.geminiApiKey || process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return {
+      success: false,
+      message: language === 'ar' ? 'مفتاح الذكاء الاصطناعي غير متوفر للتحويل الصوتي' : 'AI API key not configured for transcription'
+    };
+  }
+
+  try {
+    let base64Data = '';
+    if (Buffer.isBuffer(audioBufferOrBase64)) {
+      base64Data = audioBufferOrBase64.toString('base64');
+    } else if (typeof audioBufferOrBase64 === 'string') {
+      base64Data = audioBufferOrBase64.replace(/^data:audio\/[a-z0-9]+;base64,/, '').trim();
+    }
+
+    if (!base64Data) {
+      return {
+        success: false,
+        message: language === 'ar' ? 'لم يتم استلام بيانات صوتية صالحة' : 'No valid audio data received'
+      };
+    }
+
+    const cleanMime = (mimeType || 'audio/m4a').split(';')[0].trim();
+    const modelsToTry = ['gemini-3.5-transcribe', 'gemini-flash-latest', 'gemini-3.6-flash'];
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    text: `Transcribe this audio file with extreme accuracy.
+If the speech is in Arabic (Egyptian dialect, Gulf, or Modern Standard Arabic), transcribe in accurate Arabic text.
+If the speech is in English, transcribe in English.
+IMPORTANT: Return ONLY the exact transcribed spoken words. Do not add any introductory or concluding remarks, explanations, quotes, or markdown.`
+                  },
+                  {
+                    inlineData: {
+                      mimeType: cleanMime,
+                      data: base64Data
+                    }
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.1,
+              maxOutputTokens: 1024
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          lastError = new Error(`HTTP ${response.status}: ${errText.slice(0, 200)}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const candidate = data?.candidates?.[0]?.content?.parts?.[0];
+        const text = candidate?.audioTranscription?.text || candidate?.text;
+        
+        if (text && text.trim()) {
+          return {
+            success: true,
+            text: text.trim(),
+            model
+          };
+        }
+      } catch (err) {
+        lastError = err;
+        console.warn(`Transcription attempt with ${model} failed:`, err.message);
+      }
+    }
+
+    throw lastError || new Error('All transcription models failed');
+  } catch (err) {
+    console.error('Audio transcription error:', err);
+    return {
+      success: false,
+      message: language === 'ar' ? 'تعذر تحويل الصوت إلى نص، يرجى المحاولة ثانية.' : 'Could not transcribe audio: ' + err.message
+    };
+  }
+}
+
 module.exports = {
   getAiConfig,
   saveAiConfig,
@@ -1102,5 +1201,6 @@ module.exports = {
   deepSemanticChatConsultant,
   chatConsultant,
   deepSemanticAnalysis,
-  analyzeProjectPrompt
+  analyzeProjectPrompt,
+  transcribeAudio
 };

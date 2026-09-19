@@ -564,6 +564,19 @@ export const api = {
     }
   },
 
+  async transcribeAudio(audioBase64: string, mimeType: string = 'audio/m4a', language: string = 'ar') {
+    try {
+      const response = await fetch(`${API_URL}/ai/transcribe-voice`, {
+        method: 'POST',
+        headers: await getAuthHeaders(),
+        body: JSON.stringify({ audioBase64, mimeType, language })
+      });
+      return await response.json();
+    } catch (e) {
+      return { success: false, message: 'تعذر تحويل الصوت إلى نص، يرجى التحقق من الشبكة.' };
+    }
+  },
+
   async getToken() {
     return await getSecureToken();
   }
