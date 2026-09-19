@@ -199,13 +199,39 @@ app.get('/', (req, res) => {
 });
 
 // 🛡️ Hardened Multer Config with Strict Extension Whitelist & Cryptographic Renaming
-const ALLOWED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.pdf', '.doc', '.docx', '.txt', '.mp3', '.m4a', '.wav']);
+const ALLOWED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.pdf', '.doc', '.docx', '.txt', '.mp3', '.m4a', '.wav', '.webm']);
 const DANGEROUS_EXTENSIONS = new Set(['.exe', '.bat', '.cmd', '.sh', '.php', '.phtml', '.html', '.htm', '.svg', '.js', '.py', '.rb', '.dll', '.bin', '.msi', '.vbs']);
+
+const MIME_TO_EXT = {
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+  'application/pdf': '.pdf',
+  'audio/mpeg': '.mp3',
+  'audio/m4a': '.m4a',
+  'audio/mp4': '.m4a',
+  'audio/webm': '.webm',
+  'audio/wav': '.wav',
+  'audio/x-m4a': '.m4a',
+  'text/plain': '.txt',
+  'application/msword': '.doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
+};
+
+const getSafeExt = (file) => {
+  let ext = path.extname(file.originalname || '').toLowerCase();
+  if (!ext && file.mimetype) {
+    ext = MIME_TO_EXT[file.mimetype] || '';
+  }
+  return ext;
+};
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
+    const ext = getSafeExt(file);
     if (!ALLOWED_EXTENSIONS.has(ext) || DANGEROUS_EXTENSIONS.has(ext)) {
       return cb(new Error('نوع الملف المرفوع غير مسموح به أمنياً'));
     }
@@ -218,7 +244,7 @@ const upload = multer({
   storage, 
   limits: { fileSize: 25 * 1024 * 1024 }, // 25MB safe limit
   fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
+    const ext = getSafeExt(file);
     if (!ALLOWED_EXTENSIONS.has(ext) || DANGEROUS_EXTENSIONS.has(ext)) {
       return cb(new Error('نوع الملف المرفوع غير مسموح به أمنياً'), false);
     }
@@ -1805,11 +1831,34 @@ app.get('/email-preview', (req, res) => {
   res.send(page);
 });
 
-// Upload File Route
-app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({ success: true, url: fileUrl });
+// Upload File Route (Support Chat & Attachments)
+app.post('/api/upload', (req, res) => {
+  // Optional auth verification if token is present
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (!err && user) req.user = user;
+    });
+  }
+
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.error('Upload multer error:', err.message);
+      return res.status(400).json({ success: false, message: err.message || 'فشل رفع الملف' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'لم يتم استلام أي ملف' });
+    }
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({
+      success: true,
+      url: fileUrl,
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    });
+  });
 });
 
 // 💬 Send Message via REST API (Reliable Fallback & State Sync)

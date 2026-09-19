@@ -322,29 +322,37 @@ export default function ChatScreen() {
       const asset = result.assets[0];
       const filename = (asset as any).fileName || (asset as any).name || (asset.uri.split('/').pop()) || 'attachment.jpg';
       const type = (asset as any).mimeType || (asset as any).type || 'image/jpeg';
-      const cleanUri = Platform.OS === 'android' ? asset.uri : asset.uri.replace('file://', '');
       
-      let targetUrl = asset.uri;
       try {
-        const uploadRes = await api.uploadFile(cleanUri, filename, type);
+        const uploadRes = await api.uploadFile(asset.uri, filename, type);
         if (uploadRes && uploadRes.success && uploadRes.url) {
-          targetUrl = uploadRes.url;
+          const targetUrl = uploadRes.url;
+          await sendMessagePayload({
+            text: '',
+            attachment: {
+              uri: targetUrl,
+              name: filename,
+              type: 'image'
+            },
+            attachmentUrl: targetUrl,
+            type: 'image'
+          });
+        } else {
+          showToast({
+            type: 'error',
+            title: isRTL ? 'فشل الرفع' : 'Upload Failed',
+            message: uploadRes?.message || (isRTL ? 'فشل رفع الصورة إلى السيرفر، يرجى المحاولة ثانية.' : 'Failed to upload image to server.')
+          });
         }
-      } catch (e) {
-        targetUrl = asset.uri;
+      } catch (e: any) {
+        showToast({
+          type: 'error',
+          title: isRTL ? 'خطأ' : 'Error',
+          message: isRTL ? 'تعذر رفع الصورة، تأكد من اتصال الإنترنت.' : 'Could not upload image, check connection.'
+        });
+      } finally {
+        setUploading(false);
       }
-
-      await sendMessagePayload({
-        text: '',
-        attachment: {
-          uri: targetUrl,
-          name: filename,
-          type: 'image'
-        },
-        attachmentUrl: targetUrl,
-        type: 'image'
-      });
-      setUploading(false);
     }
   };
 
@@ -355,31 +363,39 @@ export default function ChatScreen() {
     if (!result.canceled && result.assets && result.assets[0]) {
       setUploading(true);
       const asset = result.assets[0];
-      const filename = asset.name || (asset as any).fileName || 'document.file';
-      const type = asset.mimeType || (asset as any).type || 'application/octet-stream';
-      const cleanUri = Platform.OS === 'android' ? asset.uri : asset.uri.replace('file://', '');
+      const filename = asset.name || (asset as any).fileName || 'document.pdf';
+      const type = asset.mimeType || (asset as any).type || 'application/pdf';
       
-      let targetUrl = asset.uri;
       try {
-        const uploadRes = await api.uploadFile(cleanUri, filename, type);
+        const uploadRes = await api.uploadFile(asset.uri, filename, type);
         if (uploadRes && uploadRes.success && uploadRes.url) {
-          targetUrl = uploadRes.url;
+          const targetUrl = uploadRes.url;
+          await sendMessagePayload({
+            text: filename,
+            attachment: {
+              uri: targetUrl,
+              name: filename,
+              type: 'file'
+            },
+            attachmentUrl: targetUrl,
+            type: 'document'
+          });
+        } else {
+          showToast({
+            type: 'error',
+            title: isRTL ? 'فشل الرفع' : 'Upload Failed',
+            message: uploadRes?.message || (isRTL ? 'فشل رفع المستند إلى السيرفر، يرجى المحاولة ثانية.' : 'Failed to upload document to server.')
+          });
         }
-      } catch (e) {
-        targetUrl = asset.uri;
+      } catch (e: any) {
+        showToast({
+          type: 'error',
+          title: isRTL ? 'خطأ' : 'Error',
+          message: isRTL ? 'تعذر رفع المستند، تأكد من اتصال الإنترنت.' : 'Could not upload document.'
+        });
+      } finally {
+        setUploading(false);
       }
-
-      await sendMessagePayload({
-        text: filename,
-        attachment: {
-          uri: targetUrl,
-          name: filename,
-          type: 'file'
-        },
-        attachmentUrl: targetUrl,
-        type: 'document'
-      });
-      setUploading(false);
     }
   };
 
@@ -396,29 +412,37 @@ export default function ChatScreen() {
         const asset = result.assets[0];
         const filename = asset.name || (asset as any).fileName || `voice_${Date.now()}.m4a`;
         const type = asset.mimeType || (asset as any).type || 'audio/m4a';
-        const cleanUri = Platform.OS === 'android' ? asset.uri : asset.uri.replace('file://', '');
 
-        let targetUrl = asset.uri;
         try {
-          const uploadRes = await api.uploadFile(cleanUri, filename, type);
+          const uploadRes = await api.uploadFile(asset.uri, filename, type);
           if (uploadRes && uploadRes.success && uploadRes.url) {
-            targetUrl = uploadRes.url;
+            const targetUrl = uploadRes.url;
+            await sendMessagePayload({
+              text: '',
+              attachment: {
+                uri: targetUrl,
+                name: filename,
+                type: 'audio'
+              },
+              attachmentUrl: targetUrl,
+              type: 'audio'
+            });
+          } else {
+            showToast({
+              type: 'error',
+              title: isRTL ? 'فشل الرفع' : 'Upload Failed',
+              message: uploadRes?.message || (isRTL ? 'فشل رفع المقطع الصوتي.' : 'Failed to upload audio.')
+            });
           }
-        } catch (err) {
-          targetUrl = asset.uri;
+        } catch (err: any) {
+          showToast({
+            type: 'error',
+            title: isRTL ? 'خطأ' : 'Error',
+            message: isRTL ? 'تعذر رفع المقطع الصوتي.' : 'Could not upload audio.'
+          });
+        } finally {
+          setUploading(false);
         }
-
-        await sendMessagePayload({
-          text: '',
-          attachment: {
-            uri: targetUrl,
-            name: filename,
-            type: 'audio'
-          },
-          attachmentUrl: targetUrl,
-          type: 'audio'
-        });
-        setUploading(false);
       }
     } catch (e) {
       setUploading(false);
@@ -577,26 +601,34 @@ export default function ChatScreen() {
         const filename = `voice_${Date.now()}.${extension}`;
         const blobUrl = URL.createObjectURL(audioBlob);
 
-        let targetUrl = blobUrl;
         try {
           const uploadRes = await api.uploadFile(blobUrl, filename, mimeType);
           if (uploadRes && uploadRes.success && uploadRes.url) {
-            targetUrl = uploadRes.url;
+            const targetUrl = uploadRes.url;
+            await sendMessagePayload({
+              text: '',
+              attachment: {
+                uri: targetUrl,
+                name: filename,
+                type: 'audio'
+              },
+              attachmentUrl: targetUrl,
+              type: 'audio'
+            });
+          } else {
+            showToast({
+              type: 'error',
+              title: isRTL ? 'فشل الرفع' : 'Upload Failed',
+              message: isRTL ? 'فشل رفع التسجيل الصوتي إلى السيرفر.' : 'Failed to upload voice note.'
+            });
           }
         } catch (err) {
-          targetUrl = blobUrl;
+          showToast({
+            type: 'error',
+            title: isRTL ? 'خطأ' : 'Error',
+            message: isRTL ? 'تعذر رفع التسجيل الصوتي.' : 'Could not upload voice note.'
+          });
         }
-
-        await sendMessagePayload({
-          text: '',
-          attachment: {
-            uri: targetUrl,
-            name: filename,
-            type: 'audio'
-          },
-          attachmentUrl: targetUrl,
-          type: 'audio'
-        });
       }
       mediaRecorderRef.current = null;
       audioChunksRef.current = [];
@@ -607,27 +639,34 @@ export default function ChatScreen() {
 
       if (uri) {
         const filename = uri.split('/').pop() || 'audio.m4a';
-        const cleanUri = Platform.OS === 'android' ? uri : uri.replace('file://', '');
-        let targetUrl = uri;
         try {
-          const uploadRes = await api.uploadFile(cleanUri, filename, 'audio/m4a');
+          const uploadRes = await api.uploadFile(uri, filename, 'audio/m4a');
           if (uploadRes && uploadRes.success && uploadRes.url) {
-            targetUrl = uploadRes.url;
+            const targetUrl = uploadRes.url;
+            await sendMessagePayload({
+              text: '',
+              attachment: {
+                uri: targetUrl,
+                name: filename,
+                type: 'audio'
+              },
+              attachmentUrl: targetUrl,
+              type: 'audio'
+            });
+          } else {
+            showToast({
+              type: 'error',
+              title: isRTL ? 'فشل الرفع' : 'Upload Failed',
+              message: isRTL ? 'فشل رفع التسجيل الصوتي إلى السيرفر.' : 'Failed to upload voice note.'
+            });
           }
         } catch (err) {
-          targetUrl = uri;
+          showToast({
+            type: 'error',
+            title: isRTL ? 'خطأ' : 'Error',
+            message: isRTL ? 'تعذر رفع التسجيل الصوتي.' : 'Could not upload voice note.'
+          });
         }
-
-        await sendMessagePayload({
-          text: '',
-          attachment: {
-            uri: targetUrl,
-            name: filename,
-            type: 'audio'
-          },
-          attachmentUrl: targetUrl,
-          type: 'audio'
-        });
       }
     }
 
@@ -710,7 +749,16 @@ export default function ChatScreen() {
   const handleOpenDocument = async (attachmentUri: string, attachmentName?: string) => {
     if (!attachmentUri) return;
     const fullUri = getMediaUri(attachmentUri);
+    const isLocalPhonePath = fullUri.startsWith('file:///data/') || fullUri.startsWith('file:///var/mobile/') || fullUri.startsWith('content://');
+
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (isLocalPhonePath) {
+        Alert.alert(
+          isRTL ? 'تنبيه' : 'Notice',
+          isRTL ? 'هذا الملف تم تسجيله كمسار محلي على هاتف العميل من جلسة قديمة ولم يكن قد رُفع إلى الخادم السحابي. الملفات الجديدة المرفوعة ستفتح وتتحمل بشكل مباشر.' : 'This file was saved as a local phone path in a previous session and not on the server.'
+        );
+        return;
+      }
       window.open(fullUri, '_blank');
       return;
     }
@@ -724,6 +772,16 @@ export default function ChatScreen() {
       }
       const isLocal = fullUri.startsWith('file://') || fullUri.startsWith('content://');
       if (isLocal) {
+        if (SafeFileSystem?.getInfoAsync) {
+          const info = await SafeFileSystem.getInfoAsync(fullUri);
+          if (!info.exists) {
+            Alert.alert(
+              isRTL ? 'الملف غير متوفر' : 'File Unavailable',
+              isRTL ? 'هذا الملف تم حذفه من الذاكرة المؤقتة للهاتف لأنه كان مسجلاً كمسار محلي قديم. الملفات الجديدة المرفوعة تُحفظ في السيرفر وتفتح دائماً.' : 'This file was deleted from the device cache.'
+            );
+            return;
+          }
+        }
         await SafeSharing.shareAsync(fullUri);
       } else {
         showToast({
@@ -817,19 +875,37 @@ export default function ChatScreen() {
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => {
+              const fullUri = getMediaUri(attachmentUri);
+              const isLocalPhonePath = fullUri.startsWith('file:///data/') || fullUri.startsWith('file:///var/mobile/') || fullUri.startsWith('content://');
+              if (Platform.OS === 'web' && isLocalPhonePath) {
+                Alert.alert(
+                  isRTL ? 'تنبيه' : 'Notice',
+                  isRTL ? 'هذه الصورة مسجلة كمسار محلي على هاتف العميل من جلسة سابقة ولم تكن قد رُفعت إلى الخادم السحابي. الصور الجديدة المرفوعة تُعرض فورياً وتفتح بحجمها الكامل.' : 'This image was saved as a local phone path in a previous session.'
+                );
+                return;
+              }
               setSelectedImage({
-                url: getMediaUri(attachmentUri),
+                url: fullUri,
                 filename: attachmentName || 'image.jpg',
               });
               setZoomLevel(1);
             }}
             style={[styles.imageCard, { borderColor: isMine ? 'rgba(11,19,43,0.2)' : theme.border }]}
           >
-            <Image
-              source={{ uri: getMediaUri(attachmentUri) }}
-              style={styles.chatImage}
-              resizeMode="cover"
-            />
+            {Platform.OS === 'web' && (attachmentUri.startsWith('file:///data/') || attachmentUri.startsWith('content://')) ? (
+              <View style={{ height: 160, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.btnBg, padding: 16 }}>
+                <Ionicons name="image-outline" size={36} color={theme.textMuted} />
+                <Text style={{ color: theme.textMuted, fontSize: 12, textAlign: 'center', marginTop: 8 }}>
+                  {isRTL ? 'صورة محلية من هاتف العميل (جلسة سابقة)' : 'Local phone image (previous session)'}
+                </Text>
+              </View>
+            ) : (
+              <Image
+                source={{ uri: getMediaUri(attachmentUri) }}
+                style={styles.chatImage}
+                resizeMode="cover"
+              />
+            )}
             <View style={[styles.imageZoomBadge, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               <Ionicons name="expand" size={12} color="#FFF" />
               <Text style={styles.imageZoomBadgeText}>

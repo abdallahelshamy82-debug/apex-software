@@ -295,10 +295,44 @@ export const api = {
 
   async uploadFile(uri: string, filename: string, type: string) {
     try {
-      const formData = new FormData();
-      const cleanName = filename || 'attachment.jpg';
+      // Ensure ASCII safe filename for multipart headers (prevents OkHttp crash on Arabic filenames)
+      const rawExt = filename && filename.includes('.') ? `.${filename.split('.').pop()}` : '';
+      const safeExt = rawExt ? rawExt.toLowerCase() : (type.includes('pdf') ? '.pdf' : type.includes('audio') ? '.m4a' : '.jpg');
+      const cleanName = `attachment_${Date.now()}${safeExt}`;
       const cleanType = type || 'image/jpeg';
-      
+      const token = await getSecureToken();
+
+      // 1. Native Mobile (Android & iOS) via expo-file-system uploadAsync
+      if (Platform.OS !== 'web') {
+        try {
+          let SafeFileSystem: any = null;
+          try { SafeFileSystem = require('expo-file-system/legacy'); } catch (e) {
+            try { SafeFileSystem = require('expo-file-system'); } catch (e2) {}
+          }
+          if (SafeFileSystem && SafeFileSystem.uploadAsync) {
+            const uploadRes = await SafeFileSystem.uploadAsync(`${API_URL}/upload`, uri, {
+              httpMethod: 'POST',
+              uploadType: SafeFileSystem.FileSystemUploadType?.MULTIPART || 1,
+              fieldName: 'file',
+              headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+              },
+              parameters: {
+                filename: cleanName
+              }
+            });
+            if (uploadRes.status >= 200 && uploadRes.status < 300) {
+              return JSON.parse(uploadRes.body);
+            }
+            console.warn('uploadAsync returned status:', uploadRes.status, uploadRes.body);
+          }
+        } catch (fsErr) {
+          console.warn('Native uploadAsync failed, falling back to FormData:', fsErr);
+        }
+      }
+
+      // 2. Web & Fallback via FormData
+      const formData = new FormData();
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         try {
           const response = await fetch(uri);
@@ -315,8 +349,7 @@ export const api = {
           type: cleanType,
         } as any);
       }
-      
-      const token = await getSecureToken();
+
       const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -328,11 +361,12 @@ export const api = {
         body: formData,
       });
       if (!response.ok) {
-        return { success: false, status: response.status };
+        const errJson = await response.json().catch(() => ({}));
+        return { success: false, status: response.status, message: errJson.message || 'Server rejected upload' };
       }
       return await response.json();
-    } catch (e) {
-      return { success: false, error: e };
+    } catch (e: any) {
+      return { success: false, error: e, message: e?.message || 'Network error during upload' };
     }
   },
 
