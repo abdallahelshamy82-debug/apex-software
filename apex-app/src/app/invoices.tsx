@@ -95,9 +95,9 @@ export default function InvoicesScreen() {
     setProcessing(true);
     try {
       let uploadedUrl = receiptImage;
-      if (receiptImage.startsWith('file:') || receiptImage.startsWith('blob:')) {
+      if (receiptImage.startsWith('file:') || receiptImage.startsWith('blob:') || receiptImage.startsWith('content:') || receiptImage.startsWith('data:')) {
         const upRes = await api.uploadFile(receiptImage, 'receipt.jpg', 'image/jpeg');
-        if (upRes.success) {
+        if (upRes && upRes.success && upRes.url) {
           uploadedUrl = `${BASE_URL}${upRes.url}`;
         }
       }

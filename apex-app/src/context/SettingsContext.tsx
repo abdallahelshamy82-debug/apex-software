@@ -1,16 +1,20 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ApexLoader from '../components/ApexLoader';
 
-const palettes = {
-  light: { bg: '#F8FAFC', text: '#0F172A', textMuted: '#64748B', card: '#FFFFFF', border: 'rgba(0,0,0,0.08)', btnBg: 'rgba(0,0,0,0.05)', primary: '#06B6D4' },
-  dark: { bg: '#0F172A', text: '#F8FAFC', textMuted: '#94A3B8', card: '#1E293B', border: 'rgba(255,255,255,0.08)', btnBg: 'rgba(255,255,255,0.1)', primary: '#06B6D4' },
-  black: { bg: '#000000', text: '#FFFFFF', textMuted: '#A1A1AA', card: '#18181B', border: 'rgba(255,255,255,0.1)', btnBg: 'rgba(255,255,255,0.1)', primary: '#06B6D4' },
-  blue: { bg: '#0A192F', text: '#CCD6F6', textMuted: '#8892B0', card: '#112240', border: 'rgba(100,255,218,0.1)', btnBg: 'rgba(100,255,218,0.1)', primary: '#64FFDA' },
-  purple: { bg: '#2E1065', text: '#F3E8FF', textMuted: '#C084FC', card: '#3B0764', border: 'rgba(216,180,254,0.15)', btnBg: 'rgba(216,180,254,0.1)', primary: '#E879F9' },
-  green: { bg: '#064E3B', text: '#ECFDF5', textMuted: '#6EE7B7', card: '#065F46', border: 'rgba(110,231,183,0.15)', btnBg: 'rgba(110,231,183,0.1)', primary: '#34D399' },
-  rose: { bg: '#4C0519', text: '#FFE4E6', textMuted: '#FDA4AF', card: '#701A36', border: 'rgba(253,164,175,0.15)', btnBg: 'rgba(253,164,175,0.1)', primary: '#FB7185' },
+const awwwardsBase = {
+  bg: '#09090B',
+  card: '#111113',
+  text: '#FFFFFF',
+  textMuted: '#A1A1AA',
+  border: 'rgba(255,255,255,0.05)',
+  btnBg: 'rgba(255,255,255,0.05)',
+};
+
+const accentOptions = {
+  neonGreen: '#B4F82C',
+  cyberBlue: '#00F0FF',
 };
 
 const translations = {
@@ -59,67 +63,48 @@ const translations = {
   fr: {
     appName: 'APEX', appAccent: 'LOGICIEL', login: 'Connexion Client', chooseTheme: 'Choisir le thème:', letsBuild: 'Construisons ensemble',
     heroTitle1: 'Transformer vos idées en', heroTitle2: 'Applications Modernes', heroSub: 'Nous créons des sites web, des applications mobiles et des solutions numériques avec les technologies modernes.',
-    startProject: 'Démarrer votre projet', costEstimator: 'Estimateur de coûts', coreOfferings: 'Nos services',
-    webDev: 'Développement Web', webDevDesc: 'Sites web modernes, réactifs avec un code propre.',
-    mobileApp: 'Applications Mobiles', mobileAppDesc: 'Applications multiplateformes pour iOS et Android.',
-    customSys: 'Systèmes sur mesure', customSysDesc: 'Bases de données évolutives et intégrations IA.',
+    startProject: 'Démarrer le Projet', costEstimator: 'Estimateur de Coûts', coreOfferings: 'Nos Services',
+    webDev: 'Développement Web', webDevDesc: 'Sites web modernes et réactifs avec un code propre.',
+    mobileApp: 'Applications Mobiles', mobileAppDesc: 'Applications multiplateformes iOS & Android avec React Native.',
+    customSys: 'Systèmes Personnalisés', customSysDesc: 'Bases de données évolutives et intégration IA.',
     settings: 'Paramètres', language: 'Langue', back: '← Retour', choosePlatform: '1. Choisir la plateforme', reqFeatures: '2. Fonctionnalités requises',
-    auth: 'Authentification', authDesc: 'Connexion, Inscription, Réseaux sociaux', payment: 'Passerelle de paiement', paymentDesc: 'Intégration Stripe, PayPal',
-    admin: 'Tableau de bord Admin', adminDesc: 'Gérer les utilisateurs et le contenu', ai: 'Intégration IA', aiDesc: 'Modèles IA personnalisés ou ChatGPT',
-    estCost: 'Coût estimé:', reqQuote: 'Demander un devis', web: 'WEB', mobile: 'MOBILE', both: 'LES DEUX',
-    email: 'Adresse e-mail', password: 'Mot de passe', loginBtn: 'Connexion', noAccount: 'Nouveau chez Apex?', signupNow: 'Créer un compte',
-    fullName: 'Nom complet', companyName: 'Nom de l\'entreprise', signupBtn: 'S\'inscrire', haveAccount: 'Déjà client?',
-    loginNow: 'Connectez-vous', welcomeBack: 'Bon retour!', createAccount: 'Rejoignez Apex Software', dashboard: 'Tableau de bord',
-    welcomeClient: 'Bienvenue, Ahmed', activeProject: 'Projet actif: Application E-Commerce', projectProgress: 'Progression du projet',
-    currentPhase: 'Phase actuelle: Conception UI/UX', recentUpdates: 'Mises à jour récentes', chatTeam: 'Discuter avec l\'équipe', viewInvoice: 'Voir les factures',
-    shareReferral: 'Parrainer un ami', update1: 'Maquettes approuvées par le client', update2: 'Schéma de base de données conçu',
-    portfolio: 'Notre Portfolio', portfolioDesc: 'Découvrez certains de nos récents produits numériques.'
-  },
-  es: {
-    appName: 'APEX', appAccent: 'SOFTWARE', login: 'Acceso Cliente', chooseTheme: 'Elegir Tema:', letsBuild: 'Construyamos Juntos',
-    heroTitle1: 'Transformando Ideas en', heroTitle2: 'Apps Modernas', heroSub: 'Construimos sitios web, aplicaciones móviles y soluciones digitales.',
-    startProject: 'Iniciar tu Proyecto', costEstimator: 'Calculadora de Costos', coreOfferings: 'Nuestros Servicios',
-    webDev: 'Desarrollo Web', webDevDesc: 'Sitios modernos y responsivos con código limpio.',
-    mobileApp: 'Aplicaciones Móviles', mobileAppDesc: 'Apps multiplataforma para iOS y Android.',
-    customSys: 'Sistemas a Medida', customSysDesc: 'Bases de datos escalables e integración de IA.',
-    settings: 'Ajustes', language: 'Idioma', back: '← Volver', choosePlatform: '1. Elegir Plataforma', reqFeatures: '2. Funciones Requeridas',
-    auth: 'Autenticación', authDesc: 'Inicio de sesión, Registro', payment: 'Pasarela de Pago', paymentDesc: 'Integración Stripe, PayPal',
-    admin: 'Panel de Admin', adminDesc: 'Gestionar usuarios y contenido', ai: 'Integración de IA', aiDesc: 'Modelos personalizados o ChatGPT',
-    estCost: 'Costo Estimado:', reqQuote: 'Solicitar Presupuesto', web: 'WEB', mobile: 'MÓVIL', both: 'AMBOS',
-    email: 'Correo Electrónico', password: 'Contraseña', loginBtn: 'Entrar al Portal', noAccount: '¿Nuevo en Apex?', signupNow: 'Crear una Cuenta',
-    fullName: 'Nombre Completo', companyName: 'Nombre de la Empresa', signupBtn: 'Registrarse', haveAccount: '¿Ya eres cliente?',
-    loginNow: 'Inicia sesión aquí', welcomeBack: '¡Bienvenido de nuevo!', createAccount: 'Únete a Apex', dashboard: 'Panel de Cliente',
-    welcomeClient: 'Bienvenido, Ahmed', activeProject: 'Proyecto Activo: App E-Commerce', projectProgress: 'Progreso del Proyecto',
-    currentPhase: 'Fase actual: Diseño UI/UX', recentUpdates: 'Actualizaciones Recientes', chatTeam: 'Chatear con el equipo', viewInvoice: 'Ver Facturas',
-    shareReferral: 'Recomendar a un Amigo', update1: 'Wireframes aprobados', update2: 'Esquema de base de datos diseñado',
-    portfolio: 'Nuestro Portafolio', portfolioDesc: 'Explora nuestros productos digitales más recientes.'
+    auth: 'Authentification', authDesc: 'Connexion, Inscription, Réseaux Sociaux', payment: 'Passerelle de paiement', paymentDesc: 'Intégration Stripe, PayPal',
+    admin: 'Tableau de bord', adminDesc: 'Gérer les utilisateurs et le contenu', ai: 'Intégration IA', aiDesc: 'Modèles IA personnalisés',
+    estCost: 'Coût Estimé:', reqQuote: 'Demander un devis', web: 'WEB', mobile: 'MOBILE', both: 'LES DEUX',
+    email: 'Adresse Email', password: 'Mot de passe', loginBtn: 'Se connecter au portail', noAccount: 'Nouveau chez Apex?', signupNow: 'Créer un compte',
+    fullName: 'Nom Complet', companyName: 'Nom de l\'entreprise', signupBtn: 'S\'inscrire', haveAccount: 'Déjà client?',
+    loginNow: 'Connectez-vous', welcomeBack: 'Bon retour!', createAccount: 'Rejoindre Apex', dashboard: 'Tableau de bord client',
+    welcomeClient: 'Bienvenue', activeProject: 'Projet Actif', projectProgress: 'Avancement du Projet',
+    currentPhase: 'Phase Actuelle: Design UI/UX', recentUpdates: 'Dernières Mises à Jour', chatTeam: 'Discuter avec l\'équipe', viewInvoice: 'Voir les factures',
+    shareReferral: 'Parrainer un ami', update1: 'Maquettes approuvées', update2: 'Schéma de base de données conçu',
+    portfolio: 'Notre Portfolio', portfolioDesc: 'Découvrez nos récents produits numériques.',
+    adminDashboard: 'Panneau d\'Administration', leads: 'Demandes de Devis', clients: 'Clients Inscrits',
+    refresh: 'Actualiser', quotePlatform: 'Plateforme', quoteFeatures: 'Fonctionnalités', quoteCost: 'Coût Est.', noData: 'Aucune donnée.'
   }
 };
 
-export const SettingsContext = createContext<any>(null);
+const SettingsContext = createContext<any>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useColorScheme();
-  const [selectedThemeOption, setSelectedThemeOption] = useState('system');
-  const [language, setLanguage] = useState<'en' | 'ar' | 'fr' | 'es'>('ar');
+  const [language, setLanguage] = useState<'en' | 'ar' | 'fr'>('ar');
+  const [accentKey, setAccentKey] = useState<'neonGreen' | 'cyberBlue'>('neonGreen');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isAppReady, setIsAppReady] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const initApp = async () => {
       try {
-        const [userData, savedLang, savedTheme] = await Promise.all([
+        const [userData, savedLang, savedAccent] = await Promise.all([
           AsyncStorage.getItem('userData'),
           AsyncStorage.getItem('appLang'),
-          AsyncStorage.getItem('appTheme')
+          AsyncStorage.getItem('appAccent')
         ]);
         if (userData) setCurrentUser(JSON.parse(userData));
         if (savedLang) setLanguage(savedLang as any);
-        if (savedTheme) setSelectedThemeOption(savedTheme);
+        if (savedAccent) setAccentKey(savedAccent as 'neonGreen' | 'cyberBlue');
       } catch (e) {
         console.error('Failed to load settings:', e);
       } finally {
-        // Luxury 1.2s smooth startup splash so fonts, auth & assets settle cleanly
         setTimeout(() => {
           setIsAppReady(true);
         }, 1200);
@@ -129,14 +114,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     initApp();
   }, []);
 
-  const activeTheme = selectedThemeOption === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : selectedThemeOption;
-  const theme = palettes[activeTheme as keyof typeof palettes] || palettes.light;
+  const theme = {
+    ...awwwardsBase,
+    primary: accentOptions[accentKey] || '#B4F82C',
+  };
 
   const toggleTheme = () => {
-    const isDark = activeTheme === 'dark' || activeTheme === 'black' || activeTheme === 'blue' || activeTheme === 'purple';
-    const nextTheme = isDark ? 'light' : 'dark';
-    setSelectedThemeOption(nextTheme);
-    AsyncStorage.setItem('appTheme', nextTheme);
+    const nextAccent = accentKey === 'neonGreen' ? 'cyberBlue' : 'neonGreen';
+    setAccentKey(nextAccent);
+    AsyncStorage.setItem('appAccent', nextAccent);
   };
   
   const t = (key: any) => (translations as any)[language]?.[key] || (translations['en'] as any)[key] || key;
@@ -144,11 +130,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <SettingsContext.Provider value={{ 
-      theme, activeTheme, selectedThemeOption, setSelectedThemeOption, toggleTheme,
+      theme, activeTheme: 'awwwards', selectedThemeOption: accentKey, setSelectedThemeOption: setAccentKey, toggleTheme,
+      accentKey, setAccentKey, toggleAccent: toggleTheme,
       language, setLanguage, t, isRTL, currentUser, setCurrentUser,
       isAppReady
     }}>
-      <View style={{ flex: 1, direction: isRTL ? 'rtl' : 'ltr' }}>
+      <View style={{ flex: 1, direction: isRTL ? 'rtl' : 'ltr', backgroundColor: theme.bg }}>
         {!isAppReady ? (
           <ApexLoader fullScreen theme={theme} isRTL={isRTL} message={isRTL ? 'جاري تشغيل منصة أبيكس...' : 'Initializing Apex Platform...'} />
         ) : (

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { BlurView } from 'expo-blur';
+import AnimatedBackground from '../components/AnimatedBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
@@ -456,7 +458,7 @@ export default function LoginScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
+    <View style={{ flex: 1 }}><AnimatedBackground /><SafeAreaView style={[styles.safeArea]}>
       <KeyboardAwareScrollView 
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
@@ -477,8 +479,14 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Central Logo */}
+          <View style={styles.logoContainer}>
+            <Ionicons name="hardware-chip" size={48} color={theme.primary} />
+            <Text style={[styles.logoText, { color: theme.text }]}>APEX<Text style={[styles.logoAccent, { color: theme.primary }]}> DEV</Text></Text>
+          </View>
+
           {/* Form Card */}
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <BlurView intensity={40} tint="dark" style={[styles.card, { backgroundColor: 'rgba(17, 17, 19, 0.4)', borderColor: theme.border, overflow: 'hidden' }]}>
             <Text style={[styles.cardTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
               {isLogin ? t('welcomeBack') : t('createAccount')}
             </Text>
@@ -643,9 +651,9 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-          </View>
+          </BlurView>
       </KeyboardAwareScrollView>
-    </SafeAreaView>
+    </SafeAreaView></View>
   );
 }
 
@@ -660,7 +668,7 @@ const styles = StyleSheet.create({
   backBtn: { padding: 8 },
   backBtnText: { fontSize: 16, fontWeight: 'bold' },
   scrollContent: {
-    flexGrow: 1,
+    flexGrow: 1, paddingBottom: 100,
     justifyContent: 'center',
     padding: 20,
     maxWidth: 500,

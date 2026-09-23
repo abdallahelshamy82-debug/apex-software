@@ -46,6 +46,9 @@ export function FloatingInput({
     });
   }, [isActive, floating]);
 
+  const safeTextMuted = theme?.textMuted || '#A1A1AA';
+  const safePrimary = theme?.primary || '#B4F82C';
+
   const animatedLabelStyle = useAnimatedStyle(() => {
     return {
       top: floating.value * -10 + (1 - floating.value) * 15,
@@ -55,10 +58,10 @@ export function FloatingInput({
         : interpolateColor(
             floating.value,
             [0, 1],
-            [theme.textMuted, theme.primary]
+            [safeTextMuted, safePrimary]
           )
     };
-  });
+  }, [floating, hasError, safeTextMuted, safePrimary]);
 
   const handleFocus = (e: any) => {
     setIsFocused(true);
@@ -70,28 +73,29 @@ export function FloatingInput({
     if (onBlur) onBlur(e);
   };
 
-  const borderColor = hasError ? '#EF4444' : (isFocused ? theme.primary : theme.border);
+  const safeBorder = theme?.border || 'rgba(255,255,255,0.05)';
+  const borderColor = hasError ? '#EF4444' : (isFocused ? safePrimary : safeBorder);
   const actualRightIcon = isPassword ? (isPasswordVisible ? 'eye-off-outline' : 'eye-outline') : rightIcon;
   const secureText = isPassword && !isPasswordVisible;
-  const bgColor = labelBgColor || theme.card;
+  const bgColor = labelBgColor || theme?.card || '#111113';
 
   return (
     <View style={styles.container}>
       <View style={[styles.inputContainer, { 
         borderColor, 
         backgroundColor: theme.btnBg,
-        flexDirection: isRTL ? 'row-reverse' : 'row'
+        flexDirection: 'row'
       }]}>
         
         {leftIcon && (
-          <View style={[styles.iconWrap, { marginLeft: isRTL ? 10 : 0, marginRight: isRTL ? 0 : 10 }]}>
-            <Ionicons name={leftIcon} size={20} color={isFocused ? theme.primary : theme.textMuted} />
+          <View style={[styles.iconWrap, { marginRight: 10 }]}>
+            <Ionicons name={leftIcon} size={20} color={isFocused ? safePrimary : safeTextMuted} />
           </View>
         )}
 
         <View style={styles.inputWrapper}>
           <Animated.Text style={[styles.label, animatedLabelStyle, { 
-            [isRTL ? 'right' : 'left']: 4,
+            left: 4,
             backgroundColor: bgColor,
           }]} pointerEvents="none">
             {label}
@@ -100,7 +104,7 @@ export function FloatingInput({
           <TextInput
             style={[styles.input, { 
               color: theme.text,
-              textAlign: isRTL ? 'right' : 'left'
+              textAlign: (isRTL && !isPassword && rest.keyboardType !== 'email-address') ? 'right' : 'left'
             }]}
             value={value}
             onChangeText={onChangeText}
@@ -114,10 +118,10 @@ export function FloatingInput({
 
         {actualRightIcon && (
           <TouchableOpacity 
-            style={[styles.iconWrap, { marginLeft: isRTL ? 0 : 10, marginRight: isRTL ? 10 : 0 }]} 
+            style={[styles.iconWrap, { marginLeft: 10 }]} 
             onPress={isPassword ? () => setIsPasswordVisible(!isPasswordVisible) : onRightIconPress}
           >
-            <Ionicons name={actualRightIcon} size={20} color={theme.textMuted} />
+            <Ionicons name={actualRightIcon} size={20} color={safeTextMuted} />
           </TouchableOpacity>
         )}
       </View>

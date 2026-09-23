@@ -6,16 +6,32 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ImageBackground,
   Dimensions,
   Platform,
-  Linking
+  Linking,
+  useWindowDimensions
 } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedScrollHandler, 
+  useAnimatedStyle, 
+  interpolate, 
+  Extrapolation 
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { haptics } from '../utils/haptics';
 import { useResponsive } from '../hooks/useResponsive';
+import ScrollReveal from '../components/ScrollReveal';
+import AnimatedReveal from '../components/AnimatedReveal';
+import StaggeredText from '../components/StaggeredText';
+import InteractiveCard from '../components/InteractiveCard';
+import AnimatedBackground from '../components/AnimatedBackground';
+
+const bgImage = require('../../assets/images/login-bg-dev.jpg');
 
 // ============================================================================
 // إرشادات للمطور / المصمم (Handover Instructions for Designer / Developer)
@@ -93,11 +109,91 @@ const TESTIMONIALS = [
   { name: 'م. أحمد الشامي', role: 'مدير العمليات - AutoBid', text: 'الاستقرار المعماري لمنصة المزادات كان تحدياً كبيراً، ولكن Apex قدمت حلاً هندسياً فائق السرعة بدون أي تأخير في البث.' },
 ];
 
+const HorizontalPortfolio = ({ projects, isRTL }: { projects: any[], isRTL: boolean }) => {
+  const scrollX = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollX.value = event.contentOffset.x;
+  });
+  const { width } = useWindowDimensions();
+  const CARD_WIDTH = Math.min(width * 0.85, 450);
+  const ITEM_SIZE = CARD_WIDTH + 16;
+
+  return (
+    <Animated.ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      onScroll={scrollHandler}
+      scrollEventThrottle={16}
+      snapToInterval={ITEM_SIZE}
+      decelerationRate="fast"
+      contentContainerStyle={{ paddingHorizontal: 16, gap: 16, marginTop: 12, paddingVertical: 10 }}
+    >
+      {projects.map((p, index) => {
+          const animStyle = useAnimatedStyle(() => {
+            const inputRange = [
+              (index - 1) * ITEM_SIZE,
+              index * ITEM_SIZE,
+              (index + 1) * ITEM_SIZE
+            ];
+            const scale = interpolate(scrollX.value, inputRange, [0.9, 1, 0.9], Extrapolation.CLAMP);
+            const opacity = interpolate(scrollX.value, inputRange, [0.6, 1, 0.6], Extrapolation.CLAMP);
+            return { transform: [{ scale }], opacity };
+          });
+
+        return (
+          <InteractiveCard key={p.id}>
+            <Animated.View style={[animStyle, styles.projectCard, { width: CARD_WIDTH, backgroundColor: 'rgba(15, 23, 42, 0.4)', borderColor: 'rgba(255,255,255,0.05)', ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } as any : {}) }]}>
+              <Image source={{ uri: p.image }} style={styles.projectImage} />
+              <View style={styles.projectBody}>
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <Text style={[styles.projectClient, { color: '#38BDF8' }]}>{p.client}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="star" size={13} color="#10B981" />
+                    <Text style={styles.projectMetrics}>{p.metrics}</Text>
+                  </View>
+                </View>
+
+                <Text style={[styles.projectTitle, { color: '#FFF', textAlign: isRTL ? 'right' : 'left' }]}>
+                  {p.title}
+                </Text>
+
+                <Text style={[styles.projectDesc, { color: '#94A3B8', textAlign: isRTL ? 'right' : 'left' }]}>
+                  {p.desc}
+                </Text>
+
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 6, marginVertical: 10 }}>
+                  {p.tech.map((t: string, tIdx: number) => (
+                    <View key={tIdx} style={[styles.techPill, { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+                      <Text style={{ color: '#E2E8F0', fontSize: 11 }}>{t}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </Animated.View>
+          </InteractiveCard>
+        );
+      })}
+    </Animated.ScrollView>
+  );
+};
+
 export default function IdentityPortfolioScreen() {
   const router = useRouter();
   const responsive = useResponsive();
   const { theme, isRTL } = useSettings();
   const [activeFilter, setActiveFilter] = useState<'all' | 'mobile' | 'web' | 'ai'>('all');
+  const { height } = useWindowDimensions();
+
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
+
+  const heroAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(scrollY.value, [0, 200], [1, 0], Extrapolation.CLAMP);
+    const translateY = interpolate(scrollY.value, [0, 200], [0, -30], Extrapolation.CLAMP);
+    return { opacity, transform: [{ translateY }] };
+  });
 
   const filteredProjects = activeFilter === 'all'
     ? PORTFOLIO_PROJECTS
@@ -110,19 +206,21 @@ export default function IdentityPortfolioScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-        <TouchableOpacity onPress={handleGoBack} style={[styles.backBtn, { backgroundColor: theme.btnBg }]}>
-          <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color={theme.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>
+    <ImageBackground source={bgImage} style={{ flex: 1, width: '100%', height: '100%', backgroundColor: '#050505' }} resizeMode="cover">
+      <View style={{ ...StyleSheet.absoluteFill, backgroundColor: 'rgba(10, 15, 29, 0.85)' }} />
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <View style={[styles.header, { borderBottomColor: 'rgba(255,255,255,0.1)', flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <TouchableOpacity onPress={handleGoBack} style={[styles.backBtn, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+            <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: '#FFF' }]}>
           {isRTL ? 'هويتنا وسابقة أعمالنا' : 'Identity & Portfolio'}
         </Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView 
+      <Animated.ScrollView 
         contentContainerStyle={[
           styles.scrollContent,
           {
@@ -131,25 +229,21 @@ export default function IdentityPortfolioScreen() {
           }
         ]} 
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
         {/* Brand Hero Banner */}
-        <View style={[styles.heroCard, { backgroundColor: '#0B132B', borderColor: 'rgba(56, 189, 248, 0.3)' }]}>
-          <View style={styles.brandBadge}>
+        <Animated.View style={[styles.heroCard, heroAnimatedStyle, { backgroundColor: 'rgba(15, 23, 42, 0.4)', borderColor: 'rgba(255,255,255,0.1)', ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } as any : {}) }]}>
+          <AnimatedReveal delay={100} style={styles.brandBadge}>
             <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '900' }}>APEX SOFTWARE SOLUTIONS</Text>
-          </View>
+          </AnimatedReveal>
 
-          <Text style={[styles.heroTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
-            {isRTL ? 'نبني المنتجات الرقمية التي تصنع الفارق في السوق' : 'Engineering Market-Defining Digital Products'}
-          </Text>
+          <StaggeredText text={isRTL ? 'نبني المنتجات الرقمية التي تصنع الفارق في السوق' : 'Engineering Market-Defining Digital Products'} baseDelay={300} wordDelay={60} style={[styles.heroTitle, { textAlign: isRTL ? 'right' : 'left' }]} />
 
-          <Text style={[styles.heroSub, { textAlign: isRTL ? 'right' : 'left' }]}>
-            {isRTL
-              ? 'نحن بيت خبرة برمجية ومعمارية متخصص في بناء تطبيقات الهاتف الذكي فائقة التطور، والأنظمة السحابية الموسعة، وحلول الذكاء الاصطناعي التوليدي للشركات والمشاريع الريادية.'
-              : 'Enterprise software house crafting scalable mobile apps, robust cloud backends, and generative AI solutions for industry leaders.'}
-          </Text>
+          <StaggeredText text={isRTL ? 'نحن بيت خبرة برمجية ومعمارية متخصص في بناء تطبيقات الهاتف الذكي فائقة التطور، والأنظمة السحابية الموسعة، وحلول الذكاء الاصطناعي التوليدي للشركات والمشاريع الريادية.' : 'Enterprise software house crafting scalable mobile apps, robust cloud backends, and generative AI solutions for industry leaders.'} baseDelay={700} wordDelay={30} style={[styles.heroSub, { textAlign: isRTL ? 'right' : 'left' }]} />
 
           {/* Key Metrics Stats */}
-          <View style={[styles.statsRow, { borderColor: 'rgba(255,255,255,0.1)', flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <AnimatedReveal delay={700} style={[styles.statsRow, { borderColor: 'rgba(255,255,255,0.1)', flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
             <View style={styles.statCol}>
               <Text style={styles.statNumber}>50+</Text>
               <Text style={styles.statLabel}>{isRTL ? 'مشروع منجز' : 'Delivered Projects'}</Text>
@@ -167,11 +261,11 @@ export default function IdentityPortfolioScreen() {
               </View>
               <Text style={styles.statLabel}>{isRTL ? 'تقييم المتاجر' : 'Store Rating'}</Text>
             </View>
-          </View>
-        </View>
+          </AnimatedReveal>
+        </Animated.View>
 
         {/* Core Services Section */}
-        <View style={styles.section}>
+        <ScrollReveal scrollY={scrollY} delay={100} style={styles.section}>
           <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
             <Ionicons name="construct-outline" size={18} color={theme.primary} />
             <Text style={[styles.sectionTitle, { color: theme.primary, textAlign: isRTL ? 'right' : 'left' }]}>
@@ -180,137 +274,103 @@ export default function IdentityPortfolioScreen() {
           </View>
           <View style={{ gap: 10, marginTop: 12 }}>
             {SERVICES.map((s, idx) => (
-              <View key={idx} style={[styles.serviceCard, { backgroundColor: theme.card, borderColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                <View style={[styles.serviceIconWrap, { backgroundColor: `${theme.primary}15` }]}>
-                  <Ionicons name={s.icon as any} size={22} color={theme.primary} />
+              <InteractiveCard key={idx}>
+                <View style={[styles.serviceCard, { backgroundColor: 'rgba(15, 23, 42, 0.4)', borderColor: 'rgba(255,255,255,0.05)', flexDirection: isRTL ? 'row-reverse' : 'row', ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } as any : {}) }]}>
+                  <View style={[styles.serviceIconWrap, { backgroundColor: 'rgba(180, 248, 44, 0.1)' }]}>
+                    <Ionicons name={s.icon as any} size={22} color={theme.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.serviceTitle, { color: '#FFF', textAlign: isRTL ? 'right' : 'left' }]}>{s.title}</Text>
+                    <Text style={[styles.serviceDesc, { color: '#94A3B8', textAlign: isRTL ? 'right' : 'left' }]}>{s.desc}</Text>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.serviceTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{s.title}</Text>
-                  <Text style={[styles.serviceDesc, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{s.desc}</Text>
-                </View>
-              </View>
+              </InteractiveCard>
             ))}
           </View>
-        </View>
+        </ScrollReveal>
 
         {/* Portfolio Section with Filter Tabs */}
-        <View style={[styles.section, { marginTop: 14 }]}>
+        <ScrollReveal scrollY={scrollY} delay={100} style={[styles.section, { marginTop: 14 }]}>
           <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="trophy-outline" size={18} color={theme.primary} />
-            <Text style={[styles.sectionTitle, { color: theme.primary, textAlign: isRTL ? 'right' : 'left' }]}>
-              {isRTL ? 'معرض نماذج الأعمال والمشاريع الحية' : 'Featured Portfolio'}
+            <Ionicons name="trophy-outline" size={18} color="#38BDF8" />
+            <Text style={[styles.sectionTitle, { color: '#38BDF8', textAlign: isRTL ? 'right' : 'left' }]}>
+              {isRTL ? 'معرض نماذج الأعمال والمشاريع الحية' : 'Featured Projects'}
             </Text>
           </View>
-
           {/* Filter Pills */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 12 }}>
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8 }}>
               {[
                 { id: 'all', label: isRTL ? 'الكل' : 'All', icon: 'grid-outline' },
-                { id: 'mobile', label: isRTL ? 'تطبيقات موبايل' : 'Mobile Apps', icon: 'phone-portrait-outline' },
-                { id: 'web', label: isRTL ? 'منصات ويب' : 'Web Systems', icon: 'globe-outline' },
-                { id: 'ai', label: isRTL ? 'ذكاء اصطناعي' : 'AI Solutions', icon: 'hardware-chip-outline' },
-              ].map(f => {
-                const isActive = activeFilter === f.id;
-                return (
-                  <TouchableOpacity
-                    key={f.id}
-                    onPress={() => {
-                      haptics.selection();
-                      setActiveFilter(f.id as any);
-                    }}
-                    style={[
-                      styles.filterPill,
-                      {
-                        backgroundColor: isActive ? theme.primary : theme.card,
-                        borderColor: isActive ? theme.primary : theme.border,
-                        flexDirection: isRTL ? 'row-reverse' : 'row',
-                        alignItems: 'center',
-                        gap: 6,
-                      }
-                    ]}
-                  >
-                    <Ionicons 
-                      name={f.icon as any} 
-                      size={14} 
-                      color={isActive ? '#0B132B' : theme.textMuted} 
-                    />
-                    <Text style={{ color: isActive ? '#0B132B' : theme.text, fontSize: 12, fontWeight: 'bold' }}>
-                      {f.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              { id: 'mobile', label: isRTL ? 'تطبيقات موبايل' : 'Mobile Apps', icon: 'phone-portrait-outline' },
+              { id: 'web', label: isRTL ? 'منصات ويب' : 'Web Systems', icon: 'globe-outline' },
+              { id: 'ai', label: isRTL ? 'ذكاء اصطناعي' : 'AI Solutions', icon: 'hardware-chip-outline' },
+            ].map(f => {
+              const isActive = activeFilter === f.id;
+              return (
+                <TouchableOpacity
+                  key={f.id}
+                  onPress={() => {
+                    haptics.selection();
+                    setActiveFilter(f.id as any);
+                  }}
+                  style={[
+                    styles.filterPill,
+                    {
+                      backgroundColor: isActive ? '#38BDF8' : 'rgba(255,255,255,0.05)',
+                      borderColor: isActive ? '#38BDF8' : 'rgba(255,255,255,0.1)',
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                    }
+                  ]}
+                >
+                  <Ionicons 
+                    name={f.icon as any} 
+                    size={14} 
+                    color={isActive ? '#0B132B' : '#94A3B8'} 
+                  />
+                  <Text style={{ color: isActive ? '#0B132B' : '#94A3B8', fontSize: 12, fontWeight: 'bold' }}>
+                    {f.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
             </View>
           </ScrollView>
 
-          {/* Projects Cards */}
-          <View style={{ gap: 16 }}>
-            {filteredProjects.map(p => (
-              <View key={p.id} style={[styles.projectCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Image source={{ uri: p.image }} style={styles.projectImage} />
-                
-                <View style={styles.projectBody}>
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <Text style={[styles.projectClient, { color: theme.primary }]}>{p.client}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Ionicons name="star" size={13} color="#10B981" />
-                      <Text style={styles.projectMetrics}>{p.metrics}</Text>
-                    </View>
-                  </View>
-
-                  <Text style={[styles.projectTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
-                    {p.title}
-                  </Text>
-
-                  <Text style={[styles.projectDesc, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>
-                    {p.desc}
-                  </Text>
-
-                  {/* Tech stack pills */}
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 10 }}>
-                    {p.tech.map((t, tIdx) => (
-                      <View key={tIdx} style={[styles.techPill, { backgroundColor: theme.btnBg, borderColor: theme.border }]}>
-                        <Text style={{ color: theme.text, fontSize: 11 }}>{t}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
+          {/* Projects Horizontal Parallax List */}
+          <HorizontalPortfolio projects={filteredProjects} isRTL={isRTL} />
+        </ScrollReveal>
 
         {/* Testimonials */}
-        <View style={[styles.section, { marginTop: 14 }]}>
+        <ScrollReveal scrollY={scrollY} style={[styles.section, { marginTop: 14 }]}>
           <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="chatbubbles-outline" size={18} color={theme.primary} />
-            <Text style={[styles.sectionTitle, { color: theme.primary, textAlign: isRTL ? 'right' : 'left' }]}>
-              {isRTL ? 'شهادات الشركاء والعملاء' : 'Client Testimonials'}
+            <Ionicons name="chatbubbles-outline" size={18} color="#38BDF8" />
+            <Text style={[styles.sectionTitle, { color: '#38BDF8', textAlign: isRTL ? 'right' : 'left' }]}>
+              {isRTL ? 'آراء العملاء عن شراكتنا' : 'Client Testimonials'}
             </Text>
           </View>
           <View style={{ gap: 10, marginTop: 12 }}>
             {TESTIMONIALS.map((t, idx) => (
-              <View key={idx} style={[styles.testimonialCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <Text style={{ fontSize: 24, color: theme.primary, marginBottom: 4 }}>“</Text>
-                <Text style={[styles.testimonialText, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
-                  {t.text}
-                </Text>
-                <View style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: theme.border, paddingTop: 8 }}>
-                  <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 13, textAlign: isRTL ? 'right' : 'left' }}>
-                    {t.name}
-                  </Text>
-                  <Text style={{ color: theme.textMuted, fontSize: 11, textAlign: isRTL ? 'right' : 'left' }}>
-                    {t.role}
-                  </Text>
+              <View key={idx} style={[styles.testimonialCard, { backgroundColor: 'rgba(15, 23, 42, 0.4)', borderColor: 'rgba(255,255,255,0.05)', ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } as any : {}) }]}>
+                <Text style={[styles.testimonialText, { color: '#FFF', textAlign: isRTL ? 'right' : 'left' }]}>"{t.text}"</Text>
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', marginTop: 12, gap: 10 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>{t.name.charAt(0)}</Text>
+                  </View>
+                  <View>
+                    <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 13, textAlign: isRTL ? 'right' : 'left' }}>{t.name}</Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 11, textAlign: isRTL ? 'right' : 'left' }}>{t.role}</Text>
+                  </View>
                 </View>
               </View>
             ))}
           </View>
-        </View>
+        </ScrollReveal>
 
         {/* High-Converting CTA Banner */}
-        <View style={[styles.ctaBanner, { backgroundColor: theme.primary }]}>
+        <ScrollReveal scrollY={scrollY} delay={100} style={[styles.ctaBanner, { backgroundColor: theme.primary }]}>
           <Text style={styles.ctaTitle}>
             {isRTL ? 'هل لديك فكرة مشروع رقمي تريد إطلاقها؟' : 'Ready to Launch Your Next Project?'}
           </Text>
@@ -346,9 +406,10 @@ export default function IdentityPortfolioScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollReveal>
+      </Animated.ScrollView>
     </SafeAreaView>
+    </ImageBackground>
   );
 }
 
@@ -560,3 +621,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
+
+

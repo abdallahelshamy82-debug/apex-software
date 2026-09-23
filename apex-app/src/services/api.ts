@@ -27,7 +27,7 @@ const getBaseUrl = () => {
     return 'http://10.0.2.2:3000';
   }
   // 5. Physical device fallback to current local network IP
-  return 'http://10.55.17.219:3000';
+  return 'http://10.18.163.39:3000';
 };
 
 export const BASE_URL = getBaseUrl();
@@ -40,6 +40,68 @@ const getAuthHeaders = async () => {
     'X-Client-Platform': Platform.OS,
     'Authorization': token ? `Bearer ${token}` : ''
   };
+};
+
+const readUriAsBase64 = async (uri: string): Promise<string> => {
+  // Strategy 1: React Native / Web standard fetch + FileReader
+  // Bypasses Expo Go scoped file system permission checks and reads directly via Android ContentResolver
+  try {
+    const res = await fetch(uri);
+    const blob = await res.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('FileReader did not return a string'));
+        }
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(blob);
+    });
+    const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+    if (base64 && base64.length > 0) {
+      return base64;
+    }
+  } catch (webErr) {
+    console.warn('readUriAsBase64 (fetch/FileReader) error, falling back to FileSystem:', webErr);
+  }
+
+  // Strategy 2: expo-file-system
+  let SafeFileSystem: any = null;
+  try { SafeFileSystem = require('expo-file-system/legacy'); } catch (e) {
+    try { SafeFileSystem = require('expo-file-system'); } catch (e2) {}
+  }
+
+  if (SafeFileSystem) {
+    // 2a. Direct readAsStringAsync
+    try {
+      const b64 = await SafeFileSystem.readAsStringAsync(uri, {
+        encoding: SafeFileSystem.EncodingType?.Base64 || 'base64',
+      });
+      if (b64) return b64;
+    } catch (fsDirectErr) {
+      console.warn('readAsStringAsync direct failed, attempting copy to documentDirectory:', fsDirectErr);
+    }
+
+    // 2b. Copy to documentDirectory first (to bypass Expo Go cacheDir scoping)
+    if (SafeFileSystem.documentDirectory && SafeFileSystem.copyAsync) {
+      const safeTempPath = `${SafeFileSystem.documentDirectory}upload_temp_${Date.now()}`;
+      try {
+        await SafeFileSystem.copyAsync({ from: uri, to: safeTempPath });
+        const b64 = await SafeFileSystem.readAsStringAsync(safeTempPath, {
+          encoding: SafeFileSystem.EncodingType?.Base64 || 'base64',
+        });
+        SafeFileSystem.deleteAsync(safeTempPath, { idempotent: true }).catch(() => {});
+        if (b64) return b64;
+      } catch (copyErr) {
+        console.warn('copyAsync to documentDirectory failed:', copyErr);
+      }
+    }
+  }
+
+  throw new Error('تعذر قراءة بيانات الملف على هذا الجهاز.');
 };
 
 export const api = {
@@ -293,79 +355,98 @@ export const api = {
     } catch (e) { return { success: false, chats: [] }; }
   },
 
-  async uploadFile(uri: string, filename: string, type: string) {
+  async uploadFile(uri: string, filename: string, type: string, explicitBase64?: string) {
     try {
-      // Ensure ASCII safe filename for multipart headers (prevents OkHttp crash on Arabic filenames)
       const rawExt = filename && filename.includes('.') ? `.${filename.split('.').pop()}` : '';
       const safeExt = rawExt ? rawExt.toLowerCase() : (type.includes('pdf') ? '.pdf' : type.includes('audio') ? '.m4a' : '.jpg');
       const cleanName = `attachment_${Date.now()}${safeExt}`;
-      const cleanType = type || 'image/jpeg';
+      const cleanType = type || 'application/octet-stream';
       const token = await getSecureToken();
 
-      // 1. Native Mobile (Android & iOS) via expo-file-system uploadAsync
-      if (Platform.OS !== 'web') {
-        try {
-          let SafeFileSystem: any = null;
-          try { SafeFileSystem = require('expo-file-system/legacy'); } catch (e) {
-            try { SafeFileSystem = require('expo-file-system'); } catch (e2) {}
-          }
-          if (SafeFileSystem && SafeFileSystem.uploadAsync) {
-            const uploadRes = await SafeFileSystem.uploadAsync(`${API_URL}/upload`, uri, {
-              httpMethod: 'POST',
-              uploadType: SafeFileSystem.FileSystemUploadType?.MULTIPART || 1,
-              fieldName: 'file',
-              headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-              },
-              parameters: {
-                filename: cleanName
-              }
-            });
-            if (uploadRes.status >= 200 && uploadRes.status < 300) {
-              return JSON.parse(uploadRes.body);
-            }
-            console.warn('uploadAsync returned status:', uploadRes.status, uploadRes.body);
-          }
-        } catch (fsErr) {
-          console.warn('Native uploadAsync failed, falling back to FormData:', fsErr);
-        }
-      }
-
-      // 2. Web & Fallback via FormData
-      const formData = new FormData();
+      // 1. Web Platform: Native FormData with Blob
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         try {
-          const response = await fetch(uri);
-          const blob = await response.blob();
+          const blobRes = await fetch(uri);
+          const blob = await blobRes.blob();
+          const formData = new FormData();
           formData.append('file', blob, cleanName);
-        } catch (blobErr) {
-          formData.append('file', { uri, name: cleanName, type: cleanType } as any);
+
+          const headers: Record<string, string> = {};
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+
+          const response = await fetch(`${API_URL}/upload`, {
+            method: 'POST',
+            headers,
+            body: formData,
+          });
+          const data = await response.json();
+          return data;
+        } catch (webErr: any) {
+          console.error('Web upload failed:', webErr);
+          // Fall through to Base64
         }
-      } else {
-        const cleanUri = Platform.OS === 'android' ? uri : uri.replace('file://', '');
-        formData.append('file', {
-          uri: cleanUri,
-          name: cleanName,
-          type: cleanType,
-        } as any);
       }
 
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      // 2. Base64 Upload (Most reliable on Native Mobile & Expo Go)
+      let base64Data = explicitBase64;
+      if (!base64Data) {
+        try {
+          base64Data = await readUriAsBase64(uri);
+        } catch (readErr: any) {
+          console.warn('Failed to read URI as base64:', readErr);
+        }
       }
 
-      const response = await fetch(`${API_URL}/upload`, {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        return { success: false, status: response.status, message: errJson.message || 'Server rejected upload' };
+      if (base64Data) {
+        try {
+          const b64Res = await fetch(`${API_URL}/api/upload-base64`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+              filename: cleanName,
+              mimeType: cleanType,
+              base64: base64Data
+            })
+          });
+          const parsed = await b64Res.json();
+          if (parsed && parsed.success) return parsed;
+          if (parsed && parsed.message) return { success: false, message: parsed.message };
+        } catch (b64PostErr: any) {
+          console.warn('Base64 POST to server failed:', b64PostErr);
+        }
       }
-      return await response.json();
+
+      // 3. Fallback to SafeFileSystem uploadAsync (if available and not failed)
+      let SafeFileSystem: any = null;
+      try { SafeFileSystem = require('expo-file-system/legacy'); } catch (e) {
+        try { SafeFileSystem = require('expo-file-system'); } catch (e2) {}
+      }
+
+      if (SafeFileSystem && SafeFileSystem.uploadAsync) {
+        try {
+          const uploadRes = await SafeFileSystem.uploadAsync(`${API_URL}/upload`, uri, {
+            httpMethod: 'POST',
+            uploadType: SafeFileSystem.FileSystemUploadType?.MULTIPART ?? 1,
+            fieldName: 'file',
+            mimeType: cleanType,
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+            parameters: { filename: cleanName }
+          });
+          if (uploadRes.status >= 200 && uploadRes.status < 300) {
+            const parsed = JSON.parse(uploadRes.body);
+            if (parsed.success) return parsed;
+          }
+        } catch (fsErr) {
+          console.warn('Native uploadAsync also failed:', fsErr);
+        }
+      }
+
+      return { success: false, message: 'تعذر رفع الملف إلى السيرفر، يرجى التحقق من اتصال الإنترنت.' };
     } catch (e: any) {
+      console.error('uploadFile general error:', e);
       return { success: false, error: e, message: e?.message || 'Network error during upload' };
     }
   },

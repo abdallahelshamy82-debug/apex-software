@@ -6,6 +6,7 @@ import { useSettings } from '../context/SettingsContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import ApexLoader from '../components/ApexLoader';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import { Skeleton } from '../components/Skeleton';
 import WhatsAppFAB from '../components/WhatsAppFAB';
 import NotificationModal from '../components/NotificationModal';
@@ -156,17 +157,7 @@ export default function DashboardScreen() {
         </View>
 
         <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          {/* Quick Theme Toggle */}
-          <TouchableOpacity 
-            onPress={() => {
-              haptics.selection();
-              toggleTheme();
-            }} 
-            style={[styles.settingsBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
-            accessibilityLabel="Toggle Theme"
-          >
-            <Ionicons name={isDark ? 'sunny' : 'moon'} size={16} color={theme.primary} />
-          </TouchableOpacity>
+          <ThemeSwitcher />
 
           {/* In-App Notifications Bell */}
           <TouchableOpacity 
@@ -283,7 +274,7 @@ export default function DashboardScreen() {
             styles.aiCopilotCard,
             {
               backgroundColor: activeTheme === 'light' ? '#0F172A' : '#0B132B',
-              borderColor: '#38BDF8',
+              borderColor: theme.primary,
             }
           ]}
         >
@@ -291,7 +282,7 @@ export default function DashboardScreen() {
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, flex: 1 }}>
               <View style={styles.aiLiveDot} />
               <Ionicons name="sparkles" size={16} color="#38BDF8" />
-              <Text style={{ color: '#38BDF8', fontSize: 13, fontWeight: '900', letterSpacing: 0.5, flexShrink: 1 }}>
+              <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '900', letterSpacing: 0.5, flexShrink: 1 }}>
                 {isRTL ? 'مستشار Apex الذكي (AI Project Copilot)' : 'Apex AI Project Copilot'}
               </Text>
             </View>
@@ -598,14 +589,14 @@ export default function DashboardScreen() {
         {/* Quick Actions Grid */}
         <View style={[styles.actionsGrid, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
           <TouchableOpacity 
-            style={[styles.actionBtn, { backgroundColor: theme.card, borderColor: '#38BDF8' }]}
+            style={[styles.actionBtn, { backgroundColor: theme.card, borderColor: theme.primary }]}
             onPress={() => {
               haptics.light();
               router.push('/copilot');
             }}
           >
             <Ionicons name="sparkles" size={24} color="#38BDF8" style={{ marginBottom: 4 }} />
-            <Text style={[styles.actionText, { color: '#38BDF8', fontWeight: 'bold' }]}>
+            <Text style={[styles.actionText, { color: theme.primary, fontWeight: 'bold' }]}>
               {isRTL ? 'مستشار AI' : 'AI Copilot'}
             </Text>
           </TouchableOpacity>
@@ -706,7 +697,7 @@ export default function DashboardScreen() {
                 <Ionicons name="trophy" size={22} color="#38BDF8" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#38BDF8', fontSize: 14, fontWeight: '900', textAlign: isRTL ? 'right' : 'left', flexShrink: 1 }}>
+                <Text style={{ color: theme.primary, fontSize: 14, fontWeight: '900', textAlign: isRTL ? 'right' : 'left', flexShrink: 1 }}>
                   {isRTL ? 'هويتنا وسابقة أعمالنا المتميزة' : 'Our Identity & Proven Portfolio'}
                 </Text>
                 <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 2, textAlign: isRTL ? 'right' : 'left', flexShrink: 1 }}>
@@ -921,7 +912,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     padding: 18,
     marginBottom: 16,
-    shadowColor: '#38BDF8',
+    shadowColor: '#B4F82C',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -931,7 +922,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#38BDF8',
+    backgroundColor: '#B4F82C',
   },
   aiTagBadge: {
     backgroundColor: 'rgba(56, 189, 248, 0.15)',
@@ -940,7 +931,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   aiTagBadgeText: {
-    color: '#38BDF8',
+    color: '#B4F82C',
     fontSize: 11,
     fontWeight: 'bold',
   },
@@ -964,7 +955,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   aiLaunchBtn: {
-    backgroundColor: '#38BDF8',
+    backgroundColor: '#B4F82C',
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 10,
@@ -982,7 +973,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: '#38BDF8',
+    backgroundColor: '#B4F82C',
   },
   retryBtnText: {
     color: '#0B132B',

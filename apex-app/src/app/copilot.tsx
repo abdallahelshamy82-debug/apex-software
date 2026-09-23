@@ -67,6 +67,38 @@ interface ChatMessage {
   timestamp?: string;
 }
 
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatMessage[];
+  analysis: any | null;
+  selectedPackage?: 'mvp' | 'pro' | 'enterprise';
+  preview: string;
+  hasBlueprint: boolean;
+}
+
+const SESSIONS_STORAGE_KEY = '@apex_copilot_sessions';
+
+const getInitialMessages = (rtl: boolean): ChatMessage[] => [
+  {
+    id: 'welcome',
+    role: 'assistant',
+    text: rtl
+      ? 'أهلاً بك! أنا المستشار البرمجي ورئيس المعماريين في Apex Software. ما هي فكرة تطبيقك أو مشروعك الرقمي؟ شاركني الفكرة وسأناقش معك أدق تفاصيلها الفنية والتجارية، ثم نستخرج خطة العمل الكاملة والـ 3 باقات.'
+      : 'Welcome! I am the Chief Software Architect at Apex Software. Tell me about your software idea, and I will consult with you on the architecture, business model, and generate your feasibility blueprint with 3 investment tiers.',
+    suggestions: [
+      'عندي فكرة تطبيق زي أوبر لتوصيل الأدوية من الصيدليات',
+      'منصة مزادات سيارات حية مع بث فيديو لحظي ومزايدة بالثواني',
+      'تطبيق طلب وتوصيل وجبات ومطاعم مع كباتن وتتبع GPS',
+      'سوق إلكتروني متعدد التجار مع بوابات دفع Paymob وفودافون كاش'
+    ],
+    readyForSpec: false,
+    timestamp: new Date().toLocaleTimeString(rtl ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+  }
+];
+
 const QUICK_SUGGESTIONS = [
   {
     id: 'pharmacy',
@@ -130,24 +162,13 @@ export default function CopilotScreen() {
   // Selected investment package: 'mvp' | 'pro' | 'enterprise'
   const [selectedPackage, setSelectedPackage] = useState<'mvp' | 'pro' | 'enterprise'>('pro');
 
+  // Multi-session chat history state
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string>(() => `session_${Date.now()}`);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+
   // Messages in consultation chat
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      text: isRTL
-        ? 'أهلاً بك! أنا المستشار البرمجي ورئيس المعماريين في Apex Software. ما هي فكرة تطبيقك أو مشروعك الرقمي؟ شاركني الفكرة وسأناقش معك أدق تفاصيلها الفنية والتجارية، ثم نستخرج خطة العمل الكاملة والـ 3 باقات.'
-        : 'Welcome! I am the Chief Software Architect at Apex Software. Tell me about your software idea, and I will consult with you on the architecture, business model, and generate your feasibility blueprint with 3 investment tiers.',
-      suggestions: [
-        'عندي فكرة تطبيق زي أوبر لتوصيل الأدوية من الصيدليات',
-        'منصة مزادات سيارات حية مع بث فيديو لحظي ومزايدة بالثواني',
-        'تطبيق طلب وتوصيل وجبات ومطاعم مع كباتن وتتبع GPS',
-        'سوق إلكتروني متعدد التجار مع بوابات دفع Paymob وفودافون كاش'
-      ],
-      readyForSpec: false,
-      timestamp: new Date().toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => getInitialMessages(isRTL));
 
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -241,6 +262,34 @@ export default function CopilotScreen() {
           if (res.provider) setAiProvider(res.provider);
         }
       } catch (e) {}
+    })();
+
+    // Load Saved Chat Sessions from AsyncStorage
+    (async () => {
+      try {
+        const storedSessions = await AsyncStorage.getItem(SESSIONS_STORAGE_KEY);
+        if (storedSessions) {
+          const parsed: ChatSession[] = JSON.parse(storedSessions);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSessions(parsed);
+            const latest = parsed[0];
+            if (latest) {
+              setCurrentSessionId(latest.id);
+              if (latest.messages && latest.messages.length > 0) {
+                setMessages(latest.messages);
+              }
+              if (latest.analysis) {
+                setAnalysis(latest.analysis);
+              }
+              if (latest.selectedPackage) {
+                setSelectedPackage(latest.selectedPackage);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load copilot sessions', e);
+      }
     })();
   }, [pulseAnim]);
 
@@ -550,6 +599,173 @@ export default function CopilotScreen() {
     }
   };
 
+  // Save or update active session in AsyncStorage
+  const saveSession = (
+    updatedMessages: ChatMessage[],
+    newAnalysis?: any,
+    newPkg?: 'mvp' | 'pro' | 'enterprise'
+  ) => {
+    try {
+      const effectiveAnalysis = newAnalysis !== undefined ? newAnalysis : analysis;
+      const effectivePkg = newPkg !== undefined ? newPkg : selectedPackage;
+
+      const firstUserMsg = updatedMessages.find(m => m.role === 'user');
+      let title = isRTL ? 'استشارة جديدة' : 'New Consultation';
+      if (firstUserMsg && firstUserMsg.text) {
+        title = firstUserMsg.text.trim().slice(0, 40) + (firstUserMsg.text.length > 40 ? '...' : '');
+      }
+
+      const lastMsg = updatedMessages[updatedMessages.length - 1];
+      const preview = lastMsg?.text ? (lastMsg.text.slice(0, 65) + (lastMsg.text.length > 65 ? '...' : '')) : '';
+
+      setSessions(prevSessions => {
+        const now = new Date().toISOString();
+        const existingIdx = prevSessions.findIndex(s => s.id === currentSessionId);
+        let newSessions: ChatSession[];
+
+        if (existingIdx >= 0) {
+          const existing = prevSessions[existingIdx];
+          const updatedSession: ChatSession = {
+            ...existing,
+            title: existing.title && existing.title !== 'استشارة جديدة' && existing.title !== 'New Consultation' ? existing.title : title,
+            updatedAt: now,
+            messages: updatedMessages,
+            analysis: effectiveAnalysis,
+            selectedPackage: effectivePkg,
+            preview,
+            hasBlueprint: !!effectiveAnalysis,
+          };
+          newSessions = [
+            updatedSession,
+            ...prevSessions.filter((_, idx) => idx !== existingIdx)
+          ];
+        } else {
+          const newSession: ChatSession = {
+            id: currentSessionId,
+            title,
+            createdAt: now,
+            updatedAt: now,
+            messages: updatedMessages,
+            analysis: effectiveAnalysis,
+            selectedPackage: effectivePkg,
+            preview,
+            hasBlueprint: !!effectiveAnalysis,
+          };
+          newSessions = [newSession, ...prevSessions];
+        }
+
+        AsyncStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(newSessions)).catch(() => {});
+        return newSessions;
+      });
+    } catch (err) {
+      console.warn('Failed to save session', err);
+    }
+  };
+
+  // Start a fresh new consultation session
+  const handleStartNewChat = () => {
+    haptics.success();
+    const newId = `session_${Date.now()}`;
+    setCurrentSessionId(newId);
+    const fresh = getInitialMessages(isRTL);
+    setMessages(fresh);
+    setAnalysis(null);
+    setActiveMode('chat');
+    setShowHistoryModal(false);
+    showToast({
+      type: 'success',
+      title: isRTL ? 'استشارة جديدة' : 'New Chat',
+      message: isRTL ? 'تم بدء جلسة استشارية جديدة بنجاح' : 'Started a new consultation session',
+    });
+  };
+
+  // Select and resume a past session
+  const handleSelectSession = (session: ChatSession) => {
+    haptics.medium();
+    setCurrentSessionId(session.id);
+    setMessages(session.messages && session.messages.length > 0 ? session.messages : getInitialMessages(isRTL));
+    setAnalysis(session.analysis || null);
+    if (session.selectedPackage) {
+      setSelectedPackage(session.selectedPackage);
+    }
+    if (session.hasBlueprint && session.analysis) {
+      setActiveMode('blueprint');
+    } else {
+      setActiveMode('chat');
+    }
+    setShowHistoryModal(false);
+    setTimeout(() => {
+      chatScrollRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
+
+  // Delete a specific session
+  const handleDeleteSession = (sessionId: string) => {
+    haptics.warning();
+    const performDelete = () => {
+      setSessions(prev => {
+        const filtered = prev.filter(s => s.id !== sessionId);
+        AsyncStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(filtered)).catch(() => {});
+        return filtered;
+      });
+
+      if (sessionId === currentSessionId) {
+        handleStartNewChat();
+      }
+
+      showToast({
+        type: 'info',
+        title: isRTL ? 'تم الحذف' : 'Deleted',
+        message: isRTL ? 'تم حذف الاستشارة من السجل.' : 'Consultation deleted from history.',
+      });
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm(isRTL ? 'هل أنت متأكد من حذف هذه الاستشارة؟' : 'Are you sure you want to delete this consultation?')) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(
+        isRTL ? 'حذف الاستشارة' : 'Delete Consultation',
+        isRTL ? 'هل أنت متأكد من حذف هذه الاستشارة من السجل؟' : 'Are you sure you want to delete this consultation?',
+        [
+          { text: isRTL ? 'إلغاء' : 'Cancel', style: 'cancel' },
+          { text: isRTL ? 'حذف' : 'Delete', style: 'destructive', onPress: performDelete }
+        ]
+      );
+    }
+  };
+
+  // Clear all saved sessions
+  const handleClearAllSessions = () => {
+    haptics.heavy();
+    const performClear = () => {
+      setSessions([]);
+      AsyncStorage.removeItem(SESSIONS_STORAGE_KEY).catch(() => {});
+      handleStartNewChat();
+      showToast({
+        type: 'info',
+        title: isRTL ? 'تم مسح السجل' : 'History Cleared',
+        message: isRTL ? 'تم تفريغ سجل الاستشارات بالكامل.' : 'All consultations have been cleared.',
+      });
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm(isRTL ? 'هل أنت متأكد من مسح كافة الاستشارات المحفوظة؟ لا يمكن التراجع عن هذا الإجراء.' : 'Are you sure you want to clear all consultation history? This cannot be undone.')) {
+        performClear();
+      }
+    } else {
+      Alert.alert(
+        isRTL ? 'مسح كافة الاستشارات' : 'Clear All History',
+        isRTL ? 'هل أنت متأكد من مسح كافة الاستشارات المحفوظة؟ لا يمكن التراجع عن هذا الإجراء.' : 'Are you sure you want to clear all consultation history? This cannot be undone.',
+        [
+          { text: isRTL ? 'إلغاء' : 'Cancel', style: 'cancel' },
+          { text: isRTL ? 'مسح الكل' : 'Clear All', style: 'destructive', onPress: performClear }
+        ]
+      );
+    }
+  };
+
   // Send message in interactive consultation chat
   const handleSendChatMessage = async (overrideText?: string) => {
     const textToSend = (overrideText || chatInput).trim();
@@ -568,6 +784,7 @@ export default function CopilotScreen() {
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+    saveSession(updatedMessages);
     setChatInput('');
     setChatLoading(true);
 
@@ -598,7 +815,9 @@ export default function CopilotScreen() {
           engine: res.engine,
           timestamp: new Date().toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
         };
-        setMessages(prev => [...prev, aiMsg]);
+        const newMessagesWithAi = [...updatedMessages, aiMsg];
+        setMessages(newMessagesWithAi);
+        saveSession(newMessagesWithAi);
         setTimeout(() => {
           chatScrollRef.current?.scrollToEnd({ animated: true });
         }, 150);
@@ -611,7 +830,9 @@ export default function CopilotScreen() {
           suggestions: ['إعادة المحاولة', 'استخراج خطة المشروع مباشرة'],
           timestamp: new Date().toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
         };
-        setMessages(prev => [...prev, errorMsg]);
+        const newMessagesWithError = [...updatedMessages, errorMsg];
+        setMessages(newMessagesWithError);
+        saveSession(newMessagesWithError);
       }
     } catch (err) {
       setChatLoading(false);
@@ -623,7 +844,9 @@ export default function CopilotScreen() {
         suggestions: ['إعادة المحاولة'],
         timestamp: new Date().toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
       };
-      setMessages(prev => [...prev, errorMsg]);
+      const newMessagesWithError = [...updatedMessages, errorMsg];
+      setMessages(newMessagesWithError);
+      saveSession(newMessagesWithError);
     }
   };
 
@@ -649,6 +872,7 @@ export default function CopilotScreen() {
         haptics.success();
         setAnalysis(res.analysis);
         setActiveMode('blueprint');
+        saveSession(messages, res.analysis);
         LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
       } else {
         haptics.error();
@@ -789,7 +1013,35 @@ export default function CopilotScreen() {
         </View>
 
         {/* Quick Actions & Live Status */}
-        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+          {/* New Consultation Quick Action */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleStartNewChat}
+            style={[styles.headerIconBtn, { borderColor: `${theme.primary}60`, backgroundColor: `${theme.primary}18` }]}
+            accessibilityLabel={isRTL ? 'استشارة جديدة' : 'New Consultation'}
+          >
+            <Ionicons name="add" size={20} color={theme.primary} />
+          </TouchableOpacity>
+
+          {/* Chat Sessions History Button */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              haptics.selection();
+              setShowHistoryModal(true);
+            }}
+            style={[styles.headerIconBtn, { borderColor: theme.border, backgroundColor: theme.btnBg, position: 'relative' }]}
+            accessibilityLabel={isRTL ? 'سجل الاستشارات' : 'Consultation History'}
+          >
+            <Ionicons name="time-outline" size={18} color={theme.text} />
+            {sessions.length > 0 && (
+              <View style={styles.historyBadge}>
+                <Text style={styles.historyBadgeText}>{sessions.length > 9 ? '9+' : sessions.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
           {/* WhatsApp Direct Action */}
           <TouchableOpacity
             activeOpacity={0.8}
@@ -1206,6 +1458,14 @@ export default function CopilotScreen() {
                   numberOfLines={2}
                   value={chatInput}
                   onChangeText={setChatInput}
+                  onKeyPress={(e: any) => {
+                    if (Platform.OS === 'web' && e.nativeEvent?.key === 'Enter' && !e.nativeEvent?.shiftKey) {
+                      e.preventDefault?.();
+                      if (chatInput.trim() && !chatLoading) {
+                        handleSendChatMessage();
+                      }
+                    }
+                  }}
                   onFocus={() => {
                     setIsInputFocused(true);
                     setTimeout(() => {
@@ -2068,6 +2328,176 @@ export default function CopilotScreen() {
         </View>
       </Modal>
 
+      {/* Chat History & Sessions Modal */}
+      <Modal
+        visible={showHistoryModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowHistoryModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.historyModalCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            {/* Modal Header */}
+            <View style={[styles.historyModalHeader, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="time" size={20} color={theme.primary} />
+                <Text style={[styles.historyModalTitle, { color: theme.text }]}>
+                  {isRTL ? 'سجل الاستشارات السابقة' : 'Consultation History'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowHistoryModal(false)}
+                style={[styles.closeIconBtn, { backgroundColor: theme.btnBg }]}
+              >
+                <Ionicons name="close" size={18} color={theme.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Action: Start New Chat */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleStartNewChat}
+              style={[styles.newChatCardBtn, { backgroundColor: `${theme.primary}15`, borderColor: theme.primary, flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+            >
+              <View style={[styles.newChatIconCircle, { backgroundColor: theme.primary }]}>
+                <Ionicons name="add" size={20} color="#0B132B" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.newChatCardTitle, { color: theme.primary, textAlign: isRTL ? 'right' : 'left' }]}>
+                  {isRTL ? 'بدء استشارة جديدة' : 'Start New Consultation'}
+                </Text>
+                <Text style={[styles.newChatCardSub, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>
+                  {isRTL ? 'اطرح فكرة جديدة وسنحفظ استشاراتك السابقة' : 'Discuss a new idea without losing previous chats'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Sessions List */}
+            <ScrollView style={{ maxHeight: 380, width: '100%' }} showsVerticalScrollIndicator={false}>
+              {sessions.length === 0 ? (
+                <View style={styles.emptyHistoryBox}>
+                  <Ionicons name="chatbubbles-outline" size={40} color={theme.textMuted} />
+                  <Text style={[styles.emptyHistoryText, { color: theme.textMuted }]}>
+                    {isRTL ? 'لا توجد استشارات سابقة حتى الآن.\nابدأ استشارتك الأولى الآن وسيتم حفظها تلقائياً!' : 'No previous consultations yet.\nStart your first one and it will be saved automatically!'}
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ gap: 10, paddingVertical: 6 }}>
+                  {sessions.map((sess) => {
+                    const isActive = sess.id === currentSessionId;
+                    const dateStr = new Date(sess.updatedAt || sess.createdAt).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
+
+                    return (
+                      <TouchableOpacity
+                        key={sess.id}
+                        activeOpacity={0.8}
+                        onPress={() => handleSelectSession(sess)}
+                        style={[
+                          styles.sessionItemCard,
+                          {
+                            backgroundColor: isActive ? `${theme.primary}12` : theme.btnBg,
+                            borderColor: isActive ? theme.primary : theme.border,
+                          }
+                        ]}
+                      >
+                        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                            <Ionicons
+                              name={sess.hasBlueprint ? 'document-text' : 'chatbubble-ellipses-outline'}
+                              size={16}
+                              color={isActive ? theme.primary : theme.textMuted}
+                            />
+                            <Text
+                              numberOfLines={1}
+                              style={[styles.sessionItemTitle, { color: isActive ? theme.primary : theme.text, flex: 1, textAlign: isRTL ? 'right' : 'left' }]}
+                            >
+                              {sess.title || (isRTL ? 'استشارة غير معنونة' : 'Untitled Consultation')}
+                            </Text>
+                          </View>
+
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation?.();
+                              handleDeleteSession(sess.id);
+                            }}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            style={styles.deleteSessionBtn}
+                            accessibilityLabel={isRTL ? 'حذف الاستشارة' : 'Delete'}
+                          >
+                            <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                          </TouchableOpacity>
+                        </View>
+
+                        {sess.preview ? (
+                          <Text
+                            numberOfLines={2}
+                            style={[styles.sessionItemPreview, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}
+                          >
+                            {sess.preview}
+                          </Text>
+                        ) : null}
+
+                        {/* Metadata chips */}
+                        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                          <Text style={[styles.sessionItemDate, { color: theme.textMuted }]}>
+                            {dateStr}
+                          </Text>
+
+                          {sess.messages && (
+                            <View style={[styles.metaChip, { backgroundColor: theme.card }]}>
+                              <Text style={[styles.metaChipText, { color: theme.textMuted }]}>
+                                {sess.messages.length} {isRTL ? 'رسائل' : 'msgs'}
+                              </Text>
+                            </View>
+                          )}
+
+                          {sess.hasBlueprint && (
+                            <View style={[styles.metaChip, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                              <Text style={[styles.metaChipText, { color: '#10B981', fontWeight: 'bold' }]}>
+                                {isRTL ? 'خطة معتمدة' : 'Blueprint'}
+                              </Text>
+                            </View>
+                          )}
+
+                          {isActive && (
+                            <View style={[styles.metaChip, { backgroundColor: `${theme.primary}25` }]}>
+                              <Text style={[styles.metaChipText, { color: theme.primary, fontWeight: 'bold' }]}>
+                                {isRTL ? 'النشطة' : 'Active'}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Modal Footer: Clear All Button */}
+            {sessions.length > 0 && (
+              <View style={[styles.historyModalFooter, { borderTopColor: theme.border }]}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={handleClearAllSessions}
+                  style={styles.clearAllBtn}
+                >
+                  <Ionicons name="trash-bin-outline" size={14} color="#EF4444" />
+                  <Text style={styles.clearAllBtnText}>
+                    {isRTL ? 'مسح كافة المحادثات' : 'Clear All Sessions'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -2618,5 +3048,128 @@ const styles = StyleSheet.create({
     color: '#0B132B',
     fontSize: 14,
     fontWeight: '900',
+  },
+  historyBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#38BDF8',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  historyBadgeText: {
+    color: '#0B132B',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  historyModalCard: {
+    width: '100%',
+    maxWidth: 520,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
+  },
+  historyModalHeader: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    marginBottom: 12,
+  },
+  historyModalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  closeIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  newChatCardBtn: {
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  newChatIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  newChatCardTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  newChatCardSub: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  emptyHistoryBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 36,
+    gap: 12,
+  },
+  emptyHistoryText: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  sessionItemCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+  },
+  sessionItemTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  sessionItemPreview: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 2,
+  },
+  sessionItemDate: {
+    fontSize: 11,
+  },
+  deleteSessionBtn: {
+    padding: 4,
+    marginLeft: 6,
+  },
+  metaChip: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  metaChipText: {
+    fontSize: 10,
+  },
+  historyModalFooter: {
+    paddingTop: 10,
+    marginTop: 6,
+    borderTopWidth: 1,
+    alignItems: 'center',
+  },
+  clearAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  clearAllBtnText: {
+    color: '#EF4444',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });

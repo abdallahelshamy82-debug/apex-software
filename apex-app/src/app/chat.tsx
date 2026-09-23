@@ -316,6 +316,7 @@ export default function ChatScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.8,
+      base64: true,
     });
     if (!result.canceled && result.assets && result.assets[0]) {
       setUploading(true);
@@ -324,7 +325,7 @@ export default function ChatScreen() {
       const type = (asset as any).mimeType || (asset as any).type || 'image/jpeg';
       
       try {
-        const uploadRes = await api.uploadFile(asset.uri, filename, type);
+        const uploadRes = await api.uploadFile(asset.uri, filename, type, asset.base64 || undefined);
         if (uploadRes && uploadRes.success && uploadRes.url) {
           const targetUrl = uploadRes.url;
           await sendMessagePayload({
@@ -359,7 +360,9 @@ export default function ChatScreen() {
   const handlePickDocument = async () => {
     if (uploading || isSendingRef.current) return;
     setShowAttachmentMenu(false);
-    let result = await DocumentPicker.getDocumentAsync({});
+    let result = await DocumentPicker.getDocumentAsync({
+      copyToCacheDirectory: true,
+    });
     if (!result.canceled && result.assets && result.assets[0]) {
       setUploading(true);
       const asset = result.assets[0];
@@ -367,7 +370,7 @@ export default function ChatScreen() {
       const type = asset.mimeType || (asset as any).type || 'application/pdf';
       
       try {
-        const uploadRes = await api.uploadFile(asset.uri, filename, type);
+        const uploadRes = await api.uploadFile(asset.uri, filename, type, (asset as any).base64);
         if (uploadRes && uploadRes.success && uploadRes.url) {
           const targetUrl = uploadRes.url;
           await sendMessagePayload({
@@ -855,7 +858,7 @@ export default function ChatScreen() {
         ]}
       >
         {/* Text Message (or caption if text is present and not matching doc name) */}
-        {msg.text && !isDoc && (
+        {!!msg.text && !isDoc && (
           <Text
             style={[
               styles.messageText,

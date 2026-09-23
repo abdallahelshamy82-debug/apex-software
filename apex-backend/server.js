@@ -1831,9 +1831,51 @@ app.get('/email-preview', (req, res) => {
   res.send(page);
 });
 
-// Upload File Route (Support Chat & Attachments)
-app.post('/api/upload', (req, res) => {
-  // Optional auth verification if token is present
+// Upload File Route (Support Chat & Attachments - Multipart & Base64)
+app.post('/api/upload', express.json({ limit: '30mb' }), (req, res, next) => {
+  // Check if this is a JSON base64 upload
+  if (req.is('application/json') && req.body && req.body.base64) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token) {
+      jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (!err && user) req.user = user;
+      });
+    }
+
+    try {
+      const { filename, mimeType, base64 } = req.body;
+      const safeExt = getSafeExt({ originalname: filename, mimetype: mimeType });
+      if (!ALLOWED_EXTENSIONS.has(safeExt) || DANGEROUS_EXTENSIONS.has(safeExt)) {
+        return res.status(400).json({ success: false, message: 'نوع الملف المرفوع غير مسموح به أمنياً' });
+      }
+
+      const cleanBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
+      const buffer = Buffer.from(cleanBase64, 'base64');
+
+      if (buffer.length > 25 * 1024 * 1024) {
+        return res.status(400).json({ success: false, message: 'حجم الملف يتجاوز الحد الأقصى المسموح (25 ميجابايت)' });
+      }
+
+      const secureName = `${Date.now()}_${crypto.randomBytes(12).toString('hex')}${safeExt}`;
+      const targetPath = path.join(uploadsDir, secureName);
+      fs.writeFileSync(targetPath, buffer);
+
+      const fileUrl = `/uploads/${secureName}`;
+      return res.json({
+        success: true,
+        url: fileUrl,
+        filename: filename || secureName,
+        mimetype: mimeType || 'application/octet-stream',
+        size: buffer.length
+      });
+    } catch (err) {
+      console.error('Base64 upload error:', err);
+      return res.status(500).json({ success: false, message: 'فشل حفظ الملف على السيرفر' });
+    }
+  }
+
+  // Otherwise handle as standard multipart
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (token) {
@@ -1859,6 +1901,51 @@ app.post('/api/upload', (req, res) => {
       size: req.file.size
     });
   });
+});
+
+// Dedicated endpoint for Base64 Upload (Reliable fallback for React Native Android/Expo)
+app.post('/api/upload-base64', express.json({ limit: '30mb' }), (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (!err && user) req.user = user;
+    });
+  }
+
+  try {
+    const { filename, mimeType, base64 } = req.body;
+    if (!base64) {
+      return res.status(400).json({ success: false, message: 'لم يتم استلام أي بيانات للملف' });
+    }
+    const safeExt = getSafeExt({ originalname: filename, mimetype: mimeType });
+    if (!ALLOWED_EXTENSIONS.has(safeExt) || DANGEROUS_EXTENSIONS.has(safeExt)) {
+      return res.status(400).json({ success: false, message: 'نوع الملف المرفوع غير مسموح به أمنياً' });
+    }
+
+    const cleanBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
+    const buffer = Buffer.from(cleanBase64, 'base64');
+
+    if (buffer.length > 25 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: 'حجم الملف يتجاوز الحد الأقصى المسموح (25 ميجابايت)' });
+    }
+
+    const secureName = `${Date.now()}_${crypto.randomBytes(12).toString('hex')}${safeExt}`;
+    const targetPath = path.join(uploadsDir, secureName);
+    fs.writeFileSync(targetPath, buffer);
+
+    const fileUrl = `/uploads/${secureName}`;
+    return res.json({
+      success: true,
+      url: fileUrl,
+      filename: filename || secureName,
+      mimetype: mimeType || 'application/octet-stream',
+      size: buffer.length
+    });
+  } catch (err) {
+    console.error('Base64 upload error:', err);
+    return res.status(500).json({ success: false, message: 'فشل حفظ الملف على السيرفر' });
+  }
 });
 
 // 💬 Send Message via REST API (Reliable Fallback & State Sync)
