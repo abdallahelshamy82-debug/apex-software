@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  /* Premium Dark Mode Colors */
+  --color-bg-onyx: #09090B;
+  --color-card-dark: #111113;
+  --color-card-hover: #18181B;
+  --color-accent-radium: #ccff00; /* Vibrant Neon/Radium Green */
+  --color-text-muted: #A1A1AA;
+  --color-border-glass: rgba(255, 255, 255, 0.1);
+
+  /* Fonts Mapping */
+  --font-sans: var(--font-primary-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-primary-heading), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  :root[dir="rtl"] {
+    --font-primary-sans: var(--font-tajawal);
+    --font-primary-heading: var(--font-tajawal);
+  }
+  :root[dir="ltr"] {
+    --font-primary-sans: var(--font-space-grotesk);
+    --font-primary-heading: var(--font-space-grotesk);
+  }
+
+  body {
+    background-color: var(--color-bg-onyx);
+    color: #ffffff;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg-onyx);
+    color: #ffffff;
+  }
+}
+
+@media (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
+}
