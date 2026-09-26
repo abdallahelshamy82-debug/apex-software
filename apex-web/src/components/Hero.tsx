@@ -85,6 +85,15 @@ export default function Hero() {
                   {t.common.clientPortal}
                 </a>
               </Magnetic>
+
+              <Magnetic strength={0.2}>
+                <a 
+                  href="https://expo.dev/artifacts/eas/O9eYqlRKcalAIvfweoG4Ic2Wq5YBbkPIjs0F0M28hS8.apk" 
+                  className="px-8 py-4 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-lg hover:bg-white/10 transition-colors block cursor-none"
+                >
+                  {t.common.downloadApp}
+                </a>
+              </Magnetic>
             </motion.div>
           </div>
 

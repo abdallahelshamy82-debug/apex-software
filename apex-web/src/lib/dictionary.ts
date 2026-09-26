@@ -2,7 +2,8 @@ export const dict = {
   ar: {
     common: {
       clientPortal: "بوابة العملاء",
-      startProject: "ابدأ مشروعك"
+      startProject: "ابدأ مشروعك",
+      downloadApp: "تنزيل تطبيق أندرويد"
     },
     hero: {
       title: "نبتكر ونصنع البرمجيات التي تقود مستقبلك",
@@ -65,7 +66,8 @@ export const dict = {
   en: {
     common: {
       clientPortal: "Client Portal",
-      startProject: "Start Your Project"
+      startProject: "Start Your Project",
+      downloadApp: "Download Android App"
     },
     hero: {
       title: "Scalable Systems, Flawless Engineering.",
