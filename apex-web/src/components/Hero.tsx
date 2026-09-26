@@ -70,7 +70,7 @@ export default function Hero() {
             >
               <Magnetic strength={0.2}>
                 <a 
-                  href="#" onClick={(e) => { e.preventDefault(); alert("Under construction"); }} 
+                  href={process.env.NEXT_PUBLIC_PORTAL_URL || '#'} target='_blank'  
                   className="px-8 py-4 rounded-full bg-accent-radium text-bg-onyx font-sans font-bold text-lg hover:bg-white transition-colors shadow-[0_0_20px_rgba(204,255,0,0.4)] block cursor-none"
                 >
                   {t.common.startProject}
@@ -79,7 +79,7 @@ export default function Hero() {
               
               <Magnetic strength={0.2}>
                 <a 
-                  href="#" onClick={(e) => { e.preventDefault(); alert("Under construction"); }} 
+                  href={process.env.NEXT_PUBLIC_PORTAL_URL || '#'} target='_blank'  
                   className="px-8 py-4 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-lg hover:bg-white/10 transition-colors block cursor-none"
                 >
                   {t.common.clientPortal}

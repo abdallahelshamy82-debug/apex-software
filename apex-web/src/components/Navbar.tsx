@@ -19,7 +19,7 @@ export default function Navbar() {
         
         <div className="flex items-center gap-4">
           <a 
-            href="#" onClick={(e) => { e.preventDefault(); alert(lang === "ar" ? "بوابة العملاء تحت الإنشاء" : "Client Portal under construction"); }} 
+            href={process.env.NEXT_PUBLIC_PORTAL_URL || '#'} target='_blank'  
             className="px-5 py-2.5 rounded-full border border-white/20 text-white font-sans text-sm font-medium hover:bg-white/10 transition-colors backdrop-blur-md cursor-none"
           >
             {t.common.clientPortal}
