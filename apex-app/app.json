@@ -22,9 +22,11 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "USE_BIOMETRIC",
-        "USE_FINGERPRINT",
-        "NOTIFICATIONS"
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize"
@@ -75,7 +77,8 @@
         {
           "android": {
             "enableProguardInReleaseBuilds": true,
-            "shrinkResources": true
+            "shrinkResources": true,
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ],
@@ -84,6 +87,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "723fd3cb-e637-4109-8967-8c4eebd0f375"
+      }
+    },
+    "owner": "abdallah_au"
   }
 }
