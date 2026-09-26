@@ -13,7 +13,7 @@ export default function HorizontalPortfolio() {
   });
 
   // Dynamic scroll mapping based on RTL vs LTR
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", lang === 'ar' ? "50%" : "-50%"]); 
+  const x = useTransform(scrollYProgress, [0, 1], ['0vw', lang === 'ar' ? '150vw' : '-150vw']); 
 
   return (
     <section ref={targetRef} className="relative h-[250vh] bg-bg-onyx">
@@ -60,12 +60,12 @@ export default function HorizontalPortfolio() {
 
                 <div className={`absolute bottom-0 ${lang === 'ar' ? 'right-0' : 'left-0'} w-full p-10 flex flex-col justify-end z-10`}>
                   <div className="overflow-hidden mb-2">
-                    <h3 className="text-4xl md:text-5xl font-serif font-bold text-white translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <h3 className="text-3xl md:text-5xl font-serif font-bold text-white transform-none md:translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                       {p.title}
                     </h3>
                   </div>
                   <div className="overflow-hidden">
-                    <p className="text-xl text-accent-radium font-sans translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                    <p className="text-xl text-accent-radium font-sans transform-none opacity-100 md:translate-y-full md:opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 md:delay-100 mt-2">
                       {p.desc}
                     </p>
                   </div>
