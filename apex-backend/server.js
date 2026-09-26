@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
@@ -256,12 +255,7 @@ const upload = multer({
 const JWT_SECRET = process.env.JWT_SECRET || 'apex_dev_jwt_secret_change_in_production';
 
 // Database Config
-const dbPath = path.resolve(__dirname, 'database.sqlite');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) console.error('Error opening database', err);
-  else {
-    console.log('✅ Connected to SQLite database.');
-    db.run('PRAGMA journal_mode = WAL;');
+const db = require('./database');
     db.serialize(() => {
       db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -349,8 +343,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
       // Clean up existing duplicates in database
       db.run(`DELETE FROM messages WHERE id NOT IN (SELECT MIN(id) FROM messages GROUP BY userId, senderRole, text, IFNULL(attachmentUrl, ''), IFNULL(clientMsgId, ''))`, () => {});
     });
-  }
-});
 
 // Realtime Chat (Socket.io)
 io.on('connection', (socket) => {
@@ -2111,4 +2103,8 @@ app.get('/privacy', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => console.log(`✅ Apex API Server running on http://0.0.0.0:${PORT}`));
+if (require.main === module) {
+  server.listen(PORT, '0.0.0.0', () => console.log(🚀 Apex API Server running on port ));
+}
+
+module.exports = app;
