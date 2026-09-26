@@ -85,8 +85,9 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // Create uploads directory if not exists
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+let uploadsDir = path.join(__dirname, 'uploads');
+if (process.env.VERCEL) uploadsDir = '/tmp/uploads';
+if (!fs.existsSync(uploadsDir)) { try { fs.mkdirSync(uploadsDir); } catch(e){} }
 app.use('/uploads', express.static(uploadsDir, {
   dotfiles: 'ignore',
   setHeaders: (res, filePath) => {
