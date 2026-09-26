@@ -2104,7 +2104,7 @@ app.get('/privacy', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
-  server.listen(PORT, '0.0.0.0', () => console.log(🚀 Apex API Server running on port ));
+  server.listen(PORT, '0.0.0.0', () => console.log('Apex API Server running'));
 }
 
 module.exports = app;
