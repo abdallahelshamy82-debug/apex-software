@@ -67,7 +67,7 @@ function ServiceRow({ srv, i, lang }: { srv: any; i: number; lang: string }) {
           <span className="text-accent-radium font-sans font-black text-3xl md:text-4xl mb-4 drop-shadow-[0_0_15px_rgba(204,255,0,0.4)] block">
             {srv.id}
           </span>
-          <h3 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-6">
+          <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-6">
             {srv.title}
           </h3>
           <p className="text-text-muted font-sans text-lg md:text-xl leading-relaxed">
@@ -91,7 +91,7 @@ export default function Services() {
   });
 
   return (
-    <section className="py-24 px-8 md:px-20 bg-bg-onyx text-white">
+    <section className="py-24 px-5 md:px-10 bg-bg-onyx text-white">
       <div className="max-w-7xl mx-auto border-t border-border-glass pt-24">
         
         <div className="flex flex-col items-center text-center mb-20 gap-6">
@@ -100,7 +100,7 @@ export default function Services() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-serif font-bold leading-tight"
+            className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold leading-tight"
           >
             {t.services.title} <span className="text-accent-radium italic px-2">{t.services.titleHighlight}</span>
           </motion.h2>
