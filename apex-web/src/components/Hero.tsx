@@ -26,7 +26,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative w-full min-h-screen flex flex-col justify-center px-8 md:px-20 bg-bg-onyx overflow-hidden pt-20 pb-10">
+    <section className="relative w-full min-h-screen flex flex-col justify-center px-5 md:px-10 bg-bg-onyx overflow-hidden pt-28 md:pt-20 pb-10">
       <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[70vw] h-[40vh] bg-white/5 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto">

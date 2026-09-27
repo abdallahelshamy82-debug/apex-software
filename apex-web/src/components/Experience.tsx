@@ -6,7 +6,7 @@ export default function Experience() {
   const { t, lang } = useLanguage();
   
   return (
-    <section className="py-24 px-8 md:px-20 bg-bg-onyx">
+    <section className="py-24 px-5 md:px-10 bg-bg-onyx">
       <div className="max-w-7xl mx-auto border-t border-border-glass pt-24">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -20,7 +20,7 @@ export default function Experience() {
           </h2>
         </motion.div>
 
-        <div className={`flex flex-col gap-12 ${lang === 'ar' ? 'border-r pr-8 md:pr-12 mr-4' : 'border-l pl-8 md:pl-12 ml-4'} border-border-glass`}>
+        <div className={`flex flex-col gap-12 ${lang === 'ar' ? 'border-r pr-16 md:pr-12 mr-2 md:mr-4' : 'border-l pl-16 md:pl-12 ml-2 md:ml-4'} border-border-glass`}>
           {t.experience.list.map((exp, i) => (
             <motion.div 
               key={i}
