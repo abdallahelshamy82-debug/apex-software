@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "230331278530",
+    "project_id": "apex-software-469ee",
+    "storage_bucket": "apex-software-469ee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:230331278530:android:fe28c476cd55ff6190875b",
+        "android_client_info": {
+          "package_name": "com.apexsoftware.portal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5O01ewo8UQvh2DS83_jwn6BcXmxJE4-Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
