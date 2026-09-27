@@ -4,8 +4,18 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SettingsProvider } from '../context/SettingsContext';
 import { ApexToastProvider } from '../components/ApexToast';
-import { LogBox, Platform } from 'react-native';
+import { LogBox, Platform, Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+if (typeof ErrorUtils !== 'undefined') {
+  ErrorUtils.setGlobalHandler((error, isFatal) => {
+    Alert.alert(
+      'Crash Detected!',
+      `${error.message}\n${error.stack}`,
+      [{ text: 'OK' }]
+    );
+  });
+}
 
 // Disable error/warning toasts & red/yellow boxes from showing on client screen
 LogBox.ignoreAllLogs(true);
