@@ -15,12 +15,12 @@ export default function Experience() {
           transition={{ duration: 0.8 }}
           className={`mb-20 ${lang === 'ar' ? 'text-right' : 'text-left'}`}
         >
-           <h2 className="text-5xl md:text-7xl font-serif font-bold text-white">
+           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-white">
             {t.experience.title} <span className="text-accent-radium italic px-2">{t.experience.titleHighlight}</span>
           </h2>
         </motion.div>
 
-        <div className={`flex flex-col gap-12 ${lang === 'ar' ? 'border-r pr-24 md:pr-32 mr-6' : 'border-l pl-24 md:pl-32 ml-6'} border-border-glass`}>
+        <div className={`flex flex-col gap-12 ${lang === 'ar' ? 'border-r pr-8 md:pr-12 mr-4' : 'border-l pl-8 md:pl-12 ml-4'} border-border-glass`}>
           {t.experience.list.map((exp, i) => (
             <motion.div 
               key={i}
@@ -33,7 +33,7 @@ export default function Experience() {
               {/* Glowing Dot on Timeline */}
               <span className={`absolute top-[32px] w-4 h-4 rounded-full bg-accent-radium md:bg-bg-onyx border-2 border-accent-radium md:border-border-glass md:group-hover:border-accent-radium md:group-hover:bg-accent-radium transition-all duration-500 shadow-[0_0_10px_rgba(204,255,0,0.4)] md:shadow-[0_0_10px_rgba(204,255,0,0)] md:group-hover:shadow-[0_0_20px_rgba(204,255,0,0.8)] md:group-hover:scale-150 ${lang === 'ar' ? '-right-[41px] md:-right-[57px]' : '-left-[41px] md:-left-[57px]'}`} />
 
-              <div className="flex flex-col">
+              <div className={`flex flex-col ${lang === 'ar' ? 'pr-12 md:pr-16' : 'pl-12 md:pl-16'}`}>
                 {/* Year - Visible but dims when not hovered to draw attention */}
                 <span className="text-accent-radium md:text-white/30 md:group-hover:text-accent-radium font-sans text-sm font-bold tracking-[0.2em] uppercase mb-4 block transition-colors duration-500">
                   {exp.year}

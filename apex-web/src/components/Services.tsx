@@ -120,12 +120,12 @@ export default function Services() {
         <div ref={containerRef} className="relative mt-20 md:mt-32 w-full">
           
           {/* Vertical Track Background */}
-          <div className={`absolute top-0 bottom-0 w-[2px] bg-white/10 ${lang === 'ar' ? 'right-[13px] md:right-auto md:left-1/2 md:-translate-x-1/2' : 'left-[13px] md:left-1/2 md:-translate-x-1/2'}`} />
+          <div className={`absolute top-[80px] bottom-[80px] md:top-[128px] md:bottom-[128px] w-[2px] bg-white/10 ${lang === 'ar' ? 'right-[13px] md:right-auto md:left-1/2 md:-translate-x-1/2' : 'left-[13px] md:left-1/2 md:-translate-x-1/2'}`} />
           
           {/* Glowing Fill Bar linked to Scroll */}
           <motion.div 
             style={{ scaleY: scrollYProgress, transformOrigin: 'top' }}
-            className={`absolute top-0 bottom-0 w-[4px] bg-accent-radium shadow-[0_0_20px_#ccff00] z-10 ${lang === 'ar' ? 'right-[12px] md:right-auto md:left-1/2 md:-translate-x-1/2' : 'left-[12px] md:left-1/2 md:-translate-x-1/2'}`}
+            className={`absolute top-[80px] bottom-[80px] md:top-[128px] md:bottom-[128px] w-[4px] bg-accent-radium shadow-[0_0_20px_#ccff00] z-10 ${lang === 'ar' ? 'right-[12px] md:right-auto md:left-1/2 md:-translate-x-1/2' : 'left-[12px] md:left-1/2 md:-translate-x-1/2'}`}
           />
 
           {/* Service Items */}

@@ -25,7 +25,7 @@ export default function HorizontalPortfolio() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-5xl md:text-7xl font-serif font-bold text-white mb-2"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-white mb-2"
             >
               {t.portfolio.title} <span className="text-accent-radium italic px-2">{t.portfolio.titleHighlight}</span>
             </motion.h2>
