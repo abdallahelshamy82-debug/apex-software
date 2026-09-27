@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { motion, useScroll, useInView } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 
-function ServiceRow({ srv, i, lang }: { srv: any; i: number; lang: string }) {
+function ServiceRow({ srv, i, lang }: { srv: { id: string; title: string; desc: string }; i: number; lang: string }) {
   const isEven = i % 2 === 0;
   const dotRef = useRef<HTMLDivElement>(null);
   

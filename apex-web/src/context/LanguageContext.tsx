@@ -16,10 +16,10 @@ const LangContext = createContext<LangContextProps | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>('ar');
-  const [mounted, setMounted] = useState(false);
+  
 
   useEffect(() => {
-    setMounted(true);
+    
     // Sync document direction and language for global css targeting
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;

@@ -17,6 +17,7 @@ export default function CustomCursor() {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
     // Only run on devices with a mouse
     if (window.matchMedia("(pointer: coarse)").matches) return;
