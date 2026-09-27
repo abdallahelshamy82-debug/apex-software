@@ -34,7 +34,7 @@ export default function Hero() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="text-6xl md:text-8xl lg:text-[7.5rem] font-heading font-black text-white leading-[1.2] md:leading-[1.25] tracking-tight flex flex-wrap gap-x-4 gap-y-2 md:gap-x-6"
+          className="text-4xl md:text-8xl lg:text-[7.5rem] font-heading font-black text-white leading-[1.2] md:leading-[1.25] tracking-tight flex flex-wrap gap-x-3 gap-y-2 md:gap-x-6 justify-center md:justify-start"
         >
           {words.map((word, index) => {
             const isHighlight = t.hero.highlights.includes(word);

@@ -31,16 +31,16 @@ export default function Experience() {
               className="relative group cursor-crosshair py-6"
             >
               {/* Glowing Dot on Timeline */}
-              <span className={`absolute top-[32px] w-4 h-4 rounded-full bg-bg-onyx border-2 border-border-glass group-hover:border-accent-radium group-hover:bg-accent-radium transition-all duration-500 shadow-[0_0_10px_rgba(204,255,0,0)] group-hover:shadow-[0_0_20px_rgba(204,255,0,0.8)] group-hover:scale-150 ${lang === 'ar' ? '-right-[41px] md:-right-[57px]' : '-left-[41px] md:-left-[57px]'}`} />
+              <span className={`absolute top-[32px] w-4 h-4 rounded-full bg-accent-radium md:bg-bg-onyx border-2 border-accent-radium md:border-border-glass md:group-hover:border-accent-radium md:group-hover:bg-accent-radium transition-all duration-500 shadow-[0_0_10px_rgba(204,255,0,0.4)] md:shadow-[0_0_10px_rgba(204,255,0,0)] md:group-hover:shadow-[0_0_20px_rgba(204,255,0,0.8)] md:group-hover:scale-150 ${lang === 'ar' ? '-right-[41px] md:-right-[57px]' : '-left-[41px] md:-left-[57px]'}`} />
 
               <div className="flex flex-col">
                 {/* Year - Visible but dims when not hovered to draw attention */}
-                <span className="text-white/30 group-hover:text-accent-radium font-sans text-sm font-bold tracking-[0.2em] uppercase mb-4 block transition-colors duration-500">
+                <span className="text-accent-radium md:text-white/30 md:group-hover:text-accent-radium font-sans text-sm font-bold tracking-[0.2em] uppercase mb-4 block transition-colors duration-500">
                   {exp.year}
                 </span>
                 
-                {/* Content - Hidden and blurred until hovered */}
-                <div className="opacity-0 group-hover:opacity-100 blur-md group-hover:blur-none -translate-x-4 group-hover:translate-x-0 transition-all duration-700 ease-out flex flex-col">
+                {/* Content - Hidden and blurred until hovered ON DESKTOP ONLY */}
+                <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 blur-none md:blur-md md:group-hover:blur-none translate-x-0 md:-translate-x-4 md:group-hover:translate-x-0 transition-all duration-700 ease-out flex flex-col">
                   <h3 className="text-3xl md:text-4xl font-serif font-bold text-white mb-2">{exp.role}</h3>
                   <h4 className="text-lg text-white/50 font-sans mb-4">{exp.company}</h4>
                   <p className="text-text-muted font-sans leading-relaxed max-w-2xl text-base md:text-lg">
