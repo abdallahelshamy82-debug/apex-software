@@ -20,7 +20,7 @@ export default function Experience() {
           </h2>
         </motion.div>
 
-        <div className={`flex flex-col gap-12 ${lang === 'ar' ? 'border-r pr-16 md:pr-24 mr-2 md:mr-4' : 'border-l pl-16 md:pl-24 ml-2 md:ml-4'} border-border-glass`}>
+        <div className={`flex flex-col gap-12 ${lang === 'ar' ? 'border-r pr-24 md:pr-32 mr-6' : 'border-l pl-24 md:pl-32 ml-6'} border-border-glass`}>
           {t.experience.list.map((exp, i) => (
             <motion.div 
               key={i}
