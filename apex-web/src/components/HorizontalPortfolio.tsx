@@ -51,16 +51,16 @@ export default function HorizontalPortfolio() {
               >
                 
                 <div 
-                  className="absolute inset-0 bg-cover bg-center transition-all duration-1000 group-hover:scale-105 filter grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-60"
+                  className="absolute inset-0 bg-cover bg-center transition-all duration-1000 group-hover:scale-105 filter md:grayscale md:opacity-40 grayscale-0 opacity-60 md:group-hover:grayscale-0 md:group-hover:opacity-60"
                   style={{ backgroundImage: `url('${p.img}')` }}
                 />
 
                 {/* Solid black gradient overlay to ensure text legibility and prevent messy overlapping */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-100 md:opacity-80 md:group-hover:opacity-100 transition-opacity duration-500" />
 
                 <div className={`absolute bottom-0 ${lang === 'ar' ? 'right-0' : 'left-0'} w-full p-10 flex flex-col justify-end z-10`}>
                   <div className="overflow-hidden mb-2">
-                    <h3 className="text-3xl md:text-5xl font-serif font-bold text-white transform-none md:translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <h3 className="text-3xl md:text-5xl font-serif font-bold text-white transform-none md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-500">
                       {p.title}
                     </h3>
                   </div>

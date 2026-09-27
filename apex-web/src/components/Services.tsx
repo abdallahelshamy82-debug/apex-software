@@ -15,7 +15,7 @@ function ServiceRow({ srv, i, lang }: { srv: any; i: number; lang: string }) {
 
   return (
     <div 
-      className={`relative flex w-full items-center py-20 md:py-32 justify-start ${isEven ? 'md:justify-start' : 'md:justify-end'}`}
+      className={`relative flex w-full items-center py-20 md:py-32 justify-start ${isEven ? 'md:justify-start' : 'md:justify-end'} ${lang === 'ar' ? 'pr-12 md:pr-0' : 'pl-12 md:pl-0'}`}
     >
       {/* Empty Dot that fills up */}
       <motion.div 
