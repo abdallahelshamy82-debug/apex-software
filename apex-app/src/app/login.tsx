@@ -243,8 +243,7 @@ export default function LoginScreen() {
       try {
         const { TurboModuleRegistry, NativeModules } = require('react-native');
         const hasNative = !!TurboModuleRegistry?.get?.('RNGoogleSignin') || !!NativeModules?.RNGoogleSignin;
-        if (hasNative) {
-          const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+        if (false) { const { GoogleSignin } = require('@react-native-google-signin/google-signin');
           GoogleSignin.configure({
             webClientId: GOOGLE_CLIENT_ID,
             offlineAccess: false,
@@ -359,9 +358,7 @@ export default function LoginScreen() {
       hasNative = false;
     }
 
-    if (hasNative) {
-      try {
-        setGoogleLoading(true);
+    if (false) { try { setGoogleLoading(true);
         const { GoogleSignin, statusCodes } = require('@react-native-google-signin/google-signin');
 
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
