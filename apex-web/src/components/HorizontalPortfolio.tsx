@@ -14,6 +14,10 @@ export default function HorizontalPortfolio() {
 
   // Dynamic scroll mapping based on RTL vs LTR
   const x = useTransform(scrollYProgress, [0, 1], ['0%', lang === 'ar' ? '65%' : '-65%']); 
+  
+  // Rotating the cards slightly as the user scrolls
+  const rotateZ = useTransform(scrollYProgress, [0, 1], [-5, 5]);
+  const yOffset = useTransform(scrollYProgress, [0, 0.5, 1], [50, 0, -50]);
 
   return (
     <section ref={targetRef} className="relative h-[250vh] bg-bg-onyx">
@@ -42,12 +46,13 @@ export default function HorizontalPortfolio() {
         <motion.div style={{ x }} className="flex gap-10 px-10 md:px-24 w-[300vw] md:w-[150vw] items-center pt-32">
           {t.portfolio.projects.map((p, index) => {
             return (
-              <a 
+              <motion.a 
                 key={p.id} 
                 href={p.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-[85vw] md:w-[40vw] h-[60vh] shrink-0 relative group cursor-pointer overflow-hidden bg-card-dark rounded-xl border border-border-glass block"
+                style={{ rotateZ, y: yOffset }}
+                className="w-[85vw] md:w-[40vw] h-[60vh] shrink-0 relative group cursor-pointer overflow-hidden bg-card-dark rounded-xl border border-border-glass block shadow-2xl"
               >
                 
                 <div 
@@ -71,15 +76,12 @@ export default function HorizontalPortfolio() {
                   </div>
                 </div>
 
-                <div className={`absolute top-8 ${lang === 'ar' ? 'right-8' : 'left-8'} text-white/20 font-sans font-bold text-6xl group-hover:text-accent-radium/20 transition-colors duration-500`}>
-                  0{index + 1}
-                </div>
-              </a>
+              </motion.a>
             );
           })}
         </motion.div>
 
       </div>
     </section>
-  )
+  );
 }
