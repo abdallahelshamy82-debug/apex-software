@@ -66,7 +66,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.8 }}
-              className="flex flex-wrap items-center gap-4"
+              className="flex flex-col w-full px-6 md:flex-row md:w-auto md:px-0 gap-4"
             >
               <Magnetic strength={0.2}>
                 <a 

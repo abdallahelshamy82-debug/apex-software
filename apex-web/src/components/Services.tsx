@@ -15,7 +15,7 @@ function ServiceRow({ srv, i, lang }: { srv: any; i: number; lang: string }) {
 
   return (
     <div 
-      className={`relative flex w-full items-center py-20 md:py-32 justify-start ${isEven ? 'md:justify-start' : 'md:justify-end'} ${lang === 'ar' ? 'pr-20 md:pr-0' : 'pl-20 md:pl-0'}`}
+      className={`relative flex w-full items-center py-20 md:py-32 justify-start ${isEven ? 'md:justify-start' : 'md:justify-end'} ${lang === 'ar' ? 'pr-16 md:pr-24' : 'pl-16 md:pl-24'}`}
     >
       {/* Empty Dot that fills up */}
       <motion.div 
@@ -46,7 +46,7 @@ function ServiceRow({ srv, i, lang }: { srv: any; i: number; lang: string }) {
       <div 
         className={`w-full md:w-1/2 ${
           lang === 'ar'
-            ? `pr-16 md:pr-0 ${isEven ? 'md:pl-16 lg:md:pl-24' : 'md:pr-16 lg:pr-24'}`
+            ? `pr-4 md:pr-8 ${isEven ? 'md:pl-16 lg:md:pl-24' : 'md:pr-16 lg:pr-24'}`
             : `pl-16 md:pl-0 ${isEven ? 'md:pr-16 lg:pr-24' : 'md:pl-16 lg:pl-24'}`
         }`}
       >
