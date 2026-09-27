@@ -103,7 +103,7 @@ export default function HomeScreen() {
               <View style={[styles.heroBadge, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Ionicons name="rocket-outline" size={14} color="#38BDF8" />
                 <Text style={styles.heroBadgeText}>
-                  {isRTL ? '✨ أيكس سوفتوير • تقنيات الجيل القادم' : '✨ APEX SOFTWARE STUDIO • NEXT-GEN TECH'}
+                  {isRTL ? '✨ أبكس سوفتوير • تقنيات الجيل القادم' : '✨ APEX SOFTWARE STUDIO • NEXT-GEN TECH'}
                 </Text>
               </View>
             </AnimatedReveal>
