@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
 
 // Check if valid postgres connection string exists
 const rawConnStr = (process.env.DATABASE_URL || '').trim().replace(/^["']|["']$/g, '');
@@ -20,35 +19,38 @@ if (hasValidPg) {
   }
 }
 
-// Prepare SQLite database with /tmp support for serverless
-let sqliteDbPath = path.resolve(__dirname, 'database.sqlite');
-if (process.env.VERCEL) {
-  const tmpDbPath = '/tmp/database.sqlite';
+// Prepare SQLite database only if PostgreSQL is not active
+let sqliteDb = null;
+if (!hasValidPg) {
   try {
-    if (!fs.existsSync(tmpDbPath)) {
-      if (fs.existsSync(sqliteDbPath)) {
-        fs.copyFileSync(sqliteDbPath, tmpDbPath);
-        console.log('Copied database.sqlite to /tmp/database.sqlite');
+    const sqlite3 = require('sqlite3').verbose();
+    let sqliteDbPath = path.resolve(__dirname, 'database.sqlite');
+    if (process.env.VERCEL) {
+      const tmpDbPath = '/tmp/database.sqlite';
+      try {
+        if (!fs.existsSync(tmpDbPath)) {
+          if (fs.existsSync(sqliteDbPath)) {
+            fs.copyFileSync(sqliteDbPath, tmpDbPath);
+            console.log('Copied database.sqlite to /tmp/database.sqlite');
+          }
+        }
+        sqliteDbPath = tmpDbPath;
+      } catch (e) {
+        console.error('Error copying sqlite to /tmp:', e);
       }
     }
-    sqliteDbPath = tmpDbPath;
-  } catch (e) {
-    console.error('Error copying sqlite to /tmp:', e);
-  }
-}
 
-let sqliteDb = null;
-try {
-  sqliteDb = new sqlite3.Database(sqliteDbPath, (err) => {
-    if (err) {
-      console.error('Error opening SQLite database:', err);
-    } else {
-      console.log('✅ Connected to SQLite database at:', sqliteDbPath);
-      sqliteDb.run('PRAGMA journal_mode = WAL;', () => {});
-    }
-  });
-} catch (e) {
-  console.error('Failed to construct sqlite3 DB:', e);
+    sqliteDb = new sqlite3.Database(sqliteDbPath, (err) => {
+      if (err) {
+        console.error('Error opening SQLite database:', err);
+      } else {
+        console.log('✅ Connected to SQLite database at:', sqliteDbPath);
+        sqliteDb.run('PRAGMA journal_mode = WAL;', () => {});
+      }
+    });
+  } catch (e) {
+    console.warn('SQLite not available or not loaded:', e.message);
+  }
 }
 
 // Helper: Convert SQLite SQL to PostgreSQL SQL
@@ -57,6 +59,7 @@ function convertSql(sql) {
   pgSql = pgSql.replace(/INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT/gi, 'SERIAL PRIMARY KEY');
   pgSql = pgSql.replace(/DATETIME/gi, 'TIMESTAMP');
   pgSql = pgSql.replace(/ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+(?!IF\s+NOT\s+EXISTS)/gi, 'ALTER TABLE $1 ADD COLUMN IF NOT EXISTS ');
+  pgSql = pgSql.replace(/IFNULL\s*\(/gi, 'COALESCE(');
   let i = 1;
   pgSql = pgSql.replace(/\?/g, () => `$${i++}`);
   return pgSql;
