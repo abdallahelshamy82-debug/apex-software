@@ -53,12 +53,6 @@
         }
       ],
       [
-        "expo-av",
-        {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone for voice messages."
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos for sending images."
