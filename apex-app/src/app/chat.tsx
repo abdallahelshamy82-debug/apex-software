@@ -33,20 +33,8 @@ import {
   ChatMessage 
 } from '../utils/ticketStorage';
 
-// Safe loader for expo-av to prevent crashes in Expo Go environments where ExponentAV is missing
+// Safe loader for expo-av (disabled for New Architecture stability)
 let SafeAudio: any = null;
-try {
-  const { NativeModules, Platform } = require('react-native');
-  if (Platform.OS === 'web' || NativeModules?.ExponentAV || NativeModules?.ExpoAudio) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const av = require('expo-av');
-    if (av && av.Audio) {
-      SafeAudio = av.Audio;
-    }
-  }
-} catch (e) {
-  SafeAudio = null;
-}
 
 // Safe loaders for expo-sharing & expo-file-system
 let SafeSharing: any = null;

@@ -33,17 +33,6 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 // Safe loader for expo-av
 let SafeAudio: any = null;
-try {
-  const { NativeModules, Platform: RNPlatform } = require('react-native');
-  if (RNPlatform.OS === 'web' || NativeModules?.ExponentAV || NativeModules?.ExpoAudio) {
-    const av = require('expo-av');
-    if (av && av.Audio) {
-      SafeAudio = av.Audio;
-    }
-  }
-} catch (e) {
-  SafeAudio = null;
-}
 
 // Safe loader for expo-file-system
 let SafeFileSystem: any = null;
