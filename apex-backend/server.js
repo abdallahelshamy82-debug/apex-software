@@ -40,6 +40,7 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.disable('x-powered-by');
+app.set('trust proxy', 1);
 
 // 🛡️ Prevent Directory Traversal & Sensitive File Exposure
 app.use((req, res, next) => {

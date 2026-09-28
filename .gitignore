@@ -60,3 +60,5 @@ secure_connect.js
 .claude
 .gemini
 .cursor
+.vercel
+.env*

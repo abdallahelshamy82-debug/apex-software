@@ -1,97 +1,160 @@
-const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
 
-const connectionString = process.env.DATABASE_URL;
+// Check if valid postgres connection string exists
+const rawConnStr = (process.env.DATABASE_URL || '').trim().replace(/^["']|["']$/g, '');
+const hasValidPg = rawConnStr && !rawConnStr.includes('[YOUR-PASSWORD]') && rawConnStr.startsWith('postgres');
 
-if (!connectionString) {
-  console.error("❌ ERROR: DATABASE_URL is missing in .env file.");
-  process.exit(1);
+let pool = null;
+if (hasValidPg) {
+  try {
+    const { Pool } = require('pg');
+    pool = new Pool({
+      connectionString: rawConnStr,
+      ssl: { rejectUnauthorized: false }
+    });
+    console.log('✅ PostgreSQL connection pool initialized.');
+  } catch (e) {
+    console.error('Failed to initialize PG pool:', e);
+  }
 }
 
-const pool = new Pool({
-  connectionString,
-  ssl: {
-    rejectUnauthorized: false
+// Prepare SQLite database with /tmp support for serverless
+let sqliteDbPath = path.resolve(__dirname, 'database.sqlite');
+if (process.env.VERCEL) {
+  const tmpDbPath = '/tmp/database.sqlite';
+  try {
+    if (!fs.existsSync(tmpDbPath)) {
+      if (fs.existsSync(sqliteDbPath)) {
+        fs.copyFileSync(sqliteDbPath, tmpDbPath);
+        console.log('Copied database.sqlite to /tmp/database.sqlite');
+      }
+    }
+    sqliteDbPath = tmpDbPath;
+  } catch (e) {
+    console.error('Error copying sqlite to /tmp:', e);
   }
-});
+}
 
-pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL Database (Supabase).');
-});
+let sqliteDb = null;
+try {
+  sqliteDb = new sqlite3.Database(sqliteDbPath, (err) => {
+    if (err) {
+      console.error('Error opening SQLite database:', err);
+    } else {
+      console.log('✅ Connected to SQLite database at:', sqliteDbPath);
+      sqliteDb.run('PRAGMA journal_mode = WAL;', () => {});
+    }
+  });
+} catch (e) {
+  console.error('Failed to construct sqlite3 DB:', e);
+}
 
 // Helper: Convert SQLite SQL to PostgreSQL SQL
 function convertSql(sql) {
   let pgSql = sql;
-  
-  // Replace SQLite specific auto-increment
   pgSql = pgSql.replace(/INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT/gi, 'SERIAL PRIMARY KEY');
-  
-  // Replace DATETIME with TIMESTAMP
   pgSql = pgSql.replace(/DATETIME/gi, 'TIMESTAMP');
-  
-  // Convert ? to $1, $2, $3...
+  pgSql = pgSql.replace(/ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+(?!IF\s+NOT\s+EXISTS)/gi, 'ALTER TABLE $1 ADD COLUMN IF NOT EXISTS ');
   let i = 1;
   pgSql = pgSql.replace(/\?/g, () => `$${i++}`);
-  
   return pgSql;
 }
 
-// Mimic SQLite API
 module.exports = {
   serialize: (cb) => {
-    if (cb) cb();
+    if (sqliteDb) sqliteDb.serialize(cb);
+    else if (cb) cb();
   },
-  
-  run: (sql, params = [], cb) => {
+
+  run: function(sql, params = [], cb) {
     if (typeof params === 'function') {
       cb = params;
       params = [];
-    }
-    
-    let pgSql = convertSql(sql);
-    
-    const isInsert = /^\s*INSERT/i.test(pgSql);
-    if (isInsert && !/RETURNING/i.test(pgSql)) {
-      pgSql += ' RETURNING id';
     }
 
-    pool.query(pgSql, params, (err, res) => {
-      if (cb) {
-        if (err) return cb(err);
-        
-        const context = {
-          lastID: (isInsert && res.rows && res.rows.length) ? res.rows[0].id : null,
-          changes: res.rowCount || 0
-        };
-        cb.call(context, null);
+    if (pool) {
+      let pgSql = convertSql(sql);
+      const isInsert = /^\s*INSERT/i.test(pgSql);
+      if (isInsert && !/RETURNING/i.test(pgSql)) {
+        pgSql += ' RETURNING id';
       }
-    });
+
+      pool.query(pgSql, params, (err, res) => {
+        if (!err) {
+          if (cb) {
+            const context = {
+              lastID: (isInsert && res.rows && res.rows.length) ? res.rows[0].id : null,
+              changes: res.rowCount || 0
+            };
+            return cb.call(context, null);
+          }
+          return;
+        }
+
+        console.warn('Postgres run error, falling back to SQLite:', err.message);
+        if (sqliteDb) {
+          return sqliteDb.run(sql, params, cb);
+        }
+        if (cb) cb(err);
+      });
+    } else if (sqliteDb) {
+      sqliteDb.run(sql, params, cb);
+    } else if (cb) {
+      cb(new Error('No database available'));
+    }
   },
-  
-  get: (sql, params = [], cb) => {
+
+  get: function(sql, params = [], cb) {
     if (typeof params === 'function') {
       cb = params;
       params = [];
     }
-    pool.query(convertSql(sql), params, (err, res) => {
-      if (err) {
+
+    if (pool) {
+      pool.query(convertSql(sql), params, (err, res) => {
+        if (!err) {
+          if (cb) cb(null, res.rows && res.rows.length ? res.rows[0] : null);
+          return;
+        }
+
+        console.warn('Postgres get error, falling back to SQLite:', err.message);
+        if (sqliteDb) {
+          return sqliteDb.get(sql, params, cb);
+        }
         if (cb) cb(err, null);
-      } else {
-        if (cb) cb(null, res.rows.length ? res.rows[0] : null);
-      }
-    });
+      });
+    } else if (sqliteDb) {
+      sqliteDb.get(sql, params, cb);
+    } else if (cb) {
+      cb(new Error('No database available'), null);
+    }
   },
-  
-  all: (sql, params = [], cb) => {
+
+  all: function(sql, params = [], cb) {
     if (typeof params === 'function') {
       cb = params;
       params = [];
     }
-    pool.query(convertSql(sql), params, (err, res) => {
-      if (err) {
+
+    if (pool) {
+      pool.query(convertSql(sql), params, (err, res) => {
+        if (!err) {
+          if (cb) cb(null, res.rows || []);
+          return;
+        }
+
+        console.warn('Postgres all error, falling back to SQLite:', err.message);
+        if (sqliteDb) {
+          return sqliteDb.all(sql, params, cb);
+        }
         if (cb) cb(err, []);
-      } else {
-        if (cb) cb(null, res.rows || []);
-      }
-    });
+      });
+    } else if (sqliteDb) {
+      sqliteDb.all(sql, params, cb);
+    } else if (cb) {
+      cb(new Error('No database available'), []);
+    }
   }
 };
