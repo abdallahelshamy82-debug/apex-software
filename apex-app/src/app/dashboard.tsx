@@ -687,7 +687,7 @@ export default function DashboardScreen() {
           activeOpacity={0.85}
           onPress={() => {
             haptics.selection();
-            router.push('/portfolio');
+            Linking.openURL('https://apex-web-blond.vercel.app');
           }}
           style={[styles.card, { backgroundColor: '#0B132B', borderColor: 'rgba(56, 189, 248, 0.3)', marginTop: 12, padding: 16 }]}
         >

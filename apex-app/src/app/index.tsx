@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Platform, Linking } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedScrollHandler,
@@ -59,7 +59,7 @@ export default function HomeScreen() {
                    <TouchableOpacity onPress={() => router.push('/copilot')} style={styles.navLink}>
                      <Text style={styles.navLinkText}>{isRTL ? 'المساعد الذكي' : 'Copilot'}</Text>
                    </TouchableOpacity>
-                   <TouchableOpacity onPress={() => router.push('/portfolio')} style={styles.navLink}>
+                   <TouchableOpacity onPress={() => Linking.openURL('https://apex-web-blond.vercel.app')} style={styles.navLink}>
                      <Text style={styles.navLinkText}>{isRTL ? 'أعمالنا' : 'Portfolio'}</Text>
                    </TouchableOpacity>
                  </>
@@ -135,7 +135,7 @@ export default function HomeScreen() {
                
                <TouchableOpacity 
                  style={styles.secondaryActionBtn}
-                 onPress={() => router.push('/portfolio')}
+                 onPress={() => Linking.openURL('https://apex-web-blond.vercel.app')}
                >
                  <Text style={styles.secondaryActionText}>{isRTL ? 'استكشف أعمالنا' : 'Explore Portfolio'}</Text>
                </TouchableOpacity>
@@ -183,7 +183,7 @@ export default function HomeScreen() {
                  </Text>
                </InteractiveCard>
                
-               <InteractiveCard style={styles.glassCard} onPress={() => router.push('/portfolio')}>
+               <InteractiveCard style={styles.glassCard} onPress={() => Linking.openURL('https://apex-web-blond.vercel.app')}>
                  <Ionicons name="sparkles-outline" size={32} color="#A78BFA" style={{ marginBottom: 12 }} />
                  <Text style={[styles.glassCardTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
                    {isRTL ? 'أعمالنا ومشاريعنا' : 'Portfolio & Case Studies'}

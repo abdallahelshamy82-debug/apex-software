@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
@@ -488,7 +488,7 @@ export default function SettingsScreen() {
             style={[styles.linkRow, { flexDirection: isRTL ? 'row-reverse' : 'row', borderBottomColor: theme.border }]}
             onPress={() => {
               haptics.selection();
-              router.push('/portfolio');
+              Linking.openURL('https://apex-web-blond.vercel.app');
             }}
           >
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 }}>
