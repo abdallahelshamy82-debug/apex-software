@@ -19,7 +19,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
 import { api, BASE_URL } from '../services/api';
-import io from 'socket.io-client';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -33,8 +32,14 @@ import {
   ChatMessage 
 } from '../utils/ticketStorage';
 
-// Safe loader for expo-av (disabled for New Architecture stability)
+// Safe loader for expo-av
 let SafeAudio: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  SafeAudio = require('expo-av');
+} catch (e) {
+  SafeAudio = null;
+}
 
 // Safe loaders for expo-sharing & expo-file-system
 let SafeSharing: any = null;
@@ -163,56 +168,43 @@ export default function ChatScreen() {
       }
     });
 
-    // 2. Connect socket
-    socketRef.current = io(BASE_URL);
-    socketRef.current.emit('join_room', activeUserId);
-    
-    socketRef.current.on('receive_message', (msg: any) => {
-      setMessages(prev => {
-        const msgKey = msg.clientMsgId || msg.id;
-        const existsIndex = prev.findIndex(m => 
-          (m.clientMsgId && (m.clientMsgId === msgKey || m.clientMsgId === msg.clientMsgId)) ||
-          String(m.id) === String(msg.id) ||
-          String(m.id) === String(msg.clientMsgId) ||
-          (msg.clientMsgId && String(m.clientMsgId) === String(msg.id))
-        );
-        if (existsIndex !== -1) {
-          const updated = [...prev];
-          updated[existsIndex] = { ...updated[existsIndex], ...msg };
-          saveStoredMessages(activeUserId, updated);
-          return updated;
-        }
-        const updated = [...prev, msg];
-        saveStoredMessages(activeUserId, updated);
-        return updated;
-      });
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-    });
-
-    // 3. Fetch from server and merge with local storage
-    const fetchMessages = async () => {
+    // 2. Fetch from server and merge with local storage
+    const fetchMessages = async (isInitial = false) => {
       try {
         const local = await getStoredMessages(activeUserId);
         const res = await api.getMessages(activeUserId);
         if (res.success && Array.isArray(res.messages)) {
           const merged = mergeServerAndLocalMessages(res.messages, local);
-          setMessages(merged);
-          await saveStoredMessages(activeUserId, merged);
-        } else if (local.length > 0) {
+          setMessages(prev => {
+            // Only update if server has new messages not yet in state
+            const prevIds = new Set(prev.map((m: any) => m.clientMsgId || String(m.id)));
+            const hasNew = merged.some((m: any) => !prevIds.has(m.clientMsgId || String(m.id)));
+            if (hasNew || isInitial) {
+              saveStoredMessages(activeUserId, merged);
+              return merged;
+            }
+            return prev;
+          });
+        } else if (local.length > 0 && isInitial) {
           setMessages(local);
         }
       } catch (err) {
         console.warn('Failed to fetch messages from server', err);
       } finally {
-        setLoading(false);
-        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 200);
+        if (isInitial) {
+          setLoading(false);
+          setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 200);
+        }
       }
     };
 
-    fetchMessages();
+    fetchMessages(true);
+
+    // 3. Poll every 5 seconds to get new messages from server (works on Vercel serverless)
+    const pollInterval = setInterval(() => fetchMessages(false), 5000);
 
     return () => {
-      socketRef.current?.disconnect();
+      clearInterval(pollInterval);
       if (audioPlayerRef.current) {
         try {
           audioPlayerRef.current.pause();
@@ -273,15 +265,11 @@ export default function ChatScreen() {
         email: currentUser?.email,
       });
 
-      // 3. Emit via socket if connected; fallback to REST API if disconnected
-      if (socketRef.current?.connected) {
-        socketRef.current?.emit('send_message', fullMsg);
-      } else {
-        try {
-          await api.sendMessage(fullMsg);
-        } catch (e) {
-          // offline fallback already persisted in AsyncStorage
-        }
+      // 3. Send via REST API (reliable on Vercel serverless)
+      try {
+        await api.sendMessage(fullMsg);
+      } catch (e) {
+        // offline fallback already persisted in AsyncStorage
       }
     } finally {
       isSendingRef.current = false;
@@ -509,7 +497,7 @@ export default function ChatScreen() {
         return;
       }
       try {
-        const perm = await SafeAudio.requestPermissionsAsync();
+        const perm = await (SafeAudio.Audio || SafeAudio).requestPermissionsAsync();
         if (perm.status !== 'granted') {
           showToast({
             type: 'warning',
@@ -518,8 +506,9 @@ export default function ChatScreen() {
           });
           return;
         }
-        await SafeAudio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-        const { recording: newRecording } = await SafeAudio.Recording.createAsync(SafeAudio.RecordingOptionsPresets.HIGH_QUALITY);
+        await (SafeAudio.Audio || SafeAudio).setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+        const AudioClass = SafeAudio.Audio || SafeAudio;
+const { recording: newRecording } = await AudioClass.Recording.createAsync(AudioClass.RecordingOptionsPresets?.HIGH_QUALITY || SafeAudio.RecordingOptionsPresets?.HIGH_QUALITY);
         setRecording(newRecording);
         setIsRecording(true);
       } catch (err) {
@@ -702,7 +691,8 @@ export default function ChatScreen() {
         return;
       }
       try {
-        const { sound } = await SafeAudio.Sound.createAsync({ uri: fullUrl });
+        const AudioClass = SafeAudio.Audio || SafeAudio;
+const { sound } = await AudioClass.Sound.createAsync({ uri: fullUrl });
         await sound.playAsync();
       } catch (e) {
         console.log('Audio playback error', e);

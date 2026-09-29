@@ -230,7 +230,7 @@ const getSafeExt = (file) => {
 };
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
+  destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
     const ext = getSafeExt(file);
     if (!ALLOWED_EXTENSIONS.has(ext) || DANGEROUS_EXTENSIONS.has(ext)) {
@@ -1847,20 +1847,19 @@ app.post('/api/upload', express.json({ limit: '30mb' }), (req, res, next) => {
       const cleanBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
       const buffer = Buffer.from(cleanBase64, 'base64');
 
-      if (buffer.length > 25 * 1024 * 1024) {
-        return res.status(400).json({ success: false, message: 'حجم الملف يتجاوز الحد الأقصى المسموح (25 ميجابايت)' });
+      if (buffer.length > 8 * 1024 * 1024) {
+        return res.status(400).json({ success: false, message: 'حجم الملف يتجاوز الحد الأقصى المسموح (8 ميجابايت)' });
       }
 
-      const secureName = `${Date.now()}_${crypto.randomBytes(12).toString('hex')}${safeExt}`;
-      const targetPath = path.join(uploadsDir, secureName);
-      fs.writeFileSync(targetPath, buffer);
-
-      const fileUrl = `/uploads/${secureName}`;
+      // Return as data URL - no filesystem required (works on Vercel serverless)
+      const safeMime = mimeType || 'application/octet-stream';
+      const dataUrl = 'data:' + safeMime + ';base64,' + cleanBase64;
+      const secureName = Date.now() + '_' + crypto.randomBytes(12).toString('hex') + safeExt;
       return res.json({
         success: true,
-        url: fileUrl,
+        url: dataUrl,
         filename: filename || secureName,
-        mimetype: mimeType || 'application/octet-stream',
+        mimetype: safeMime,
         size: buffer.length
       });
     } catch (err) {
@@ -1886,14 +1885,28 @@ app.post('/api/upload', express.json({ limit: '30mb' }), (req, res, next) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'لم يتم استلام أي ملف' });
     }
-    const fileUrl = `/uploads/${req.file.filename}`;
-    res.json({
-      success: true,
-      url: fileUrl,
-      filename: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size
-    });
+    // Convert to data URL for Vercel (no persistent filesystem)
+    try {
+      const fileBuffer = fs.readFileSync(req.file.path);
+      const dataUrl = 'data:' + req.file.mimetype + ';base64,' + fileBuffer.toString('base64');
+      try { fs.unlinkSync(req.file.path); } catch(e) {}
+      res.json({
+        success: true,
+        url: dataUrl,
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+    } catch(readErr) {
+      const fileUrl = '/uploads/' + req.file.filename;
+      res.json({
+        success: true,
+        url: fileUrl,
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+    }
   });
 });
 
@@ -1924,16 +1937,19 @@ app.post('/api/upload-base64', express.json({ limit: '30mb' }), (req, res) => {
       return res.status(400).json({ success: false, message: 'حجم الملف يتجاوز الحد الأقصى المسموح (25 ميجابايت)' });
     }
 
-    const secureName = `${Date.now()}_${crypto.randomBytes(12).toString('hex')}${safeExt}`;
-    const targetPath = path.join(uploadsDir, secureName);
-    fs.writeFileSync(targetPath, buffer);
+    if (buffer.length > 8 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: 'حجم الملف يتجاوز الحد الأقصى المسموح (8 ميجابايت)' });
+    }
 
-    const fileUrl = `/uploads/${secureName}`;
+    // Return as data URL - no filesystem required (works on Vercel serverless)
+    const safeMime = mimeType || 'application/octet-stream';
+    const dataUrl = 'data:' + safeMime + ';base64,' + cleanBase64;
+    const secureName = Date.now() + '_' + crypto.randomBytes(12).toString('hex') + safeExt;
     return res.json({
       success: true,
-      url: fileUrl,
+      url: dataUrl,
       filename: filename || secureName,
-      mimetype: mimeType || 'application/octet-stream',
+      mimetype: safeMime,
       size: buffer.length
     });
   } catch (err) {
