@@ -23,7 +23,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export default function LoginScreen() {
   const router = useRouter();
   const responsive = useResponsive();
-  const { theme, t, isRTL, setCurrentUser } = useSettings();
+  const { theme, t, isRTL, currentUser, setCurrentUser } = useSettings();
   const [isLogin, setIsLogin] = useState(true);
   
   // Form State
@@ -50,9 +50,16 @@ export default function LoginScreen() {
       if (bio.biometryType) setBiometryType(bio.biometryType);
     }
     const token = await getSecureToken();
-    const user = await AsyncStorage.getItem('userData');
-    if (token && user) {
+    const userStr = await AsyncStorage.getItem('userData');
+    if (token && userStr) {
       setHasSavedSession(true);
+      try {
+        const userObj = JSON.parse(userStr);
+        if (!currentUser) setCurrentUser(userObj);
+        const target = (userObj.role === 'admin' || userObj.email === 'abdallahelshamy82@gmail.com') ? '/admin' : '/dashboard';
+        router.replace(target as any);
+        return;
+      } catch (e) {}
     }
     const isConfigured = await biometrics.isBiometricsConfigured();
     if (isConfigured) {
@@ -365,6 +372,12 @@ export default function LoginScreen() {
         const { GoogleSignin, statusCodes } = require('@react-native-google-signin/google-signin');
 
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+        // 🔄 Force Android to show Google account picker
+        try {
+          await GoogleSignin.signOut();
+        } catch (signOutErr) {}
+
         const signInResult = await GoogleSignin.signIn();
         const user = signInResult.data?.user || signInResult.user || signInResult;
 

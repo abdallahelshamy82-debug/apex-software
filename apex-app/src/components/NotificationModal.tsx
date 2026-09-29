@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
 
 interface NotificationItem {
@@ -22,56 +23,62 @@ interface NotificationModalProps {
 }
 
 export default function NotificationModal({ visible, onClose, unreadCount, setUnreadCount, initialNotifications }: NotificationModalProps) {
+  const router = useRouter();
   const { theme, isRTL, currentUser } = useSettings() || {
     theme: { bg: '#0F172A', text: '#F8FAFC', textMuted: '#94A3B8', primary: '#06B6D4', card: '#1E293B', border: 'rgba(255,255,255,0.08)' },
-    isRTL: true
+    isRTL: true,
+    currentUser: null
   };
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>(
-    initialNotifications && initialNotifications.length > 0
-      ? initialNotifications
-      : [
-          {
-            id: '1',
-            title: isRTL ? 'تحديث في مرحلة مشروعك' : 'Project Phase Update',
-            body: isRTL 
-              ? `مشروعك (${currentUser?.projectName || 'تطبيق المتجر الإلكتروني'}) تقدم إلى نسبة ${currentUser?.projectProgress || 45}% - المرحلة: ${currentUser?.projectPhase || 'تصميم الواجهات'}`
-              : `Your project (${currentUser?.projectName || 'E-Commerce App'}) reached ${currentUser?.projectProgress || 45}% progress.`,
-            time: isRTL ? 'منذ ساعة' : '1 hour ago',
-            icon: 'rocket',
-            color: '#06B6D4',
-            unread: true,
-          },
-          {
-            id: '2',
-            title: isRTL ? 'رسالة ترحيبية من Apex Devs' : 'Welcome to Apex Devs',
-            body: isRTL 
-              ? 'أهلاً بك في بوابتك الرقمية! يمكنك التحدث مباشرة مع المهندسين عبر الشات وتتبع كل خطوة.'
-              : 'Welcome to your portal! You can chat with our engineering team anytime.',
-            time: isRTL ? 'اليوم' : 'Today',
-            icon: 'sparkles',
-            color: '#10B981',
-            unread: true,
-          },
-          {
-            id: '3',
-            title: isRTL ? 'إشعار الدفع والفواتير' : 'Billing Notification',
-            body: isRTL 
-              ? 'تم إصدار إشعار الفاتورة لمرحلة التطوير. يمكنك إرفاق إيصال التحويل البنكي أو فودافون كاش.'
-              : 'Invoice generated for the development milestone. Receipt upload is available.',
-            time: isRTL ? 'أمس' : 'Yesterday',
-            icon: 'receipt',
-            color: '#F59E0B',
-            unread: true,
-          }
-        ]
-  );
-
-  React.useEffect(() => {
+  const getInitialList = (): NotificationItem[] => {
     if (initialNotifications && initialNotifications.length > 0) {
-      setNotifications(initialNotifications);
+      return initialNotifications;
     }
-  }, [initialNotifications]);
+    if (!currentUser) {
+      return [];
+    }
+    return [
+      {
+        id: '1',
+        title: isRTL ? 'تحديث في مرحلة مشروعك' : 'Project Phase Update',
+        body: isRTL 
+          ? `مشروعك (${currentUser?.projectName || 'تطبيق المتجر الإلكتروني'}) تقدم إلى نسبة ${currentUser?.projectProgress || 45}% - المرحلة: ${currentUser?.projectPhase || 'تصميم الواجهات'}`
+          : `Your project (${currentUser?.projectName || 'E-Commerce App'}) reached ${currentUser?.projectProgress || 45}% progress.`,
+        time: isRTL ? 'منذ ساعة' : '1 hour ago',
+        icon: 'rocket',
+        color: '#06B6D4',
+        unread: true,
+      },
+      {
+        id: '2',
+        title: isRTL ? 'رسالة ترحيبية من Apex Devs' : 'Welcome to Apex Devs',
+        body: isRTL 
+          ? 'أهلاً بك في بوابتك الرقمية! يمكنك التحدث مباشرة مع المهندسين عبر الشات وتتبع كل خطوة.'
+          : 'Welcome to your portal! You can chat with our engineering team anytime.',
+        time: isRTL ? 'اليوم' : 'Today',
+        icon: 'sparkles',
+        color: '#10B981',
+        unread: true,
+      },
+      {
+        id: '3',
+        title: isRTL ? 'إشعار الدفع والفواتير' : 'Billing Notification',
+        body: isRTL 
+          ? 'تم إصدار إشعار الفاتورة لمرحلة التطوير. يمكنك إرفاق إيصال التحويل البنكي أو فودافون كاش.'
+          : 'Invoice generated for the development milestone. Receipt upload is available.',
+        time: isRTL ? 'أمس' : 'Yesterday',
+        icon: 'receipt',
+        color: '#F59E0B',
+        unread: true,
+      }
+    ];
+  };
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>(getInitialList());
+
+  useEffect(() => {
+    setNotifications(getInitialList());
+  }, [initialNotifications, currentUser]);
 
   const markAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
@@ -102,40 +109,80 @@ export default function NotificationModal({ visible, onClose, unreadCount, setUn
             </TouchableOpacity>
           </View>
 
-          {/* List */}
-          <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-            {notifications.map((item) => (
-              <View 
-                key={item.id} 
-                style={[
-                  styles.notificationItem, 
-                  { 
-                    borderBottomColor: theme.border, 
-                    backgroundColor: item.unread ? `${theme.primary}08` : 'transparent',
-                    flexDirection: isRTL ? 'row-reverse' : 'row'
-                  }
-                ]}
-              >
-                <View style={[styles.iconCircle, { backgroundColor: `${item.color}20` }]}>
-                  <Ionicons name={item.icon} size={20} color={item.color} />
-                </View>
-                <View style={[styles.itemContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-                  <Text style={[styles.itemTitle, { color: theme.text }]}>{item.title}</Text>
-                  <Text style={[styles.itemBody, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{item.body}</Text>
-                  <Text style={[styles.itemTime, { color: theme.textMuted }]}>{item.time}</Text>
-                </View>
+          {/* List or Empty State */}
+          {!currentUser ? (
+            <View style={styles.emptyContainer}>
+              <View style={[styles.emptyIconCircle, { backgroundColor: `${theme.primary}15` }]}>
+                <Ionicons name="notifications-off-outline" size={36} color={theme.primary} />
               </View>
-            ))}
-          </ScrollView>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                {isRTL ? 'لا توجد إشعارات حالياً' : 'No Notifications Yet'}
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: theme.textMuted }]}>
+                {isRTL 
+                  ? 'سجّل الدخول إلى حسابك في بوابة العملاء لمتابعة تحديثات مشروعك البرمجي، الفواتير، والتواصل مع المهندسين.'
+                  : 'Sign in to the Client Portal to track your project progress, milestones, and developer updates.'}
+              </Text>
+              <TouchableOpacity 
+                style={[styles.loginCtaBtn, { backgroundColor: theme.primary }]}
+                onPress={() => {
+                  onClose();
+                  router.push('/login');
+                }}
+              >
+                <Ionicons name="log-in-outline" size={18} color="#0B0F19" />
+                <Text style={styles.loginCtaText}>{isRTL ? 'تسجيل الدخول لبوابة العملاء' : 'Sign In to Portal'}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : notifications.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <View style={[styles.emptyIconCircle, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+                <Ionicons name="checkmark-done-circle-outline" size={36} color={theme.textMuted} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                {isRTL ? 'لا توجد إشعارات جديدة' : 'All Caught Up'}
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: theme.textMuted }]}>
+                {isRTL ? 'تم الاطلاع على جميع التحديثات والإشعارات الخاصة بمشروعك.' : 'No new notifications right now.'}
+              </Text>
+            </View>
+          ) : (
+            <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+              {notifications.map((item) => (
+                <View 
+                  key={item.id} 
+                  style={[
+                    styles.notificationItem, 
+                    { 
+                      borderBottomColor: theme.border, 
+                      backgroundColor: item.unread ? `${theme.primary}08` : 'transparent',
+                      flexDirection: isRTL ? 'row-reverse' : 'row'
+                    }
+                  ]}
+                >
+                  <View style={[styles.iconCircle, { backgroundColor: `${item.color}20` }]}>
+                    <Ionicons name={item.icon} size={20} color={item.color} />
+                  </View>
+                  <View style={[styles.itemContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+                    <Text style={[styles.itemTitle, { color: theme.text }]}>{item.title}</Text>
+                    <Text style={[styles.itemBody, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{item.body}</Text>
+                    <Text style={[styles.itemTime, { color: theme.textMuted }]}>{item.time}</Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
 
           {/* Footer Actions */}
-          <View style={[styles.footerRow, { borderTopColor: theme.border }]}>
-            <TouchableOpacity onPress={markAllRead} style={styles.markReadBtn}>
-              <Text style={[styles.markReadText, { color: theme.primary }]}>
-                {isRTL ? 'تحديد الكل كمقروء' : 'Mark all as read'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {currentUser && notifications.length > 0 && (
+            <View style={[styles.footerRow, { borderTopColor: theme.border }]}>
+              <TouchableOpacity onPress={markAllRead} style={styles.markReadBtn}>
+                <Text style={[styles.markReadText, { color: theme.primary }]}>
+                  {isRTL ? 'تحديد الكل كمقروء' : 'Mark all as read'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
         </View>
       </View>
@@ -146,7 +193,7 @@ export default function NotificationModal({ visible, onClose, unreadCount, setUn
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -155,7 +202,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 440,
     maxHeight: '80%',
-    borderRadius: 20,
+    borderRadius: 24,
     borderWidth: 1,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -220,19 +267,58 @@ const styles = StyleSheet.create({
   },
   itemTime: {
     fontSize: 11,
-    opacity: 0.8,
   },
   footerRow: {
     padding: 14,
     borderTopWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   markReadBtn: {
-    paddingVertical: 6,
+    paddingVertical: 4,
     paddingHorizontal: 12,
   },
   markReadText: {
-    fontWeight: 'bold',
     fontSize: 13,
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: 'center',
+    marginBottom: 20,
+    maxWidth: 280,
+  },
+  loginCtaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  loginCtaText: {
+    color: '#0B0F19',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });

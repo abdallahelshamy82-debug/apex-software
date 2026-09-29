@@ -19,12 +19,14 @@ import InteractiveCard from '../components/InteractiveCard';
 
 const bgImage = require('../../assets/images/login-bg-dev.jpg');
 
+let hasAutoRedirectedOnLaunch = false;
+
 export default function HomeScreen() {
   const router = useRouter();
-  const { theme, t, isRTL } = useSettings();
+  const { theme, t, isRTL, currentUser, isAppReady } = useSettings();
   const responsive = useResponsive();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(2);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler((event) => {
@@ -34,6 +36,27 @@ export default function HomeScreen() {
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
   }, []);
+
+  // 🚀 Persistent Login: Auto-route to Dashboard on launch if user is already authenticated
+  useEffect(() => {
+    if (!hasAutoRedirectedOnLaunch && isAppReady && currentUser) {
+      hasAutoRedirectedOnLaunch = true;
+      const target = (currentUser.role === 'admin' || currentUser.email === 'abdallahelshamy82@gmail.com')
+        ? '/admin'
+        : '/dashboard';
+      router.replace(target as any);
+    }
+  }, [isAppReady, currentUser]);
+
+  // 🔔 Dynamic Notifications: only count if user is logged in
+  useEffect(() => {
+    if (currentUser) {
+      // Don't show fake notifications, start clean
+      setUnreadCount(0);
+    } else {
+      setUnreadCount(0);
+    }
+  }, [currentUser]);
 
   return (
     <ImageBackground source={bgImage} style={styles.bgContainer} resizeMode="cover">
@@ -78,10 +101,29 @@ export default function HomeScreen() {
                </TouchableOpacity>
 
                <TouchableOpacity 
-                 onPress={() => router.push('/login')}
-                 style={styles.clientPortalBtn}
+                 onPress={() => {
+                   if (currentUser) {
+                     const target = (currentUser.role === 'admin' || currentUser.email === 'abdallahelshamy82@gmail.com')
+                       ? '/admin'
+                       : '/dashboard';
+                     router.push(target as any);
+                   } else {
+                     router.push('/login');
+                   }
+                 }}
+                 style={[styles.clientPortalBtn, currentUser ? { borderColor: `${theme.primary}66`, backgroundColor: `${theme.primary}15` } : {}]}
                >
-                 <Text style={[styles.clientPortalText, { color: theme.primary }]}>{isRTL ? 'بوابة العملاء' : 'Client Portal'}</Text>
+                 <Ionicons 
+                   name={currentUser ? 'grid-outline' : 'person-outline'} 
+                   size={14} 
+                   color={theme.primary} 
+                   style={{ marginRight: isRTL ? 0 : 5, marginLeft: isRTL ? 5 : 0 }} 
+                 />
+                 <Text style={[styles.clientPortalText, { color: theme.primary }]}>
+                   {currentUser 
+                     ? (isRTL ? 'لوحة التحكم' : 'Dashboard') 
+                     : (isRTL ? 'بوابة العملاء' : 'Client Portal')}
+                 </Text>
                </TouchableOpacity>
             </View>
           </View>

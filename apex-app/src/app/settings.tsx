@@ -533,6 +533,10 @@ export default function SettingsScreen() {
             activeOpacity={0.85}
             onPress={async () => {
               haptics.medium();
+              try {
+                const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+                await GoogleSignin.signOut();
+              } catch (e) {}
               await removeSecureToken();
               await AsyncStorage.removeItem('userData');
               setCurrentUser(null);

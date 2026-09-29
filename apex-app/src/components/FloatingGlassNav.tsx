@@ -17,13 +17,19 @@ interface NavItem {
 export default function FloatingGlassNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const { isRTL, theme } = useSettings();
+  const { isRTL, theme, currentUser } = useSettings();
+
+  const isUserAdmin = currentUser?.role === 'admin' || currentUser?.email === 'abdallahelshamy82@gmail.com';
+  const portalRoute = currentUser ? (isUserAdmin ? '/admin' : '/dashboard') : '/login';
+  const portalName = currentUser ? (isRTL ? 'لوحتي' : 'Dashboard') : (isRTL ? 'حسابي' : 'Portal');
+  const portalIcon: IconName = currentUser ? 'grid-outline' : 'person-outline';
+  const portalActiveIcon: IconName = currentUser ? 'grid' : 'person';
 
   const navItems: NavItem[] = [
-    { name: 'Home', icon: 'home-outline', activeIcon: 'home', route: '/' },
-    { name: 'Cost', icon: 'calculator-outline', activeIcon: 'calculator', route: '/estimator' },
-    { name: 'Copilot', icon: 'hardware-chip-outline', activeIcon: 'hardware-chip', route: '/copilot' },
-    { name: 'Portal', icon: 'person-outline', activeIcon: 'person', route: '/login' },
+    { name: isRTL ? 'الرئيسية' : 'Home', icon: 'home-outline', activeIcon: 'home', route: '/' },
+    { name: isRTL ? 'التكلفة' : 'Cost', icon: 'calculator-outline', activeIcon: 'calculator', route: '/estimator' },
+    { name: isRTL ? 'المساعد' : 'Copilot', icon: 'hardware-chip-outline', activeIcon: 'hardware-chip', route: '/copilot' },
+    { name: portalName, icon: portalIcon, activeIcon: portalActiveIcon, route: portalRoute },
   ];
 
   if (pathname === '/login') return null;
