@@ -128,7 +128,6 @@ export default function ChatScreen() {
   const timerIntervalRef = useRef<any>(null);
 
   const flatListRef = useRef<FlatList>(null);
-  const socketRef = useRef<any>(null);
   const isSendingRef = useRef(false);
 
   const activeUserId = currentUser?.role === 'admin' ? Number(params.targetUserId) : currentUser?.id;
