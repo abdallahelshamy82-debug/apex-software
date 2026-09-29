@@ -140,7 +140,7 @@ export const api = {
     } catch (e) { return { success: false, message: 'Network error.' }; }
   },
 
-  async googleLogin(profileData: { email: string; fullName: string; googleId?: string; picture?: string }) {
+  async googleLogin(idToken: string) {
     try {
       const deviceId = await getDeviceId();
       const response = await fetch(`${API_URL}/auth/google`, {
@@ -149,7 +149,7 @@ export const api = {
           'Content-Type': 'application/json',
           'X-Client-Platform': Platform.OS
         },
-        body: JSON.stringify({ ...profileData, deviceId, platform: Platform.OS })
+        body: JSON.stringify({ idToken, deviceId, platform: Platform.OS })
       });
       return await response.json();
     } catch (e) { return { success: false, message: 'Google Auth network error.' }; }
@@ -404,7 +404,7 @@ export const api = {
 
       if (base64Data) {
         try {
-          const b64Res = await fetch(`${API_URL}/api/upload-base64`, {
+          const b64Res = await fetch(`${API_URL}/upload-base64`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

@@ -1,6 +1,18 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const BIOMETRIC_USER_KEY = 'apex_biometric_user';
+const BIOMETRIC_TOKEN_KEY = 'apex_biometric_user_token';
+
+function getSecureStore() {
+  if (Platform.OS === 'web') return null;
+  try {
+    return require('expo-secure-store');
+  } catch (e) {
+    return null;
+  }
+}
+
 export interface BoundBiometricUser {
   user: any;
   token: string;
@@ -76,24 +88,69 @@ export const biometrics = {
 
   // Save the specific user and token securely bound to biometrics
   async setBiometricUser(user: any, token: string): Promise<void> {
+    const SecureStore = getSecureStore();
+    if (!SecureStore?.setItemAsync || !token) {
+      await AsyncStorage.removeItem(BIOMETRIC_USER_KEY);
+      await AsyncStorage.setItem('apex_biometrics_enabled', 'false');
+      return;
+    }
+
     try {
-      const payload: BoundBiometricUser = {
+      await SecureStore.setItemAsync(BIOMETRIC_TOKEN_KEY, token, {
+        keychainAccessible: SecureStore.WHEN_UNLOCKED || undefined,
+      });
+      await AsyncStorage.setItem(BIOMETRIC_USER_KEY, JSON.stringify({
         user,
-        token,
         boundAt: Date.now()
-      };
-      await AsyncStorage.setItem('apex_biometric_user', JSON.stringify(payload));
+      }));
       await AsyncStorage.setItem('apex_biometrics_enabled', 'true');
-    } catch (e) {}
+    } catch (e) {
+      await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY).catch(() => {});
+      await AsyncStorage.removeItem(BIOMETRIC_USER_KEY).catch(() => {});
+      await AsyncStorage.setItem('apex_biometrics_enabled', 'false').catch(() => {});
+    }
   },
 
   // Get the bound user
   async getBiometricUser(): Promise<BoundBiometricUser | null> {
     try {
-      const val = await AsyncStorage.getItem('apex_biometric_user');
+      const val = await AsyncStorage.getItem(BIOMETRIC_USER_KEY);
       if (!val) return null;
-      return JSON.parse(val) as BoundBiometricUser;
+      const payload = JSON.parse(val);
+      const SecureStore = getSecureStore();
+      if (!SecureStore?.getItemAsync || !payload.user) {
+        if (Object.prototype.hasOwnProperty.call(payload, 'token')) {
+          await AsyncStorage.removeItem(BIOMETRIC_USER_KEY);
+          await AsyncStorage.setItem('apex_biometrics_enabled', 'false');
+        }
+        return null;
+      }
+
+      let token = await SecureStore.getItemAsync(BIOMETRIC_TOKEN_KEY);
+      if (!token && typeof payload.token === 'string' && payload.token) {
+        token = payload.token;
+        await SecureStore.setItemAsync(BIOMETRIC_TOKEN_KEY, token, {
+          keychainAccessible: SecureStore.WHEN_UNLOCKED || undefined,
+        });
+      }
+
+      if (!token) return null;
+      if (Object.prototype.hasOwnProperty.call(payload, 'token')) {
+        await AsyncStorage.setItem(BIOMETRIC_USER_KEY, JSON.stringify({
+          user: payload.user,
+          boundAt: payload.boundAt || Date.now(),
+        }));
+      }
+
+      return { user: payload.user, token, boundAt: payload.boundAt } as BoundBiometricUser;
     } catch (e) {
+      try {
+        const val = await AsyncStorage.getItem(BIOMETRIC_USER_KEY);
+        if (val && Object.prototype.hasOwnProperty.call(JSON.parse(val), 'token')) {
+          await AsyncStorage.removeItem(BIOMETRIC_USER_KEY);
+          await AsyncStorage.setItem('apex_biometrics_enabled', 'false');
+        }
+      } catch (cleanupError) {}
       return null;
     }
   },
@@ -150,7 +207,11 @@ export const biometrics = {
   // Clear binding on logout or when disabled in settings
   async clearBiometricUser(): Promise<void> {
     try {
-      await AsyncStorage.removeItem('apex_biometric_user');
+      const SecureStore = getSecureStore();
+      if (SecureStore?.deleteItemAsync) {
+        await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY).catch(() => {});
+      }
+      await AsyncStorage.removeItem(BIOMETRIC_USER_KEY);
       await AsyncStorage.setItem('apex_biometrics_enabled', 'false');
     } catch (e) {}
   }

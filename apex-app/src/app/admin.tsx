@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert, Modal, Image, Platform, Linking } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,24 +17,6 @@ export default function AdminDashboardScreen() {
   const router = useRouter();
   const responsive = useResponsive();
   const { theme, t, isRTL, activeTheme, currentUser, setCurrentUser, isAppReady } = useSettings();
-  
-  // 🛡️ Bank-Grade Strict Admin Route Guard:
-  // 1. Wait for auth & settings to finish initializing
-  if (!isAppReady) {
-    return (
-      <ApexLoader 
-        fullScreen 
-        theme={theme} 
-        isRTL={isRTL} 
-        message={isRTL ? 'جاري التحقق من صلاحيات الأمان...' : 'Verifying Security Credentials...'} 
-      />
-    );
-  }
-
-  // 2. Strict Role Check: Instant redirect if not admin
-  if (!currentUser || currentUser.role !== 'admin') {
-    return <Redirect href="/" />;
-  }
   
   const [activeTab, setActiveTab] = useState<'quotes' | 'invoices' | 'users' | 'analytics' | 'support'>('quotes');
   const [quotes, setQuotes] = useState<any[]>([]);
@@ -90,7 +72,7 @@ export default function AdminDashboardScreen() {
   // Receipt Preview Modal
   const [viewingReceipt, setViewingReceipt] = useState<string | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     const [quotesRes, invoicesRes, usersRes, chatsRes, configRes, sentRes, agencyRes, analyticsRes] = await Promise.all([
       api.getQuotes(),
@@ -141,11 +123,27 @@ export default function AdminDashboardScreen() {
     if (agencyRes?.success && agencyRes.settings) setAgencySettings(agencyRes.settings);
     if (analyticsRes?.success && analyticsRes.analytics) setAnalytics(analyticsRes.analytics);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
+    if (!isAppReady || currentUser?.role !== 'admin') return;
     loadData();
-  }, []);
+  }, [currentUser?.role, isAppReady, loadData]);
+
+  if (!isAppReady) {
+    return (
+      <ApexLoader
+        fullScreen
+        theme={theme}
+        isRTL={isRTL}
+        message={isRTL ? 'جاري التحقق من صلاحيات الأمان...' : 'Verifying Security Credentials...'}
+      />
+    );
+  }
+
+  if (!currentUser || currentUser.role !== 'admin') {
+    return <Redirect href="/" />;
+  }
 
   const handleSaveUserProject = async (userId: number, projectName: string, projectPhase: string, projectProgress: number) => {
     const res = await api.updateProject(userId, projectName, projectPhase, projectProgress);

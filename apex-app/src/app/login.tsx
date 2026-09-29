@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { FloatingInput } from '../components/FloatingInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveSecureToken, getSecureToken } from '../utils/secureTokenStorage';
-import * as WebBrowser from 'expo-web-browser';
 import { haptics } from '../utils/haptics';
 import { biometrics } from '../utils/biometrics';
 import { notifications } from '../utils/notifications';
@@ -233,8 +232,6 @@ export default function LoginScreen() {
   };
 
   const GOOGLE_WEB_CLIENT_ID = '596632301040-cpotn60a58rmi31ctcltiqkltutcqg4e.apps.googleusercontent.com';
-  const GOOGLE_NATIVE_CLIENT_ID = '230331278530-eviu86gh9if07cr6fefemel9pbmbrto3.apps.googleusercontent.com';
-  const GOOGLE_CLIENT_ID = Platform.OS === 'web' ? GOOGLE_WEB_CLIENT_ID : GOOGLE_NATIVE_CLIENT_ID;
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -255,7 +252,7 @@ export default function LoginScreen() {
         if (hasNative) {
           const { GoogleSignin } = require('@react-native-google-signin/google-signin');
           GoogleSignin.configure({
-            webClientId: GOOGLE_NATIVE_CLIENT_ID,
+            webClientId: GOOGLE_WEB_CLIENT_ID,
             offlineAccess: false,
           });
         }
@@ -267,30 +264,14 @@ export default function LoginScreen() {
 
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const executeGoogleLogin = async (selectedEmail: string, selectedName?: string, selectedPic?: string) => {
+  const executeGoogleLogin = async (idToken: string) => {
     try {
       setGoogleLoading(true);
-      const cleanEmail = selectedEmail.trim().toLowerCase();
-
-      // 🛡️ Web restriction: Only admin allowed via web Google sign-in
-      if (Platform.OS === 'web' && cleanEmail !== 'abdallahelshamy82@gmail.com') {
-        setGoogleLoading(false);
-        await haptics.error();
-        Alert.alert(
-          isRTL ? 'الوصول مقتصر على الإدارة' : 'Admin Portal Only',
-          isRTL 
-            ? 'منصة الويب مخصصة للوحة تحكم الإدارة فقط. لمتابعة حساب العميل، يرجى استخدام تطبيق الهاتف.'
-            : 'Web is reserved for Admin Dashboard. Please use the mobile app for client accounts.'
-        );
-        return;
+      if (!idToken) {
+        throw new Error('Google did not return a verified ID token.');
       }
 
-      const res = await api.googleLogin({
-        email: cleanEmail,
-        fullName: selectedName || cleanEmail.split('@')[0],
-        googleId: 'google_' + Date.now(),
-        picture: selectedPic
-      });
+      const res = await api.googleLogin(idToken);
       setGoogleLoading(false);
 
       if (res.success) {
@@ -304,7 +285,7 @@ export default function LoginScreen() {
         );
         notifications.registerForPushNotifications().catch(() => {});
 
-        if (res.user.role === 'admin' || cleanEmail === 'abdallahelshamy82@gmail.com') {
+        if (res.user.role === 'admin') {
           router.push('/admin');
         } else {
           router.push('/dashboard');
@@ -325,37 +306,29 @@ export default function LoginScreen() {
 
     // 1. Web Flow
     if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && (window as any).google?.accounts?.oauth2) {
-        try {
-          setGoogleLoading(true);
-          const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: 'email profile openid',
-            callback: async (tokenResponse: any) => {
-              if (tokenResponse?.access_token) {
-                try {
-                  const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                  }).then(r => r.json());
-                  await executeGoogleLogin(userInfo.email, userInfo.name, userInfo.picture);
-                } catch (fetchErr: any) {
-                  setGoogleLoading(false);
-                  Alert.alert('Error', fetchErr.message || 'Failed to fetch Google profile');
-                }
-              } else {
-                setGoogleLoading(false);
-              }
-            },
-            error_callback: (error: any) => {
-              setGoogleLoading(false);
-              console.error('Google OAuth error:', error);
-            }
-          });
-          tokenClient.requestAccessToken({ prompt: 'select_account' });
-        } catch (e: any) {
+      const googleIdentity = (window as any).google?.accounts?.id;
+      if (!googleIdentity) {
+        Alert.alert('Google Sign-In', 'Google Identity Services is not available. Please try again.');
+        return;
+      }
+
+      setGoogleLoading(true);
+      googleIdentity.initialize({
+        client_id: GOOGLE_WEB_CLIENT_ID,
+        callback: (response: any) => {
+          if (response?.credential) {
+            executeGoogleLogin(response.credential);
+          } else {
+            setGoogleLoading(false);
+            Alert.alert('Google Sign-In', 'Google did not return an ID token.');
+          }
+        },
+      });
+      googleIdentity.prompt((notification: any) => {
+        if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
           setGoogleLoading(false);
         }
-      }
+      });
       return;
     }
 
@@ -382,11 +355,12 @@ export default function LoginScreen() {
 
         const signInResult = await GoogleSignin.signIn();
         const user = signInResult.data?.user || signInResult.user || signInResult;
+        const idToken = signInResult.data?.idToken || (await GoogleSignin.getTokens()).idToken;
 
-        if (user && user.email) {
-          await executeGoogleLogin(user.email, user.name || user.givenName, user.photo);
+        if (user && idToken) {
+          await executeGoogleLogin(idToken);
         } else {
-          setGoogleLoading(false);
+          throw new Error('Google did not return a verified ID token.');
         }
       } catch (error: any) {
         setGoogleLoading(false);
@@ -413,32 +387,10 @@ export default function LoginScreen() {
       return;
     }
 
-    // 3. Fallback for Expo Go (where native TurboModules are not compiled into the APK)
-    try {
-      setGoogleLoading(true);
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&response_type=token&scope=email%20profile%20openid&redirect_uri=https://auth.expo.io/@anonymous/apex-app&prompt=select_account`;
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, 'apexapp://');
-      if (result.type === 'success' && result.url) {
-        const hash = result.url.split('#')[1];
-        if (hash) {
-          const params = new URLSearchParams(hash);
-          const accessToken = params.get('access_token');
-          if (accessToken) {
-            const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: { Authorization: `Bearer ${accessToken}` }
-            }).then(r => r.json());
-            if (userInfo && userInfo.email) {
-              await executeGoogleLogin(userInfo.email, userInfo.name, userInfo.picture);
-              return;
-            }
-          }
-        }
-      }
-      setGoogleLoading(false);
-    } catch (fallbackErr) {
-      setGoogleLoading(false);
-      console.log('Google AuthSession notice:', fallbackErr);
-    }
+    Alert.alert(
+      'Google Sign-In',
+      'A development build is required to receive a verifiable Google ID token. Expo Go sign-in is unavailable.'
+    );
   };
 
   const handleAppleSignIn = () => {
