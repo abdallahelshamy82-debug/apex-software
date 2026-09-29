@@ -10,24 +10,29 @@ const getBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, '');
   }
-  // 2. Web browser: auto-detect current hostname (works on both PC and mobile browser)
+  // 2. Web browser: if running on local dev server (localhost / 127.0.0.1)
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
-    return `http://${window.location.hostname}:3000`;
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return `http://${window.location.hostname}:3000`;
+    }
+    // On production web (e.g. apex-admin-seven.vercel.app), connect directly to cloud backend
+    return 'https://apex-backend-ten.vercel.app';
   }
-  // 3. Physical Mobile Device / Expo Go: dynamically extract PC IP from Expo host
-  const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
-  if (hostUri) {
-    const hostIp = hostUri.split(':')[0];
-    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      return `http://${hostIp}:3000`;
+  // 3. Expo Go / Development Client (only when actively developing via Expo host)
+  if (__DEV__) {
+    const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
+    if (hostUri) {
+      const hostIp = hostUri.split(':')[0];
+      if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
+        return `http://${hostIp}:3000`;
+      }
+    }
+    if (Platform.OS === 'android' && !Constants.isDevice) {
+      return 'http://10.0.2.2:3000';
     }
   }
-  // 4. Android Emulator fallback (only if not on a physical device)
-  if (Platform.OS === 'android' && !Constants.isDevice) {
-    return 'http://10.0.2.2:3000';
-  }
-  // 5. Physical device fallback to current local network IP
-  return 'http://10.18.163.39:3000';
+  // 4. Default to Cloud Backend for Production APK and standalone app
+  return 'https://apex-backend-ten.vercel.app';
 };
 
 export const BASE_URL = getBaseUrl();

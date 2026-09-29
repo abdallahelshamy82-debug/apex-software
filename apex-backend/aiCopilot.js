@@ -55,11 +55,29 @@ function saveAiConfig(newConfig) {
   }
 }
 
+function safeParseJson(rawText) {
+  if (!rawText) return null;
+  let text = String(rawText).trim();
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch (e1) {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start !== -1 && end > start) {
+      try {
+        return JSON.parse(text.slice(start, end + 1));
+      } catch (e2) {}
+    }
+    return null;
+  }
+}
+
 // -------------------------------------------------------------
-// 1. Google Gemini Flash API Caller (Gemini 3.6 / 3.5 / Flash-latest)
+// 1. Google Gemini Flash API Caller (Gemini 3.5 / 3.1 / Flash-lite)
 // -------------------------------------------------------------
 async function callGeminiAI(prompt, apiKey, language = 'ar') {
-  const modelsToTry = ['gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.6-flash', 'gemini-3-flash-preview'];
+  const modelsToTry = ['gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
   let lastError = null;
 
   const systemPrompt = `You are an elite Principal Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
@@ -264,10 +282,13 @@ The JSON must follow this exact schema:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
           contents: [
             {
               role: 'user',
-              parts: [{ text: `${systemPrompt}\n\n[فكرة العميل لتحليلها بدقة وبشكل مخصص وعميق جداً]:\n"${prompt}"` }]
+              parts: [{ text: `[فكرة العميل لتحليلها بدقة وبشكل مخصص وعميق جداً]:\n"${prompt}"` }]
             }
           ],
           generationConfig: {
@@ -291,8 +312,8 @@ The JSON must follow this exact schema:
       let text = textPart?.text;
       if (!text) throw new Error(`No content returned from Gemini API (${model})`);
 
-      text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-      const parsed = JSON.parse(text);
+      const parsed = safeParseJson(text);
+      if (!parsed) throw new Error(`Could not parse JSON response from Gemini (${model})`);
       parsed.isLiveAI = true;
       parsed.engine = `Google Gemini Live LLM (${model})`;
       return parsed;
@@ -354,7 +375,7 @@ Language: ${language === 'ar' ? 'Arabic' : 'English'}.`;
 // -------------------------------------------------------------
 async function callGeminiChatConsultant(messages, apiKey, language = 'ar') {
   // Reliable models ordered by current availability & performance
-  const modelsToTry = ['gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.6-flash', 'gemini-3-flash-preview'];
+  const modelsToTry = ['gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
   let lastError = null;
 
   const systemInstruction = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency (شركة إيبكس لحلول البرمجيات وتطوير التطبيقات).
@@ -383,27 +404,42 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
   "readyForSpec": false
 }`;
 
-  // Map messages to Gemini format (roles must be 'user' or 'model')
-  const contents = [];
+  // Format contents for Gemini:
+  // Must alternate strictly: user -> model -> user -> model ...
+  const rawContents = [];
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i];
     const role = (msg.role === 'assistant' || msg.role === 'model') ? 'model' : 'user';
-    let text = msg.text || msg.content || '';
-    if (i === 0 && role === 'user') {
-      text = `${systemInstruction}\n\n[رسالة العميل]:\n${text}`;
+    const text = (msg.text || msg.content || '').trim();
+    if (text) {
+      rawContents.push({ role, text });
     }
-    contents.push({
-      role,
-      parts: [{ text: text || 'مرحباً' }]
-    });
   }
 
-  if (contents.length === 0 || contents[0].role !== 'user') {
-    contents.unshift({
-      role: 'user',
-      parts: [{ text: `${systemInstruction}\n\n[بدء الجلسة الاستشارية]` }]
-    });
+  // Ensure first message is user
+  if (rawContents.length === 0 || rawContents[0].role !== 'user') {
+    rawContents.unshift({ role: 'user', text: 'مرحباً، أود استشارتك في مشروعي.' });
   }
+
+  // Merge adjacent messages with same role to guarantee strict alternation
+  const alternating = [];
+  for (const item of rawContents) {
+    if (alternating.length > 0 && alternating[alternating.length - 1].role === item.role) {
+      alternating[alternating.length - 1].text += '\n\n' + item.text;
+    } else {
+      alternating.push({ role: item.role, text: item.text });
+    }
+  }
+
+  // Ensure last message is user (if last is model, add a user continuation prompt)
+  if (alternating.length > 0 && alternating[alternating.length - 1].role === 'model') {
+    alternating.push({ role: 'user', text: 'تابع الشرح والتحليل المعماري.' });
+  }
+
+  const contents = alternating.map(c => ({
+    role: c.role,
+    parts: [{ text: c.text }]
+  }));
 
   for (const model of modelsToTry) {
     try {
@@ -412,6 +448,9 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemInstruction }]
+          },
           contents,
           generationConfig: {
             responseMimeType: 'application/json',
@@ -434,8 +473,9 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
       let text = textPart?.text;
       if (!text) throw new Error(`No content returned from Gemini API (${model})`);
 
-      text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-      const parsed = JSON.parse(text);
+      const parsed = safeParseJson(text);
+      if (!parsed) throw new Error(`Failed to parse JSON response from Gemini API (${model})`);
+
       return {
         reply: parsed.reply || 'أهلاً بك! أنا مستشارك البرمجي الذكي في Apex Software. كيف يمكنني مساعدتك في تطوير فكرتك اليوم؟',
         suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
@@ -1212,7 +1252,7 @@ async function transcribeAudio(audioBufferOrBase64, mimeType = 'audio/m4a', lang
     }
 
     const cleanMime = (mimeType || 'audio/m4a').split(';')[0].trim();
-    const modelsToTry = ['gemini-flash-latest', 'gemini-3.5-transcribe', 'gemini-3.1-flash-lite', 'gemini-3.6-flash'];
+    const modelsToTry = ['gemini-3.5-transcribe', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3.5-flash'];
     let lastError = null;
 
     for (const model of modelsToTry) {
