@@ -69,6 +69,7 @@ export default function ChatScreen() {
   const { theme, t, isRTL, currentUser } = useSettings();
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
+  const [recording, setRecording] = useState<any>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
@@ -130,7 +131,13 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList>(null);
   const isSendingRef = useRef(false);
 
-  const activeUserId = currentUser?.role === 'admin' ? Number(params.targetUserId) : currentUser?.id;
+  const activeUserId = currentUser?.role === 'admin'
+    ? Number(params.targetUserId || currentUser?.id || 0)
+    : Number(currentUser?.id || params.targetUserId || 0);
+  const senderUserId = Number(currentUser?.id || activeUserId || 0);
+  const recipientUserId = currentUser?.role === 'admin'
+    ? activeUserId
+    : Number(params.targetUserId || activeUserId || senderUserId || 0);
   const chatTitle = currentUser?.role === 'admin' ? 'Support Ticket' : t('chatTeam');
 
   // Live recording timer
@@ -232,11 +239,14 @@ export default function ChatScreen() {
       const msgType = msgPayload.type || (msgPayload.attachment ? (msgPayload.attachment.type === 'image' ? 'image' : msgPayload.attachment.type === 'audio' ? 'audio' : 'document') : 'text');
       
       const uniqueMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const finalRecipientId = Number(recipientUserId || activeUserId || 0);
 
       const fullMsg: ChatMessage = {
         id: uniqueMsgId,
         clientMsgId: uniqueMsgId,
-        userId: activeUserId,
+        userId: finalRecipientId,
+        senderUserId,
+        recipientUserId: finalRecipientId,
         sender: role,
         senderRole: role,
         text: msgPayload.text || '',
@@ -429,10 +439,7 @@ export default function ChatScreen() {
 
   const startRecording = async () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      
-      // On non-localhost HTTP, mobile browsers disable mediaDevices completely for security
-      if (!window.isSecureContext && !isLocal) {
+      if (!window.isSecureContext) {
         setShowMicHelpModal(true);
         return;
       }
@@ -484,19 +491,17 @@ export default function ChatScreen() {
         }
       }
     } else {
-      // Native Expo / Standalone
       if (!SafeAudio) {
         showToast({
           type: 'info',
           title: isRTL ? 'تسجيل الصوت' : 'Voice Recording',
-          message: isRTL 
-            ? 'يمكنك إرسال مقاطع صوتية بسهولة عبر زر المرفقات (قائمة المرفقات > إرسال مقطع صوتي) في نسخة Expo Go.'
-            : 'Please attach audio files via the attachment menu in Expo Go.',
+          message: isRTL ? 'ميزة تسجيل الصوت تتطلب نسخة مبنية (APK).' : 'Voice recording requires a standalone build.',
         });
         return;
       }
       try {
-        const perm = await (SafeAudio.Audio || SafeAudio).requestPermissionsAsync();
+        const AudioClass = SafeAudio.Audio || SafeAudio;
+        const perm = await AudioClass.requestPermissionsAsync();
         if (perm.status !== 'granted') {
           showToast({
             type: 'warning',
@@ -505,9 +510,8 @@ export default function ChatScreen() {
           });
           return;
         }
-        await (SafeAudio.Audio || SafeAudio).setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-        const AudioClass = SafeAudio.Audio || SafeAudio;
-const { recording: newRecording } = await AudioClass.Recording.createAsync(AudioClass.RecordingOptionsPresets?.HIGH_QUALITY || SafeAudio.RecordingOptionsPresets?.HIGH_QUALITY);
+        await AudioClass.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+        const { recording: newRecording } = await AudioClass.Recording.createAsync(AudioClass.RecordingOptionsPresets?.HIGH_QUALITY || SafeAudio.RecordingOptionsPresets?.HIGH_QUALITY);
         setRecording(newRecording);
         setIsRecording(true);
       } catch (err) {
@@ -691,7 +695,7 @@ const { recording: newRecording } = await AudioClass.Recording.createAsync(Audio
       }
       try {
         const AudioClass = SafeAudio.Audio || SafeAudio;
-const { sound } = await AudioClass.Sound.createAsync({ uri: fullUrl });
+        const { sound } = await AudioClass.Sound.createAsync({ uri: fullUrl });
         await sound.playAsync();
       } catch (e) {
         console.log('Audio playback error', e);
