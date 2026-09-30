@@ -1051,8 +1051,11 @@ export default function AdminDashboardScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: theme.card, paddingVertical: 20 }}>
         <View style={{ alignItems: "center", marginBottom: 30, paddingHorizontal: 16 }}>
-          <Image source={require("../../assets/images/logo-light.png")} style={{ width: 100, height: 40, resizeMode: "contain", tintColor: activeTheme === "dark" ? "#FFF" : undefined }} />
-          <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 4 }}>Admin Workspace</Text>
+          <View style={{ width: 60, height: 60, borderRadius: 16, backgroundColor: `${theme.primary}20`, alignItems: "center", justifyContent: "center", marginBottom: 4 }}>
+            <Text style={{ color: theme.primary, fontSize: 28, fontWeight: "900" }}>A.</Text>
+          </View>
+          <Text style={{ color: theme.text, fontSize: 15, fontWeight: "bold" }}>Apex Admin</Text>
+          <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Workspace</Text>
         </View>
         <ScrollView style={{ flex: 1 }}>
           {tabs.map((tab) => {
