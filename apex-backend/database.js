@@ -54,6 +54,7 @@ if (!hasValidPg) {
 }
 
 // Helper: Convert SQLite SQL to PostgreSQL SQL
+const camelMap = { fullname: "fullName", avatarurl: "avatarUrl", resetcode: "resetCode", resetcodeexpires: "resetCodeExpires", projectname: "projectName", projectphase: "projectPhase", projectprogress: "projectProgress", projecttasks: "projectTasks", projectdeliverables: "projectDeliverables", pushtoken: "pushToken", deviceid: "deviceId", createdat: "createdAt", userid: "userId", senderrole: "senderRole", attachmenturl: "attachmentUrl", clientmsgid: "clientMsgId", projecttype: "projectType", aianalysis: "aiAnalysis", companyname: "companyName", companyemail: "companyEmail", companyphone: "companyPhone", taxid: "taxId", bankname: "bankName", bankaccount: "bankAccount", bankiban: "bankIban", instapayhandle: "instapayHandle", vodafonecash: "vodafoneCash", quoteid: "quoteId", invoicenumber: "invoiceNumber", paymentmethod: "paymentMethod", duedate: "dueDate", receipturl: "receiptUrl", paidat: "paidAt" }; function mapKeys(row) { if (!row) return row; const newRow = {}; for (const k in row) { newRow[camelMap[k] || k] = row[k]; } return newRow; }
 function convertSql(sql) {
   let pgSql = sql;
   pgSql = pgSql.replace(/INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT/gi, 'SERIAL PRIMARY KEY');
@@ -118,7 +119,7 @@ module.exports = {
     if (pool) {
       pool.query(convertSql(sql), params, (err, res) => {
         if (!err) {
-          if (cb) cb(null, res.rows && res.rows.length ? res.rows[0] : null);
+          if (cb) cb(null, res.rows && res.rows.length ? mapKeys(res.rows[0]) : null);
           return;
         }
 
@@ -144,7 +145,7 @@ module.exports = {
     if (pool) {
       pool.query(convertSql(sql), params, (err, res) => {
         if (!err) {
-          if (cb) cb(null, res.rows || []);
+          if (cb) cb(null, res.rows ? res.rows.map(mapKeys) : []);
           return;
         }
 

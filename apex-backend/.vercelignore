@@ -1,0 +1,7 @@
+node_modules
+.env.local
+.env
+database.sqlite
+database.sqlite-shm
+database.sqlite-wal
+uploads/
