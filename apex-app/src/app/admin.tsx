@@ -24,6 +24,7 @@ export default function AdminDashboardScreen() {
   const [users, setUsers] = useState<any[]>([]);
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Agency Settings State
   const [agencySettings, setAgencySettings] = useState<any>({
@@ -1038,247 +1039,47 @@ export default function AdminDashboardScreen() {
     );
   };
 
-  return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
-      
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-        <View style={[styles.headerLeft, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <TouchableOpacity 
-            onPress={() => {
-              if (router.canGoBack()) router.back();
-              else router.push('/dashboard');
-            }} 
-            style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
-          >
-            <Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={20} color={theme.text} />
-          </TouchableOpacity>
-          
-          <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
-                {t('adminDashboard')}
-              </Text>
-              <View style={{ backgroundColor: `${theme.primary}20`, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
-                <Text style={{ color: theme.primary, fontSize: 10, fontWeight: '900' }}>Admin</Text>
-              </View>
-            </View>
-            {currentUser && (
-              <Text style={{ color: theme.textMuted, fontSize: 11 }} numberOfLines={1}>
-                {currentUser.fullName}
-              </Text>
-            )}
-          </View>
+  
+  const renderSidebar = () => {
+    const tabs = [
+      { id: "quotes", label: isRTL ? "����� �������" : "Quotes", icon: "document-text-outline", count: quotes.filter((q:any) => q.status === "pending").length },
+      { id: "invoices", label: isRTL ? "��������" : "Invoices", icon: "receipt-outline", count: invoices.filter((i:any) => i.status === "pending").length },
+      { id: "users", label: isRTL ? "������� ���������" : "Clients & Projects", icon: "people-outline", count: users.filter((u:any) => u.role !== "admin").length },
+      { id: "analytics", label: isRTL ? "���������" : "Analytics", icon: "bar-chart-outline", count: 0 },
+      { id: "support", label: isRTL ? "����� �����" : "Support", icon: "chatbubbles-outline", count: chats.length },
+    ];
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.card, paddingVertical: 20 }}>
+        <View style={{ alignItems: "center", marginBottom: 30, paddingHorizontal: 16 }}>
+          <Image source={require("../../assets/images/logo-light.png")} style={{ width: 100, height: 40, resizeMode: "contain", tintColor: activeTheme === "dark" ? "#FFF" : undefined }} />
+          <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 4 }}>Admin Workspace</Text>
         </View>
-
-        {/* Header Action Buttons */}
-        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-          <TouchableOpacity 
-            onPress={() => router.push('/dashboard')} 
-            style={[styles.refreshBtn, { backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4 }]}
-          >
-            <Ionicons name="person-outline" size={14} color={theme.text} />
-            {!responsive.isMobile && (
-              <Text style={{ color: theme.text, fontSize: 12, fontWeight: 'bold' }}>
-                {isRTL ? 'بوابة العميل' : 'Client View'}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            onPress={async () => {
-              await loadData();
-              if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                window.alert(isRTL ? 'تم تحديث كافة البيانات بنجاح' : 'Data refreshed');
-              } else {
-                Alert.alert(isRTL ? 'تم التحديث' : 'Refreshed', isRTL ? 'تم تحديث كافة البيانات بنجاح' : 'Data refreshed');
-              }
-            }} 
-            style={[styles.refreshBtn, { backgroundColor: theme.primary, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4 }]}
-          >
-            <Ionicons name="refresh" size={14} color={activeTheme === 'light' ? '#FFF' : '#000'} />
-            {!responsive.isMobile && (
-              <Text style={{ color: activeTheme === 'light' ? '#FFF' : '#000', fontWeight: 'bold', fontSize: 12 }}>
-                {t('refresh')}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            onPress={async () => { 
-              await removeSecureToken(); 
-              await AsyncStorage.removeItem('userData'); 
-              setCurrentUser(null); 
-              router.replace('/login'); 
-            }} 
-            style={[styles.refreshBtn, { backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border, alignItems: 'center', justifyContent: 'center' }]}
-          >
-            <Ionicons name="log-out-outline" size={16} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Email SMTP Status & Toolbar Banner */}
-      <View style={{
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        backgroundColor: emailConfig?.configured ? '#10B98110' : '#F59E0B10',
-        borderBottomWidth: 1,
-        borderBottomColor: emailConfig?.configured ? '#10B98125' : '#F59E0B25',
-        gap: 8,
-      }}>
-        {/* Status Line */}
-        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-          <Ionicons 
-            name={emailConfig?.configured ? 'checkmark-circle' : 'alert-circle'} 
-            size={16} 
-            color={emailConfig?.configured ? '#10B981' : '#D97706'} 
-          />
-          <Text 
-            numberOfLines={1}
-            style={{ fontSize: 12, fontWeight: 'bold', color: emailConfig?.configured ? '#10B981' : '#D97706', flex: 1, textAlign: isRTL ? 'right' : 'left' }}
-          >
-            {emailConfig?.configured 
-              ? `${isRTL ? 'إرسال Gmail الحقيقي مفعّل:' : 'Gmail Active:'} ${emailConfig.user}`
-              : (isRTL ? 'إرسال البريد في وضع المحاكاة \u2066(Simulation)\u2069' : 'Emails in Simulation Mode')}
-          </Text>
-        </View>
-
-        {/* Action Buttons Horizontal Scroll Strip */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8, alignItems: 'center' }}
-        >
-          <TouchableOpacity
-            onPress={() => setShowAgencySettingsModal(true)}
-            style={{
-              paddingVertical: 6,
-              paddingHorizontal: 11,
-              borderRadius: 8,
-              backgroundColor: '#8B5CF618',
-              borderWidth: 1,
-              borderColor: '#8B5CF644',
-              flexDirection: isRTL ? 'row-reverse' : 'row',
-              alignItems: 'center',
-              gap: 5
-            }}
-          >
-            <Ionicons name="business-outline" size={14} color="#8B5CF6" />
-            <Text style={{ color: '#8B5CF6', fontSize: 11, fontWeight: 'bold' }}>
-              {isRTL ? 'إعدادات الوكالة والبنك' : 'Agency & Bank'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setShowEmailConfigModal(true)}
-            style={{
-              paddingVertical: 6,
-              paddingHorizontal: 11,
-              borderRadius: 8,
-              backgroundColor: emailConfig?.configured ? '#10B98120' : '#D9770620',
-              borderWidth: 1,
-              borderColor: emailConfig?.configured ? '#10B98155' : '#D9770655',
-              flexDirection: isRTL ? 'row-reverse' : 'row',
-              alignItems: 'center',
-              gap: 5
-            }}
-          >
-            <Ionicons name="settings-outline" size={14} color={emailConfig?.configured ? '#10B981' : '#D97706'} />
-            <Text style={{ color: emailConfig?.configured ? '#10B981' : '#D97706', fontSize: 11, fontWeight: 'bold' }}>
-              {isRTL ? 'إعدادات Gmail' : 'Gmail Setup'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setShowSentEmailsModal(true)}
-            style={{
-              paddingVertical: 6,
-              paddingHorizontal: 11,
-              borderRadius: 8,
-              backgroundColor: theme.card,
-              borderWidth: 1,
-              borderColor: theme.border,
-              flexDirection: isRTL ? 'row-reverse' : 'row',
-              alignItems: 'center',
-              gap: 5
-            }}
-          >
-            <Ionicons name="mail-unread-outline" size={14} color={theme.text} />
-            <Text style={{ color: theme.text, fontSize: 11, fontWeight: 'bold' }}>
-              {isRTL ? `سجل الرسائل (${sentEmails.length})` : `History (${sentEmails.length})`}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              const url = `${BASE_URL}/email-preview`;
-              if (Platform.OS === 'web' && typeof window !== 'undefined') window.open(url, '_blank');
-              else Linking.openURL(url);
-            }}
-            style={{
-              paddingVertical: 6,
-              paddingHorizontal: 11,
-              borderRadius: 8,
-              backgroundColor: '#0284c718',
-              borderWidth: 1,
-              borderColor: '#0284c744',
-              flexDirection: isRTL ? 'row-reverse' : 'row',
-              alignItems: 'center',
-              gap: 5
-            }}
-          >
-            <Ionicons name="sparkles-outline" size={14} color="#0284c7" />
-            <Text style={{ color: '#0284c7', fontSize: 11, fontWeight: 'bold' }}>
-              {isRTL ? 'معاينة شكل الإيميل' : 'Showcase'}
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-
-      {/* Tabs */}
-      <View style={{ borderBottomWidth: 1, borderBottomColor: theme.border, backgroundColor: theme.card }}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ flexDirection: isRTL ? 'row-reverse' : 'row', paddingHorizontal: 6 }}
-        >
-          {[
-            { id: 'quotes', label: isRTL ? 'طلبات التسعير' : 'Quotes', icon: 'document-text-outline', count: quotes.length },
-            { id: 'invoices', label: isRTL ? 'الفواتير' : 'Invoices', icon: 'receipt-outline', count: invoices.length },
-            { id: 'analytics', label: isRTL ? 'التحليلات' : 'Analytics', icon: 'pie-chart-outline' },
-            { id: 'users', label: isRTL ? 'العملاء المسجلين' : 'Clients', icon: 'people-outline', count: users.length },
-            { id: 'support', label: isRTL ? 'الدعم الفني' : 'Support', icon: 'chatbubbles-outline', count: chats.length },
-          ].map((tab) => {
+        <ScrollView style={{ flex: 1 }}>
+          {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={tab.id}
-                style={[
-                  styles.tabBtn,
-                  { flexDirection: isRTL ? 'row-reverse' : 'row', gap: 6 },
-                  isActive && { borderBottomColor: theme.primary, borderBottomWidth: 3 }
-                ]}
-                onPress={() => setActiveTab(tab.id as any)}
+                style={{
+                  flexDirection: isRTL ? "row-reverse" : "row",
+                  alignItems: "center",
+                  paddingVertical: 14,
+                  paddingHorizontal: 20,
+                  backgroundColor: isActive ? `${theme.primary}15` : "transparent",
+                  borderRightWidth: !isRTL && isActive ? 3 : 0,
+                  borderLeftWidth: isRTL && isActive ? 3 : 0,
+                  borderColor: theme.primary,
+                  marginBottom: 4
+                }}
+                onPress={() => { setActiveTab(tab.id as any); setShowSidebar(false); }}
               >
-                <Ionicons 
-                  name={tab.icon as any} 
-                  size={15} 
-                  color={isActive ? theme.primary : theme.textMuted} 
-                />
-                <Text style={[styles.tabText, { color: isActive ? theme.primary : theme.textMuted }]}>
+                <Ionicons name={tab.icon as any} size={20} color={isActive ? theme.primary : theme.textMuted} />
+                <Text style={{ flex: 1, color: isActive ? theme.primary : theme.text, fontSize: 14, fontWeight: isActive ? "bold" : "normal", marginHorizontal: 12, textAlign: isRTL ? "right" : "left" }}>
                   {tab.label}
                 </Text>
-                {tab.count !== undefined && tab.count > 0 && (
-                  <View style={{
-                    backgroundColor: isActive ? `${theme.primary}25` : `${theme.textMuted}20`,
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                    borderRadius: 10,
-                  }}>
-                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: isActive ? theme.primary : theme.textMuted }}>
-                      {tab.count}
-                    </Text>
+                {tab.count > 0 && (
+                  <View style={{ backgroundColor: theme.primary, borderRadius: 12, paddingHorizontal: 6, paddingVertical: 2 }}>
+                    <Text style={{ color: "#FFF", fontSize: 10, fontWeight: "bold" }}>{tab.count}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -1286,673 +1087,176 @@ export default function AdminDashboardScreen() {
           })}
         </ScrollView>
       </View>
+    );
+  };
 
-      {/* Universal Search Bar */}
-      <View style={{
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        backgroundColor: theme.card,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-      }}>
-        <View style={{
-          backgroundColor: theme.bg,
-          borderRadius: 10,
-          borderWidth: 1,
-          borderColor: theme.border,
-          flexDirection: isRTL ? 'row-reverse' : 'row',
-          alignItems: 'center',
-          paddingHorizontal: 10,
-          paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-          gap: 8,
-        }}>
-          <Ionicons name="search" size={18} color={theme.textMuted} />
-          <TextInput
-            style={{
-              flex: 1,
-              color: theme.text,
-              fontSize: 13,
-              paddingVertical: 4,
-              textAlign: isRTL ? 'right' : 'left',
-            }}
-            placeholder={isRTL ? 'بحث بالاسم، الإيميل، رقم الفاتورة، أو المشروع...' : 'Search by name, email, invoice #, or project...'}
-            placeholderTextColor={theme.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
+      <View style={{ flex: 1, flexDirection: isRTL ? "row-reverse" : "row" }}>
+        
+        {/* Desktop Sidebar */}
+        {Number(responsive.containerWidth) > 768 && (
+          <View style={{ width: 260, borderRightWidth: isRTL ? 0 : 1, borderLeftWidth: isRTL ? 1 : 0, borderColor: theme.border, backgroundColor: theme.card }}>
+            {renderSidebar()}
+          </View>
+        )}
+
+        {/* Mobile Drawer Overlay */}
+        {Number(responsive.containerWidth) <= 768 && showSidebar && (
+          <TouchableOpacity 
+            activeOpacity={1} 
+            onPress={() => setShowSidebar(false)}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 99 }}
           />
-          {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={18} color={theme.textMuted} />
+        )}
+
+        {/* Mobile Drawer Content */}
+        {Number(responsive.containerWidth) <= 768 && showSidebar && (
+          <View style={{ 
+            position: "absolute", top: 0, bottom: 0, 
+            left: !isRTL ? 0 : undefined, right: isRTL ? 0 : undefined, 
+            width: 280, backgroundColor: theme.card, zIndex: 100,
+            shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5
+          }}>
+            {renderSidebar()}
+          </View>
+        )}
+
+        {/* Main Content Area */}
+        <View style={{ flex: 1 }}>
+          
+          {/* Header */}
+          <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? "row-reverse" : "row", paddingVertical: 10 }]}>
+            <View style={[styles.headerLeft, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+              
+              {/* Hamburger Button for Mobile */}
+              {Number(responsive.containerWidth) <= 768 && (
+                <TouchableOpacity onPress={() => setShowSidebar(true)} style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border, marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }]}>
+                  <Ionicons name="menu" size={22} color={theme.text} />
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity 
+                onPress={() => {
+                  if (router.canGoBack()) router.back();
+                  else router.push("/dashboard");
+                }} 
+                style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
+              >
+                <Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={20} color={theme.text} />
+              </TouchableOpacity>
+              
+              <View style={{ flex: 1, alignItems: isRTL ? "flex-end" : "flex-start" }}>
+                <View style={{ flexDirection: isRTL ? "row-reverse" : "row", alignItems: "center", gap: 6 }}>
+                  <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
+                    {t("adminDashboard")}
+                  </Text>
+                  <View style={{ backgroundColor: `${theme.primary}20`, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                    <Text style={{ color: theme.primary, fontSize: 10, fontWeight: "900" }}>Admin</Text>
+                  </View>
+                </View>
+                <Text style={{ color: theme.textMuted, fontSize: 11 }} numberOfLines={1}>
+                  {currentUser?.email}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={loadData} style={[styles.refreshBtn, { backgroundColor: `${theme.primary}20` }]}>
+              {loading ? (
+                <ActivityIndicator size="small" color={theme.primary} />
+              ) : (
+                <Ionicons name="refresh" size={16} color={theme.primary} />
+              )}
             </TouchableOpacity>
-          ) : null}
+          </View>
+
+          {/* Universal Search Bar */}
+          <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: theme.card, borderBottomWidth: 1, borderBottomColor: theme.border }}>
+            <View style={{ backgroundColor: theme.bg, borderRadius: 10, borderWidth: 1, borderColor: theme.border, flexDirection: isRTL ? "row-reverse" : "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: Platform.OS === "ios" ? 8 : 4, gap: 8 }}>
+              <Ionicons name="search" size={18} color={theme.textMuted} />
+              <TextInput
+                style={{ flex: 1, color: theme.text, fontSize: 13, paddingVertical: 4, textAlign: isRTL ? "right" : "left" }}
+                placeholder={isRTL ? "��� ������ ������� �������� �� �������..." : "Search by name, email, invoice #, or project..."}
+                placeholderTextColor={theme.textMuted}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery ? (
+                <TouchableOpacity onPress={() => setSearchQuery("")}>
+                  <Ionicons name="close-circle" size={18} color={theme.textMuted} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+
+          {/* Main Scrollable View */}
+          <KeyboardAwareScrollView 
+            contentContainerStyle={[styles.scrollContent, { maxWidth: responsive.containerWidth as any, paddingHorizontal: responsive.paddingHorizontal }]} 
+            showsVerticalScrollIndicator={false}
+            enableOnAndroid={true}
+            extraScrollHeight={Platform.OS === "ios" ? 20 : 0}
+          >
+            {loading ? (
+              <View style={{ marginTop: 20 }}>
+                <View style={{ height: 200, borderRadius: 16, backgroundColor: theme.card, marginBottom: 16 }} />
+                <View style={{ height: 140, borderRadius: 16, backgroundColor: theme.card, marginBottom: 16 }} />
+              </View>
+            ) : (
+              <>
+                {activeTab === "quotes" && renderQuotes()}
+                {activeTab === "invoices" && renderInvoices()}
+                {activeTab === "users" && renderUsers()}
+                {activeTab === "analytics" && renderAnalytics()}
+                {activeTab === "support" && renderChats()}
+              </>
+            )}
+          </KeyboardAwareScrollView>
+
         </View>
       </View>
-
-      {/* Content */}
-      {/* Content */}
-      <KeyboardAwareScrollView 
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            maxWidth: responsive.containerWidth as any,
-            paddingHorizontal: responsive.paddingHorizontal
-          }
-        ]} 
-        showsVerticalScrollIndicator={false}
-        enableOnAndroid={true}
-        extraScrollHeight={Platform.OS === 'ios' ? 20 : 0}
-      >
-        {loading ? (
-          <View style={{ marginTop: 20 }}>
-            <Skeleton height={200} borderRadius={16} theme={theme} style={{ marginBottom: 16 }} />
-            <Skeleton height={140} borderRadius={16} theme={theme} style={{ marginBottom: 16 }} />
-            <Skeleton height={140} borderRadius={16} theme={theme} style={{ marginBottom: 16 }} />
-          </View>
-        ) : (
-          <>
-            {activeTab === 'quotes' && renderQuotes()}
-            {activeTab === 'invoices' && renderInvoices()}
-            {activeTab === 'users' && renderUsers()}
-            {activeTab === 'analytics' && renderAnalytics()}
-            {activeTab === 'support' && renderChats()}
-          </>
-        )}
-      </KeyboardAwareScrollView>
 
       {/* Manual Invoice Creation Modal */}
       <Modal visible={showNewInvoiceModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ color: theme.text, fontSize: 18, fontWeight: 'bold' }}>
-                {isRTL ? 'إصدار فاتورة جديدة' : 'Create New Invoice'}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <Text style={{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
+                {isRTL ? "����� ������ �����" : "Create New Invoice"}
               </Text>
               <TouchableOpacity onPress={() => setShowNewInvoiceModal(false)}>
                 <Ionicons name="close" size={24} color={theme.textMuted} />
               </TouchableOpacity>
             </View>
-
-            <Text style={{ color: theme.textMuted, fontSize: 13, marginBottom: 6, textAlign: isRTL ? 'right' : 'left' }}>
-              {isRTL ? 'اختر العميل:' : 'Select Client:'}
+            <Text style={{ color: theme.textMuted, fontSize: 13, marginBottom: 6, textAlign: isRTL ? "right" : "left" }}>
+              {isRTL ? "���� ������:" : "Select Client:"}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {users.filter(u => u.role !== 'admin').map(u => (
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {users.filter(u => u.role !== "admin").map(u => (
                   <TouchableOpacity
                     key={u.id}
                     onPress={() => setSelectedUserForInvoice(u)}
                     style={{
                       paddingVertical: 6,
                       paddingHorizontal: 12,
-                      borderRadius: 20,
+                      borderRadius: 10,
                       borderWidth: 1,
-                      backgroundColor: selectedUserForInvoice?.id === u.id ? theme.primary : theme.btnBg,
-                      borderColor: selectedUserForInvoice?.id === u.id ? theme.primary : theme.border
+                      backgroundColor: selectedUserForInvoice?.id === u.id ? theme.primary : theme.bg,
+                      borderColor: selectedUserForInvoice?.id === u.id ? theme.primary : theme.border,
                     }}
                   >
-                    <Text style={{ color: selectedUserForInvoice?.id === u.id ? '#FFF' : theme.text, fontSize: 12, fontWeight: 'bold' }}>
+                    <Text style={{ fontSize: 13, color: selectedUserForInvoice?.id === u.id ? "#FFF" : theme.text }}>
                       {u.fullName || u.email}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </ScrollView>
-
-            <TextInput 
-              style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}
-              placeholder={isRTL ? 'عنوان الفاتورة (مثال: دفعة ثانية 30%)' : 'Invoice Title'}
-              placeholderTextColor={theme.textMuted}
-              value={newInvTitle}
-              onChangeText={setNewInvTitle}
-            />
-
-            <TextInput 
-              style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}
-              placeholder={isRTL ? 'المبلغ ($)' : 'Amount ($)'}
-              placeholderTextColor={theme.textMuted}
-              keyboardType="numeric"
-              value={newInvAmount}
-              onChangeText={setNewInvAmount}
-            />
-
-            <TextInput 
-              style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}
-              placeholder={isRTL ? 'ملاحظات إضافية' : 'Notes'}
-              placeholderTextColor={theme.textMuted}
-              value={newInvNotes}
-              onChangeText={setNewInvNotes}
-            />
-
-            <TouchableOpacity 
-              style={[styles.confirmModalBtn, { backgroundColor: theme.primary }]}
-              onPress={handleCreateManualInvoice}
-              disabled={creatingInv}
-            >
-              {creatingInv ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Ionicons name="paper-plane" size={16} color="#FFF" />
-                  <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>
-                    {isRTL ? 'إصدار الفاتورة وإرسالها للعميل' : 'Issue Invoice'}
-                  </Text>
-                </View>
-              )}
+            <TouchableOpacity style={[styles.confirmModalBtn, { backgroundColor: theme.primary }]} onPress={handleCreateManualInvoice}>
+              <Text style={{ color: "#FFF", fontSize: 14, fontWeight: "bold" }}>
+                {isRTL ? "������ ������ ��������" : "Continue & Create"}
+              </Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
-
-      {/* Receipt Image Viewer Modal */}
-      <Modal visible={!!viewingReceipt} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border, alignItems: 'center' }]}>
-            <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-              <Text style={{ color: theme.text, fontWeight: 'bold' }}>{isRTL ? 'إيصال الدفع المرفوع' : 'Payment Receipt'}</Text>
-              <TouchableOpacity onPress={() => setViewingReceipt(null)}>
-                <Ionicons name="close" size={24} color={theme.textMuted} />
-              </TouchableOpacity>
-            </View>
-            {viewingReceipt ? (
-              <Image source={{ uri: viewingReceipt }} style={{ width: '100%', height: 350, borderRadius: 12 }} resizeMode="contain" />
-            ) : null}
-          </View>
-        </View>
-      </Modal>
-
-      {/* Email Configuration Modal */}
-      <Modal visible={showEmailConfigModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-            <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border, maxWidth: 540 }]}>
-              {/* Header */}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="settings-outline" size={18} color={theme.text} />
-                  <Text style={{ color: theme.text, fontSize: 17, fontWeight: 'bold' }}>
-                    {isRTL ? 'إعداد خادم البريد (Gmail SMTP)' : 'Gmail SMTP Setup'}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => setShowEmailConfigModal(false)}>
-                  <Ionicons name="close" size={24} color={theme.textMuted} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Explanatory Guide Box */}
-              <View style={{
-                backgroundColor: activeTheme === 'light' ? '#F0FDF4' : '#064E3B25',
-                borderColor: '#10B98144',
-                borderWidth: 1,
-                borderRadius: 12,
-                padding: 12,
-                marginBottom: 14
-              }}>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                  <Ionicons name="bulb-outline" size={15} color="#10B981" />
-                  <Text style={{ color: '#10B981', fontWeight: 'bold', fontSize: 13 }}>
-                    {isRTL ? 'كيفية تفعيل إرسال Gmail الحقيقي:' : 'How to enable real Gmail delivery:'}
-                  </Text>
-                </View>
-                <Text style={{ color: theme.text, fontSize: 12, lineHeight: 18, textAlign: isRTL ? 'right' : 'left' }}>
-                  {isRTL 
-                    ? '1. فعّل "التحقق بخطوتين" في حساب Google الخاص بك.\n2. افتح الرابط: myaccount.google.com/apppasswords\n3. اختر إنشاء كلمة مرور باسم Apex ثم انسخ الـ 16 حرفاً وضعها هنا في خانة App Password.'
-                    : '1. Enable 2-Step Verification on your Google account.\n2. Visit myaccount.google.com/apppasswords\n3. Create an App Password and paste the 16 characters below.'}
-                </Text>
-              </View>
-
-              {/* Status indicator */}
-              <View style={{
-                flexDirection: isRTL ? 'row-reverse' : 'row',
-                alignItems: 'center',
-                gap: 6,
-                marginBottom: 14,
-                padding: 8,
-                borderRadius: 8,
-                backgroundColor: emailConfig?.configured ? '#10B98115' : '#F59E0B15'
-              }}>
-                <Ionicons 
-                  name={emailConfig?.configured ? "checkmark-circle" : "alert-circle"} 
-                  size={18} 
-                  color={emailConfig?.configured ? "#10B981" : "#F59E0B"} 
-                />
-                <Text style={{ color: emailConfig?.configured ? '#10B981' : '#D97706', fontSize: 12, fontWeight: 'bold' }}>
-                  {emailConfig?.configured 
-                    ? (isRTL ? `مربوط حالياً بـ: ${emailConfig.user}` : `Connected to: ${emailConfig.user}`)
-                    : (isRTL ? 'الحالة: وضع المحاكاة (لم يتم ربط Gmail بعد)' : 'Status: Simulation mode (Not connected)')}
-                </Text>
-              </View>
-
-              {/* Input: Gmail User */}
-              <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                {isRTL ? 'بريد المرسل (Gmail):' : 'Sender Gmail Address:'}
-              </Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 12 }]}
-                placeholder="yourname@gmail.com"
-                placeholderTextColor={theme.textMuted}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                value={gmailUser}
-                onChangeText={setGmailUser}
-              />
-
-              {/* Input: Gmail App Password */}
-              <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                {isRTL ? 'كلمة مرور التطبيقات (Google App Password - 16 حرف):' : 'Google App Password (16 characters):'}
-              </Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 14 }]}
-                placeholder="abcd efgh ijkl mnop"
-                placeholderTextColor={theme.textMuted}
-                autoCapitalize="none"
-                secureTextEntry
-                value={gmailPass}
-                onChangeText={setGmailPass}
-              />
-
-              {/* Save Button */}
-              <TouchableOpacity
-                style={[styles.confirmModalBtn, { backgroundColor: '#10B981', marginBottom: 16 }]}
-                onPress={handleSaveEmailConfig}
-                disabled={savingEmailConfig}
-              >
-                {savingEmailConfig ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <Ionicons name="checkmark-circle-outline" size={16} color="#FFF" />
-                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
-                      {isRTL ? 'حفظ وتفعيل الإرسال الحقيقي' : 'Save & Activate Gmail'}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-
-              {/* Divider */}
-              <View style={{ height: 1, backgroundColor: theme.border, marginBottom: 14 }} />
-
-              {/* Test Email Section */}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4, marginBottom: 6 }}>
-                <Ionicons name="flask-outline" size={15} color={theme.text} />
-                <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 13 }}>
-                  {isRTL ? 'إرسال بريد تجريبي فوراً للتأكد:' : 'Send Immediate Test Email:'}
-                </Text>
-              </View>
-              <TextInput
-                style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 10 }]}
-                placeholder="target@gmail.com"
-                placeholderTextColor={theme.textMuted}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                value={testEmailTarget}
-                onChangeText={setTestEmailTarget}
-              />
-              <TouchableOpacity
-                style={[styles.confirmModalBtn, { backgroundColor: theme.primary }]}
-                onPress={handleSendTestEmail}
-                disabled={testingEmail}
-              >
-                {testingEmail ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <Ionicons name="paper-plane-outline" size={16} color="#FFF" />
-                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 14 }}>
-                      {isRTL ? 'إرسال بريد اختبار الآن' : 'Send Test Email Now'}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
-
-      {/* Sent Emails History Modal */}
-      <Modal visible={showSentEmailsModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border, maxHeight: '85%', width: '95%', maxWidth: 650 }]}>
-            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <View>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="mail-outline" size={18} color={theme.text} />
-                  <Text style={{ color: theme.text, fontSize: 17, fontWeight: 'bold' }}>
-                    {isRTL ? `سجل الرسائل الصادرة (${sentEmails.length})` : `Sent Emails History (${sentEmails.length})`}
-                  </Text>
-                </View>
-                <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>
-                  {isRTL ? 'جميع الرسائل المنشأة من النظام مع حالتها' : 'All emails generated with delivery status'}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowSentEmailsModal(false)}>
-                <Ionicons name="close" size={24} color={theme.textMuted} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={{ marginTop: 8 }} showsVerticalScrollIndicator={false}>
-              {sentEmails.length === 0 ? (
-                <View style={{ padding: 30, alignItems: 'center' }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 13 }}>
-                    {isRTL ? 'لا توجد رسائل مسجلة بعد' : 'No emails sent yet'}
-                  </Text>
-                </View>
-              ) : (
-                sentEmails.map((item, idx) => (
-                  <View 
-                    key={idx}
-                    style={{
-                      backgroundColor: theme.bg,
-                      borderRadius: 12,
-                      padding: 12,
-                      marginBottom: 10,
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                    }}
-                  >
-                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 14, textAlign: isRTL ? 'right' : 'left' }}>
-                          {item.subject}
-                        </Text>
-                        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                          <Ionicons name="mail-outline" size={12} color={theme.textMuted} />
-                          <Text style={{ color: theme.textMuted, fontSize: 12 }}>
-                            {item.to}
-                          </Text>
-                        </View>
-                        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                          <Ionicons name="time-outline" size={12} color={theme.textMuted} />
-                          <Text style={{ color: theme.textMuted, fontSize: 11 }}>
-                            {new Date(item.timestamp).toLocaleString()}
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={{
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderRadius: 8,
-                        backgroundColor: item.status === 'delivered' ? '#10B98120' : '#F59E0B20',
-                      }}>
-                        <Text style={{
-                          color: item.status === 'delivered' ? '#10B981' : '#D97706',
-                          fontSize: 11,
-                          fontWeight: 'bold',
-                        }}>
-                          {item.status === 'delivered'
-                            ? (isRTL ? 'تم التسليم' : 'Delivered')
-                            : (isRTL ? 'محاكاة' : 'Simulated')}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <TouchableOpacity
-                      onPress={() => setViewingHtmlEmail(item)}
-                      style={{
-                        marginTop: 6,
-                        paddingVertical: 6,
-                        paddingHorizontal: 10,
-                        backgroundColor: theme.card,
-                        borderWidth: 1,
-                        borderColor: theme.border,
-                        borderRadius: 8,
-                        alignSelf: isRTL ? 'flex-start' : 'flex-end',
-                        flexDirection: isRTL ? 'row-reverse' : 'row',
-                        alignItems: 'center',
-                        gap: 4
-                      }}
-                    >
-                      <Ionicons name="eye-outline" size={14} color={theme.primary} />
-                      <Text style={{ color: theme.primary, fontSize: 12, fontWeight: 'bold' }}>
-                        {isRTL ? 'معاينة محتوى البريد (HTML)' : 'Preview Email (HTML)'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* HTML Email Preview Modal */}
-      <Modal visible={!!viewingHtmlEmail} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border, maxHeight: '90%', width: '95%', maxWidth: 700 }]}>
-            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 15 }} numberOfLines={1}>
-                  {viewingHtmlEmail?.subject}
-                </Text>
-                <Text style={{ color: theme.textMuted, fontSize: 11 }}>
-                  {isRTL ? 'إلى:' : 'To:'} {viewingHtmlEmail?.to} | {viewingHtmlEmail?.status === 'delivered' ? 'Delivered' : 'Simulated'}
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setViewingHtmlEmail(null)}>
-                <Ionicons name="close" size={24} color={theme.textMuted} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: 8,
-              padding: 12,
-              maxHeight: 450,
-            }}>
-              {Platform.OS === 'web' && typeof window !== 'undefined' ? (
-                <div 
-                  dangerouslySetInnerHTML={{ __html: viewingHtmlEmail?.html || '<p>No content</p>' }} 
-                  style={{ color: '#111', fontFamily: 'sans-serif' }}
-                />
-              ) : (
-                <Text style={{ color: '#111', fontSize: 13, lineHeight: 20 }}>
-                  {viewingHtmlEmail?.html?.replace(/<[^>]+>/g, ' ') || 'No content'}
-                </Text>
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Agency & Bank Settings Modal */}
-      <Modal visible={showAgencySettingsModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-            <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border, maxWidth: 580 }]}>
-              {/* Header */}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="business-outline" size={18} color={theme.text} />
-                  <Text style={{ color: theme.text, fontSize: 17, fontWeight: 'bold' }}>
-                    {isRTL ? 'إعدادات الوكالة والحسابات البنكية' : 'Agency & Bank Accounts'}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => setShowAgencySettingsModal(false)}>
-                  <Ionicons name="close" size={24} color={theme.textMuted} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Informative Note */}
-              <View style={{
-                backgroundColor: `${theme.primary}12`,
-                borderColor: `${theme.primary}33`,
-                borderWidth: 1,
-                borderRadius: 10,
-                padding: 10,
-                marginBottom: 16
-              }}>
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="information-circle-outline" size={15} color={theme.primary} />
-                  <Text style={{ color: theme.primary, fontSize: 12, lineHeight: 18, textAlign: isRTL ? 'right' : 'left', flex: 1 }}>
-                    {isRTL 
-                      ? 'هذه البيانات تنعكس تلقائياً في فواتير العملاء المطبوعة (PDF) ونافذة تحويلات الفواتير المباشرة في بوابة العميل.' 
-                      : 'These details are automatically reflected on printable PDF invoices and client transfer modals.'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Company Name */}
-              <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                {isRTL ? 'اسم الوكالة / الشركة:' : 'Company / Agency Name:'}
-              </Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 10 }]}
-                value={agencySettings.companyName || ''}
-                onChangeText={(val) => setAgencySettings({ ...agencySettings, companyName: val })}
-                placeholder="Apex Software Agency"
-                placeholderTextColor={theme.textMuted}
-              />
-
-              {/* Phone & Email Row */}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginBottom: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                    {isRTL ? 'رقم الهاتف الرسمي:' : 'Official Phone:'}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 0 }]}
-                    value={agencySettings.companyPhone || ''}
-                    onChangeText={(val) => setAgencySettings({ ...agencySettings, companyPhone: val })}
-                    placeholder="+20 100 000 0000"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                    {isRTL ? 'البريد الرسمي:' : 'Official Email:'}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 0 }]}
-                    value={agencySettings.companyEmail || ''}
-                    onChangeText={(val) => setAgencySettings({ ...agencySettings, companyEmail: val })}
-                    placeholder="contact@apex.com"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-              </View>
-
-              {/* Address & Tax ID Row */}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginBottom: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                    {isRTL ? 'العنوان / المقر:' : 'Address / HQ:'}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 0 }]}
-                    value={agencySettings.address || ''}
-                    onChangeText={(val) => setAgencySettings({ ...agencySettings, address: val })}
-                    placeholder="Cairo, Egypt"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                    {isRTL ? 'الرقم الضريبي (Tax ID):' : 'Tax ID:'}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 0 }]}
-                    value={agencySettings.taxId || ''}
-                    onChangeText={(val) => setAgencySettings({ ...agencySettings, taxId: val })}
-                    placeholder="TX-948201-EG"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-              </View>
-
-              {/* Section Header: Electronic & Bank Accounts */}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginTop: 6, marginBottom: 8 }}>
-                <Ionicons name="card-outline" size={16} color={theme.primary} />
-                <Text style={{ color: theme.primary, fontSize: 13, fontWeight: 'bold' }}>
-                  {isRTL ? 'حسابات التحويل المالي (المحافظ والبنوك)' : 'Payment Transfer Accounts'}
-                </Text>
-              </View>
-
-              {/* Vodafone Cash & InstaPay */}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginBottom: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                    {isRTL ? 'فودافون كاش / المحافظ:' : 'Vodafone Cash / Wallets:'}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 0 }]}
-                    value={agencySettings.vodafoneCash || ''}
-                    onChangeText={(val) => setAgencySettings({ ...agencySettings, vodafoneCash: val })}
-                    placeholder="01000000000"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                    {isRTL ? 'معرف انستاباي (InstaPay):' : 'InstaPay Handle:'}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 0 }]}
-                    value={agencySettings.instapayHandle || ''}
-                    onChangeText={(val) => setAgencySettings({ ...agencySettings, instapayHandle: val })}
-                    placeholder="apex@instapay"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-              </View>
-
-              {/* Bank Name */}
-              <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                {isRTL ? 'اسم البنك المعتمد:' : 'Bank Name:'}
-              </Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 10 }]}
-                value={agencySettings.bankName || ''}
-                onChangeText={(val) => setAgencySettings({ ...agencySettings, bankName: val })}
-                placeholder="CIB (Commercial International Bank)"
-                placeholderTextColor={theme.textMuted}
-              />
-
-              {/* Bank Account & IBAN */}
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginBottom: 16 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                    {isRTL ? 'رقم الحساب البنكي:' : 'Bank Account Number:'}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 0 }]}
-                    value={agencySettings.bankAccount || ''}
-                    onChangeText={(val) => setAgencySettings({ ...agencySettings, bankAccount: val })}
-                    placeholder="100029384729"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
-                    {isRTL ? 'رقم الآيبان (IBAN):' : 'IBAN:'}
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left', marginBottom: 0 }]}
-                    value={agencySettings.bankIban || ''}
-                    onChangeText={(val) => setAgencySettings({ ...agencySettings, bankIban: val })}
-                    placeholder="EG1200000000100029384729"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-              </View>
-
-              {/* Save Button */}
-              <TouchableOpacity
-                onPress={handleSaveAgencySettings}
-                disabled={savingAgencySettings}
-                style={[styles.confirmModalBtn, { backgroundColor: theme.primary, marginTop: 4 }]}
-              >
-                {savingAgencySettings ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <Ionicons name="checkmark-circle-outline" size={16} color="#FFF" />
-                    <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 15 }}>
-                      {isRTL ? 'حفظ إعدادات الوكالة والحسابات' : 'Save Agency & Bank Settings'}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
         </View>
       </Modal>
 
