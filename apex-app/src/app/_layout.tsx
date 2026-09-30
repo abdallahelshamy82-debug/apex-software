@@ -28,7 +28,6 @@ if (Platform.OS === 'web') {
   console.warn = (...args) => {
     if (typeof args[0] === 'string') {
       if (args[0].includes('shadow*') || args[0].includes('textShadow*')) return;
-      if (args[0].includes('expo-av')) return;
       if (args[0].includes('useNativeDriver')) return;
       if (args[0].includes('props.pointerEvents is deprecated')) return;
       if (args[0].includes('Cannot record touch end without a touch start')) return;

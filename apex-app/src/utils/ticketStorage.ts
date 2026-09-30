@@ -10,6 +10,8 @@ export interface ChatMessage {
   id: string;
   clientMsgId?: string;
   userId: number;
+  senderUserId?: number;
+  recipientUserId?: number;
   sender: 'client' | 'admin';
   senderRole?: string;
   text: string;
@@ -66,6 +68,8 @@ export function normalizeMessage(raw: any, activeUserId?: number): ChatMessage {
     id: String(raw.id || Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
     clientMsgId: cId,
     userId: Number(raw.userId || activeUserId || 1),
+    senderUserId: raw.senderUserId !== undefined ? Number(raw.senderUserId) : undefined,
+    recipientUserId: raw.recipientUserId !== undefined ? Number(raw.recipientUserId) : undefined,
     sender: normRole,
     senderRole: normRole,
     text: raw.text || '',

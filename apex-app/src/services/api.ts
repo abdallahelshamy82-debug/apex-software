@@ -1,41 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { getSecureToken } from '../utils/secureTokenStorage';
-import Constants from 'expo-constants';
 import { offlineCache } from '../utils/cache';
 import { getDeviceId } from '../utils/deviceBinding';
 
-const getBaseUrl = () => {
-  // 1. Priority: Environment variable (configured in .env or during EAS / Production build)
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, '');
-  }
-  // 2. Web browser: if running on local dev server (localhost / 127.0.0.1)
-  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return `http://${window.location.hostname}:3000`;
-    }
-    // On production web (e.g. apex-admin-seven.vercel.app), connect directly to cloud backend
-    return 'https://apex-backend-ten.vercel.app';
-  }
-  // 3. Expo Go / Development Client (only when actively developing via Expo host)
-  if (__DEV__) {
-    const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
-    if (hostUri) {
-      const hostIp = hostUri.split(':')[0];
-      if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-        return `http://${hostIp}:3000`;
-      }
-    }
-    if (Platform.OS === 'android' && !Constants.isDevice) {
-      return 'http://10.0.2.2:3000';
-    }
-  }
-  // 4. Default to Cloud Backend for Production APK and standalone app
-  return 'https://apex-backend-ten.vercel.app';
-};
-
-export const BASE_URL = getBaseUrl();
+export const BASE_URL = 'https://apex-backend-ten.vercel.app';
 export const API_URL = `${BASE_URL}/api`;
 
 const getAuthHeaders = async () => {
@@ -651,7 +620,10 @@ export const api = {
 
   async getAiConfig() {
     try {
-      const response = await fetch(`${API_URL}/ai/config`);
+      const response = await fetch(`${API_URL}/ai/config`, {
+        method: 'GET',
+        headers: await getAuthHeaders(),
+      });
       return await response.json();
     } catch (e) {
       return { success: false, provider: 'gemini', hasGeminiKey: false };

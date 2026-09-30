@@ -26,13 +26,11 @@ import { haptics } from '../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useResponsive } from '../hooks/useResponsive';
 import { useToast } from '../components/ApexToast';
+import { Audio as AudioClass } from 'expo-av';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-// Safe loader for expo-av
-let SafeAudio: any = null;
 
 // Safe loader for expo-file-system
 let SafeFileSystem: any = null;
@@ -133,6 +131,7 @@ export default function CopilotScreen() {
   const { theme, activeTheme, isRTL, currentUser, setCurrentUser } = useSettings();
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
+  const [recording, setRecording] = useState<any>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
@@ -165,7 +164,6 @@ export default function CopilotScreen() {
   const [converting, setConverting] = useState(false);
   const [analysis, setAnalysis] = useState<any | null>(null);
   const [isListening, setIsListening] = useState(false);
-  const [recording, setRecording] = useState<any | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<any>(null);
   const audioChunksRef = useRef<any[]>([]);
@@ -441,13 +439,11 @@ export default function CopilotScreen() {
     if (isListening) {
       // STOP recording and transcribe!
       setIsListening(false);
-      if (!recording) return;
 
       setIsTranscribing(true);
       try {
-        await recording.stopAndUnloadAsync();
-        const uri = recording.getURI();
-        setRecording(null);
+        await audioRecorder.stop();
+        const uri = audioRecorder.uri;
 
         if (!uri) {
           setIsTranscribing(false);
@@ -518,18 +514,9 @@ export default function CopilotScreen() {
       }
     } else {
       // START recording on mobile!
-      if (!SafeAudio) {
-        showToast({
-          type: 'warning',
-          title: isRTL ? 'تسجيل الصوت' : 'Audio Recording',
-          message: isRTL ? 'مكتبة الصوت غير متوفرة في هذه البيئة.' : 'Audio module unavailable.',
-        });
-        return;
-      }
-
       try {
-        const perm = await SafeAudio.requestPermissionsAsync();
-        if (perm.status !== 'granted') {
+        const permission = await AudioModule.requestRecordingPermissionsAsync();
+        if (!permission.granted) {
           showToast({
             type: 'warning',
             title: isRTL ? 'إذن الميكروفون' : 'Permission Required',
@@ -538,16 +525,9 @@ export default function CopilotScreen() {
           return;
         }
 
-        await SafeAudio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
-        });
-
-        const { recording: newRecording } = await SafeAudio.Recording.createAsync(
-          SafeAudio.RecordingOptionsPresets.HIGH_QUALITY
-        );
-
-        setRecording(newRecording);
+        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+        await audioRecorder.prepareToRecordAsync();
+        audioRecorder.record();
         setIsListening(true);
 
         showToast({
