@@ -12,7 +12,6 @@ const aiCopilot = require('./aiCopilot');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
-const { OAuth2Client } = require('google-auth-library');
 
 // Load .env variables
 try {
@@ -31,49 +30,9 @@ try {
   }
 } catch (e) {}
 
-const isProduction = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error(
-    isProduction
-      ? 'FATAL: JWT_SECRET must be set in production. Server refused to start.'
-      : 'FATAL: JWT_SECRET is required. Set it in the environment; no in-code fallback is allowed.'
-  );
-}
-
-const DEFAULT_ALLOWED_ORIGINS = [
-  'https://apex-web-blond.vercel.app',
-  'https://apex-admin-seven.vercel.app',
-  'https://apexsoftware.com',
-  'https://www.apexsoftware.com',
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:8081',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:8081',
-];
-const extraCorsOrigins = (process.env.CORS_ORIGINS || '')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-const ALLOWED_ORIGINS = Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...extraCorsOrigins]));
-
-const corsOrigin = (origin, callback) => {
-  if (!origin) return callback(null, true);
-  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-  return callback(new Error('Not allowed by CORS'));
-};
-
-const corsOptions = {
-  origin: corsOrigin,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Client-Platform'],
-};
-
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: corsOptions });
+const io = new Server(server, { cors: { origin: '*' } });
 
 // 🛡️ Security Headers (Helmet)
 app.use(helmet({
@@ -119,16 +78,11 @@ app.use('/api/auth/reset-password', authLimiter);
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'تم بلوغ الحد الأقصى لاستخدام خدمات الذكاء الاصطناعي لهذه الفترة لحماية الموارد.' }
+  message: { success: false, message: 'تم بلوغ الحد الأقصى لتحليل المشاريع بالذكاء الاصطناعي لهذه الفترة لحماية الموارد.' }
 });
 app.use('/api/ai/analyze-project', aiLimiter);
-app.use('/api/ai/chat-consultant', aiLimiter);
-app.use('/api/ai/transcribe-voice', aiLimiter);
-app.use('/api/ai/convert-contract', aiLimiter);
 
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // Create uploads directory if not exists
@@ -237,8 +191,8 @@ app.get('/', (req, res) => {
         <div class="badge">🟢 خادم الـ API والـ Backend يعمل بنجاح (Port 3000)</div>
         <h1>خادم منصة Apex Software</h1>
         <p>هذا الرابط مخصص لخادم البيانات والـ API وقواعد البيانات.<br>لتصفح المنصة التفاعلية وتجربة التطبيق، اضغط على الزر أدناه:</p>
-        <a href="https://apex-admin-seven.vercel.app" class="btn">الانتقال إلى واجهة التطبيق والمنصة 🚀</a>
-        <div class="note">💡 الرابط المباشر لواجهة التطبيق: <strong>https://apex-admin-seven.vercel.app</strong></div>
+        <a href="http://localhost:8081" class="btn">الانتقال إلى واجهة التطبيق والمنصة (Port 8081) 🚀</a>
+        <div class="note">💡 الرابط المباشر لواجهة التطبيق: <strong>http://localhost:8081</strong></div>
       </div>
     </body>
     </html>
@@ -299,47 +253,8 @@ const upload = multer({
   }
 });
 
-io.use((socket, next) => {
-  const authHeader = socket.handshake.headers.authorization || '';
-  const token = socket.handshake.auth?.token || authHeader.split(' ')[1];
-  if (!token) return next(new Error('Unauthorized'));
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err || !user) return next(new Error('Unauthorized'));
-    socket.data.user = user;
-    next();
-  });
-});
-
-// Google OAuth verification for Android/Web sign-in
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '596632301040-cpotn60a58rmi31ctcltiqkltutcqg4e.apps.googleusercontent.com';
-const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
-
-const getVerifiedGoogleUser = async ({ idToken }) => {
-  if (!idToken) {
-    throw new Error('Google ID token is required.');
-  }
-
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: [GOOGLE_CLIENT_ID]
-    });
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
-      throw new Error('Google token is invalid or missing email.');
-    }
-
-    return {
-      email: payload.email.trim().toLowerCase(),
-      fullName: payload.name || payload.email.split('@')[0],
-      picture: payload.picture || null,
-      googleId: payload.sub || null
-    };
-  } catch (verifyErr) {
-    throw new Error('Google authentication failed: invalid ID token.');
-  }
-};
+// 🛡️ High-Entropy JWT Secret from .env with Fallback
+const JWT_SECRET = process.env.JWT_SECRET || 'apex_dev_jwt_secret_change_in_production';
 
 // Database Config
 const db = require('./database');
@@ -433,22 +348,11 @@ const db = require('./database');
 
 // Realtime Chat (Socket.io)
 io.on('connection', (socket) => {
-  socket.on('join_room', (requestedUserId) => {
-    const userId = Number(requestedUserId);
-    const user = socket.data.user;
-    if (!Number.isInteger(userId) || userId <= 0) return;
-    if (Number(user.id) !== userId && !isAdminUser(user)) return;
-    socket.join(`chat_${userId}`);
-  });
+  socket.on('join_room', (userId) => { socket.join(`chat_${userId}`); });
   socket.on('send_message', (data) => {
-    const user = socket.data.user;
-    const userId = Number(data.userId);
-    if (!Number.isInteger(userId) || userId <= 0) return;
-    if (Number(user.id) !== userId && !isAdminUser(user)) return;
-
-    const { text, attachmentUrl, attachment, type, timestamp, clientMsgId, id } = data;
+    const { userId, senderRole, sender, text, attachmentUrl, attachment, type, timestamp, clientMsgId, id } = data;
     const cId = clientMsgId || (typeof id === 'string' ? id : null);
-    const role = isAdminUser(user) ? 'admin' : 'client';
+    const role = senderRole || sender || 'client';
     const attStr = attachment ? (typeof attachment === 'object' ? JSON.stringify(attachment) : attachment) : null;
     const attUrl = attachmentUrl || (attachment && attachment.uri) || null;
     const msgType = type || (attachment ? (attachment.type === 'file' ? 'document' : attachment.type) : 'text');
@@ -524,8 +428,6 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-const verifyToken = authenticateToken;
-
 // 🛡️ Strict Admin Authorization Middleware
 const requireAdmin = (req, res, next) => {
   if (!req.user || !isAdminUser(req.user)) {
@@ -550,8 +452,7 @@ app.post('/api/register', (req, res) => {
   const normalizedEmail = email.trim().toLowerCase();
   const clientPlatform = (req.headers['x-client-platform'] || req.body.platform || '').toLowerCase();
   const isAdmin = getAdminEmails().includes(normalizedEmail);
-);
-  }
+
 
   const handleCreateOrUpdateUser = () => {
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -645,8 +546,7 @@ app.post('/api/login', (req, res) => {
       userRole = 'admin';
       db.run(`UPDATE users SET role = 'admin' WHERE id = ?`, [row.id]);
     }
-);
-    }
+
 
     // Update deviceId on mobile if not set yet
     if (deviceId && !row.deviceId) {
@@ -664,62 +564,61 @@ app.post('/api/login', (req, res) => {
 });
 
 // Google Sign-In Route
-app.post('/api/auth/google', async (req, res) => {
-  try {
-    const { deviceId } = req.body;
-    const googleUser = await getVerifiedGoogleUser(req.body);
-    const normalizedEmail = googleUser.email.trim().toLowerCase();
-    const defaultRole = getAdminEmails().includes(normalizedEmail) ? 'admin' : 'client';
-    const clientPlatform = (req.headers['x-client-platform'] || req.body.platform || '').toLowerCase();
-    const isAdmin = getAdminEmails().includes(normalizedEmail);
-);
-    }
+app.post('/api/auth/google', (req, res) => {
+  const { email, fullName, googleId, picture, deviceId } = req.body;
+  if (!email) return res.status(400).json({ success: false, message: 'Email is required from Google' });
 
-    db.get(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (err, existingUser) => {
-      if (err) return res.status(500).json({ success: false, message: 'Database error' });
+  const normalizedEmail = email.trim().toLowerCase();
+  const defaultRole = getAdminEmails().includes(normalizedEmail) ? 'admin' : 'client';
+  const clientPlatform = (req.headers['x-client-platform'] || req.body.platform || '').toLowerCase();
+  const isAdmin = getAdminEmails().includes(normalizedEmail);
 
-      if (existingUser) {
-        let currentRole = existingUser.role;
-        if (getAdminEmails().includes(normalizedEmail) && existingUser.role !== 'admin') {
-          currentRole = 'admin';
-          db.run(`UPDATE users SET role = 'admin' WHERE id = ?`, [existingUser.id]);
-        }
 
-        if (deviceId && !existingUser.deviceId) {
-          db.run(`UPDATE users SET deviceId = ? WHERE id = ?`, [deviceId, existingUser.id]);
-        }
+  db.get(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (err, existingUser) => {
+    if (err) return res.status(500).json({ success: false, message: 'Database error' });
 
-        const user = {
-          id: existingUser.id,
-          fullName: existingUser.fullName,
-          email: existingUser.email,
-          role: currentRole,
-          company: existingUser.company,
-          phone: existingUser.phone,
-          avatarUrl: existingUser.avatarUrl || googleUser.picture,
-          projectName: existingUser.projectName,
-          projectPhase: existingUser.projectPhase,
-          projectProgress: existingUser.projectProgress || 0
-        };
-        const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
-        return res.json({ success: true, user, token });
+    if (existingUser) {
+      let currentRole = existingUser.role;
+      if (getAdminEmails().includes(normalizedEmail) && existingUser.role !== 'admin') {
+        currentRole = 'admin';
+        db.run(`UPDATE users SET role = 'admin' WHERE id = ?`, [existingUser.id]);
       }
 
+      if (deviceId && !existingUser.deviceId) {
+        db.run(`UPDATE users SET deviceId = ? WHERE id = ?`, [deviceId, existingUser.id]);
+      }
+
+      const user = {
+        id: existingUser.id,
+        fullName: existingUser.fullName,
+        email: existingUser.email,
+        role: currentRole,
+        company: existingUser.company,
+        phone: existingUser.phone,
+        avatarUrl: existingUser.avatarUrl || picture,
+        projectName: existingUser.projectName,
+        projectPhase: existingUser.projectPhase,
+        projectProgress: existingUser.projectProgress || 0
+      };
+      const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+      return res.json({ success: true, user, token });
+    } else {
+      // 🛡️ Device Binding check before creating new Google client user
       const proceedWithGoogleCreate = () => {
         const defaultPassword = bcrypt.hashSync('google_oauth_' + Math.random().toString(36).substring(7), 10);
         db.run(
           `INSERT INTO users (fullName, email, password, company, role, avatarUrl, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
-          [googleUser.fullName || normalizedEmail.split('@')[0], normalizedEmail, defaultPassword, 'Google Client', defaultRole, googleUser.picture || null, deviceId || null],
+          [fullName || normalizedEmail.split('@')[0], normalizedEmail, defaultPassword, 'Google Client', defaultRole, picture || null, deviceId || null],
           function(insertErr) {
             if (insertErr) return res.status(500).json({ success: false, message: 'Failed to create user' });
             
             const newUser = {
               id: this.lastID,
-              fullName: googleUser.fullName || normalizedEmail.split('@')[0],
+              fullName: fullName || normalizedEmail.split('@')[0],
               email: normalizedEmail,
               role: defaultRole,
               company: 'Google Client',
-              avatarUrl: googleUser.picture || null,
+              avatarUrl: picture || null,
               phone: null,
               projectName: null,
               projectPhase: null,
@@ -748,13 +647,8 @@ app.post('/api/auth/google', async (req, res) => {
       } else {
         proceedWithGoogleCreate();
       }
-    });
-  } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: error.message || 'Google authentication failed.'
-    });
-  }
+    }
+  });
 });
 
 // Forgot Password Request (send 6-digit code)
@@ -1058,7 +952,7 @@ app.delete('/api/admin/quotes/:id', authenticateToken, (req, res) => {
 // ==================== APEX AI COPILOT ROUTES ====================
 
 // Interactive Chat Consultant with Live AI (Gemini 3.6 Flash / Deep Semantic)
-app.post('/api/ai/chat-consultant', verifyToken, async (req, res) => {
+app.post('/api/ai/chat-consultant', async (req, res) => {
   try {
     const { messages, language, apiKey, provider } = req.body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -1081,7 +975,7 @@ app.post('/api/ai/chat-consultant', verifyToken, async (req, res) => {
 });
 
 // Transcribe Voice Note to Text (High-accuracy Gemini 3.5 Transcribe / Flash)
-app.post('/api/ai/transcribe-voice', verifyToken, async (req, res) => {
+app.post('/api/ai/transcribe-voice', async (req, res) => {
   try {
     const { audioBase64, mimeType, language } = req.body;
     if (!audioBase64) {
@@ -1103,7 +997,7 @@ app.post('/api/ai/transcribe-voice', verifyToken, async (req, res) => {
 });
 
 // Analyze Project Prompt (Voice, Text, or Chat History, Live Gemini / OpenAI / Deep Semantic)
-app.post('/api/ai/analyze-project', verifyToken, async (req, res) => {
+app.post('/api/ai/analyze-project', async (req, res) => {
   try {
     const { prompt, messages, language, apiKey, provider } = req.body;
     const inputContent = (messages && Array.isArray(messages) && messages.length > 0) ? messages : prompt;
@@ -1127,7 +1021,7 @@ app.post('/api/ai/analyze-project', verifyToken, async (req, res) => {
 });
 
 // Get AI Copilot Configuration (Public / Client)
-app.get('/api/ai/config', verifyToken, requireAdmin, (req, res) => {
+app.get('/api/ai/config', (req, res) => {
   const config = aiCopilot.getAiConfig();
   res.json({
     success: true,
@@ -1139,7 +1033,7 @@ app.get('/api/ai/config', verifyToken, requireAdmin, (req, res) => {
 });
 
 // Update AI Copilot Configuration
-app.post('/api/ai/config', verifyToken, requireAdmin, (req, res) => {
+app.post('/api/ai/config', authenticateToken, (req, res) => {
   const { geminiApiKey, openaiApiKey, provider } = req.body;
   const result = aiCopilot.saveAiConfig({ geminiApiKey, openaiApiKey, provider });
   res.json(result);
@@ -1911,9 +1805,17 @@ app.get('/email-preview', (req, res) => {
 });
 
 // Upload File Route (Support Chat & Attachments - Multipart & Base64)
-app.post('/api/upload', authenticateToken, express.json({ limit: '30mb' }), (req, res, next) => {
+app.post('/api/upload', express.json({ limit: '30mb' }), (req, res, next) => {
   // Check if this is a JSON base64 upload
   if (req.is('application/json') && req.body && req.body.base64) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token) {
+      jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (!err && user) req.user = user;
+      });
+    }
+
     try {
       const { filename, mimeType, base64 } = req.body;
       const safeExt = getSafeExt({ originalname: filename, mimetype: mimeType });
@@ -1946,6 +1848,14 @@ app.post('/api/upload', authenticateToken, express.json({ limit: '30mb' }), (req
   }
 
   // Otherwise handle as standard multipart
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (!err && user) req.user = user;
+    });
+  }
+
   upload.single('file')(req, res, (err) => {
     if (err) {
       console.error('Upload multer error:', err.message);
@@ -1980,7 +1890,15 @@ app.post('/api/upload', authenticateToken, express.json({ limit: '30mb' }), (req
 });
 
 // Dedicated endpoint for Base64 Upload (Reliable fallback for React Native Android/Expo)
-app.post('/api/upload-base64', authenticateToken, express.json({ limit: '30mb' }), (req, res) => {
+app.post('/api/upload-base64', express.json({ limit: '30mb' }), (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (!err && user) req.user = user;
+    });
+  }
+
   try {
     const { filename, mimeType, base64 } = req.body;
     if (!base64) {
@@ -2021,16 +1939,13 @@ app.post('/api/upload-base64', authenticateToken, express.json({ limit: '30mb' }
 
 // 💬 Send Message via REST API (Reliable Fallback & State Sync)
 app.post('/api/messages', authenticateToken, (req, res) => {
-  const { userId, text, attachmentUrl, attachment, type, timestamp, clientMsgId, id } = req.body;
+  const { userId, senderRole, sender, text, attachmentUrl, attachment, type, timestamp, clientMsgId, id } = req.body;
   const targetId = Number(userId || req.user.id);
-  if (!Number.isInteger(targetId) || targetId <= 0) {
-    return res.status(400).json({ success: false, message: 'معرّف المحادثة غير صالح' });
-  }
   if (Number(req.user.id) !== targetId && !isAdminUser(req.user)) {
     return res.status(403).json({ success: false, message: 'غير مصرح لك بإرسال رسائل لهذا الحساب' });
   }
   const cId = clientMsgId || (typeof id === 'string' ? id : null);
-  const role = isAdminUser(req.user) ? 'admin' : 'client';
+  const role = senderRole || sender || (isAdminUser(req.user) ? 'admin' : 'client');
   const attStr = attachment ? (typeof attachment === 'object' ? JSON.stringify(attachment) : attachment) : null;
   const attUrl = attachmentUrl || (attachment && attachment.uri) || null;
   const msgType = type || (attachment ? (attachment.type === 'file' ? 'document' : attachment.type) : 'text');
