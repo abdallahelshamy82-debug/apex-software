@@ -104,7 +104,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
-  const [recording, setRecording] = useState<any | null>(null);
+  
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [uploading, setUploading] = useState(false);

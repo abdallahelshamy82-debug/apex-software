@@ -442,8 +442,7 @@ export default function CopilotScreen() {
 
       setIsTranscribing(true);
       try {
-        await audioRecorder.stop();
-        const uri = audioRecorder.uri;
+        await recording.stopAndUnloadAsync(); const uri = recording.getURI(); setRecording(null);
 
         if (!uri) {
           setIsTranscribing(false);
@@ -515,7 +514,7 @@ export default function CopilotScreen() {
     } else {
       // START recording on mobile!
       try {
-        const permission = await AudioModule.requestRecordingPermissionsAsync();
+        const permission = await AudioClass.requestPermissionsAsync();
         if (!permission.granted) {
           showToast({
             type: 'warning',
@@ -525,9 +524,7 @@ export default function CopilotScreen() {
           return;
         }
 
-        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-        await audioRecorder.prepareToRecordAsync();
-        audioRecorder.record();
+        await AudioClass.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true }); const { recording: newRec } = await AudioClass.Recording.createAsync(AudioClass.RecordingOptionsPresets.HIGH_QUALITY); setRecording(newRec);
         setIsListening(true);
 
         showToast({
