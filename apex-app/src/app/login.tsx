@@ -163,28 +163,7 @@ export default function LoginScreen() {
     const cleanEmail = email.trim().toLowerCase();
 
     // 🛡️ Web restriction: Prevent client sign up or client login from Web
-    if (Platform.OS === 'web') {
-      if (!isLogin) {
-        await haptics.warning();
-        Alert.alert(
-          isRTL ? 'التسجيل متاح على تطبيق الهاتف فقط' : 'Mobile Only',
-          isRTL 
-            ? 'إنشاء حسابات العملاء الجديدة متاح حصراً عبر تطبيق الموبايل لضمان هوية العميل وأمان العروض.' 
-            : 'Client registration is exclusively available via the mobile app.'
-        );
-        return;
-      }
-      if (cleanEmail !== 'abdallahelshamy82@gmail.com') {
-        await haptics.error();
-        Alert.alert(
-          isRTL ? 'الوصول مقتصر على الإدارة' : 'Admin Portal Only',
-          isRTL 
-            ? 'منصة الويب مخصصة للوحة تحكم الإدارة فقط. لمتابعة مشروعك وفواتيرك كعميل، يرجى استخدام تطبيق الهاتف (Android / iOS).'
-            : 'Web access is restricted to the Admin Dashboard. Clients must use the mobile app.'
-        );
-        return;
-      }
-    }
+    
 
     setLoading(true);
     let res;
@@ -470,15 +449,7 @@ export default function LoginScreen() {
               <TouchableOpacity 
                 style={[styles.toggleBtn, !isLogin && { backgroundColor: theme.primary }]}
                 onPress={() => {
-                  if (Platform.OS === 'web') {
-                    Alert.alert(
-                      isRTL ? 'التسجيل عبر تطبيق الموبايل فقط' : 'Mobile Only',
-                      isRTL 
-                        ? 'إنشاء حسابات العملاء الجديدة متاح حصراً عبر تطبيق الموبايل لضمان هوية العميل وأمان العروض.' 
-                        : 'Client registration is exclusively available via the mobile app.'
-                    );
-                    return;
-                  }
+                  
                   setIsLogin(false);
                 }}
               >
@@ -601,15 +572,7 @@ export default function LoginScreen() {
                 {isLogin ? t('noAccount') : t('haveAccount')}
               </Text>
               <TouchableOpacity onPress={() => {
-                if (isLogin && Platform.OS === 'web') {
-                  Alert.alert(
-                    isRTL ? 'التسجيل عبر تطبيق الموبايل فقط' : 'Mobile Only',
-                    isRTL 
-                      ? 'إنشاء حسابات العملاء الجديدة متاح حصراً عبر تطبيق الموبايل لضمان هوية العميل وأمان العروض.' 
-                      : 'Client registration is exclusively available via the mobile app.'
-                  );
-                  return;
-                }
+                
                 setIsLogin(!isLogin);
               }}>
                 <Text style={[styles.switchModeText, { color: theme.primary, marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
