@@ -161,6 +161,7 @@ export default function CopilotScreen() {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analyzingStep, setAnalyzingStep] = useState(0);
   const [converting, setConverting] = useState(false);
   const [analysis, setAnalysis] = useState<any | null>(null);
   const [isListening, setIsListening] = useState(false);
@@ -544,11 +545,16 @@ export default function CopilotScreen() {
   };
 
   // Open WhatsApp directly for human consultation
-  const handleOpenWhatsApp = () => {
+  const handleOpenWhatsApp = (customMsg?: string) => {
     haptics.medium();
-    const defaultMsg = isRTL 
-      ? 'مرحباً فريق Apex Devs، أود استشارة برمجية بخصوص مشروعي والتكلفة المتوقعة...'
-      : 'Hello Apex Devs team, I would like a consultation regarding my software project...';
+    const pkgData = analysis?.packages?.[selectedPackage] || analysis?.packages?.pro;
+    const defaultMsg = customMsg || (analysis 
+      ? (isRTL 
+          ? `مرحباً فريق Apex Software، قمت باستخراج دراسة جدوى استرشادية لمشروعي "${analysis.projectName || 'مشروعي البرمجي'}" بالباقة (${pkgData?.title || 'المختارة'}) عبر المستشار الذكي، وأود مناقشة تفاصيل التنفيذ والتعاقد الفعلي مع المهندس المسؤول.`
+          : `Hello Apex Software team, I generated a feasibility study for my project "${analysis.projectName || 'My Project'}" (${pkgData?.title || 'Selected'}) and want to discuss actual implementation and contract with the lead engineer.`)
+      : (isRTL 
+          ? 'مرحباً فريق Apex Software، أود استشارة برمجية مباشرة بخصوص مشروعي وتثبيت المتطلبات والتكلفة والبدء...'
+          : 'Hello Apex Software team, I would like a consultation regarding my software project...'));
 
     const url = `https://wa.me/201027877209?text=${encodeURIComponent(defaultMsg)}`;
 
@@ -820,7 +826,12 @@ export default function CopilotScreen() {
   const handleGenerateBlueprint = async () => {
     haptics.medium();
     setAnalyzing(true);
+    setAnalyzingStep(0);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    const stepTimer = setInterval(() => {
+      setAnalyzingStep(prev => (prev < 3 ? prev + 1 : prev));
+    }, 1200);
 
     try {
       const storedKey = await AsyncStorage.getItem('userGeminiKey');
@@ -832,6 +843,7 @@ export default function CopilotScreen() {
         { apiKey: activeKey, provider: aiProvider }
       );
 
+      clearInterval(stepTimer);
       setAnalyzing(false);
 
       if (res.success && res.analysis) {
@@ -849,6 +861,7 @@ export default function CopilotScreen() {
         });
       }
     } catch (e) {
+      clearInterval(stepTimer);
       setAnalyzing(false);
       haptics.error();
       showToast({
@@ -1035,7 +1048,7 @@ export default function CopilotScreen() {
           {/* WhatsApp Direct Action */}
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={handleOpenWhatsApp}
+            onPress={() => handleOpenWhatsApp()}
             style={[styles.headerIconBtn, { borderColor: '#10B98140', backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}
             accessibilityLabel={isRTL ? 'تواصل عبر واتساب' : 'WhatsApp'}
           >
@@ -1148,93 +1161,170 @@ export default function CopilotScreen() {
               onContentSizeChange={() => chatScrollRef.current?.scrollToEnd({ animated: true })}
             >
               {/* Collapsible Project Blueprint Banner */}
-              <View style={[styles.chatCtaBanner, { backgroundColor: activeTheme === 'light' ? '#0F172A' : '#0B132B', borderColor: '#38BDF8', marginBottom: 2 }]}>
-                {isBannerCollapsed ? (
-                  // Compact Collapsed Bar (takes ~36px height only)
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                      <Ionicons name={analysis ? "document-text" : "flash"} size={16} color="#38BDF8" />
-                      <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: 'bold' }} numberOfLines={1}>
-                        {analysis ? (isRTL ? 'خطة المشروع والـ 3 باقات جاهزة' : 'Blueprint Ready') : (isRTL ? 'استخراج خطة المشروع والـ 3 باقات' : 'Generate Blueprint')}
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                      <TouchableOpacity
-                        activeOpacity={0.85}
-                        disabled={analyzing}
-                        onPress={() => {
-                          if (analysis) setActiveMode('blueprint');
-                          else handleGenerateBlueprint();
-                        }}
-                        style={[styles.chatCtaBtn, { paddingVertical: 4, paddingHorizontal: 8 }]}
-                      >
-                        <Text style={[styles.chatCtaBtnText, { fontSize: 11 }]}>
-                          {analysis ? (isRTL ? 'عرض' : 'View') : (isRTL ? 'استخراج' : 'Generate')}
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => {
-                          haptics.selection();
-                          setIsBannerCollapsed(false);
-                        }}
-                        style={{ padding: 4 }}
-                      >
-                        <Ionicons name="chevron-down" size={18} color="#94A3B8" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ) : (
-                  // Full Expanded Card
-                  <View>
-                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <View style={{ flex: 1, paddingRight: isRTL ? 0 : 8, paddingLeft: isRTL ? 8 : 0 }}>
-                        <Text style={[styles.chatCtaTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
-                          {analysis ? (isRTL ? 'خطة المشروع والـ 3 باقات جاهزة' : 'Blueprint & 3 Tiers Ready') : (isRTL ? 'استخراج خطة المشروع والـ 3 باقات' : 'Generate Project Blueprint')}
-                        </Text>
-                        <Text style={[styles.chatCtaSub, { textAlign: isRTL ? 'right' : 'left' }]}>
-                          {analysis ? (isRTL ? 'اضغط لعرض دراسة الجدوى وتحديد الباقة والتعاقد' : 'Tap to view feasibility and choose package') : (isRTL ? 'دراسة جدوى، تحليل منافسين، 3 باقات \u2066(MVP, Pro, Enterprise)\u2069' : 'Feasibility, competitors, 3 packages')}
-                        </Text>
-                      </View>
+              {(() => {
+                const userMessages = messages.filter(m => m.role === 'user');
+                const userMsgsCount = userMessages.length;
+                const hasAiReady = messages.some(m => m.readyForSpec);
+                const hasExplicitRequest = userMessages.some(m => /(استخراج|دراسة الجدوى|خطة المشروع|الباقات|التعاقد|دراسه الجدوى|اعتماد)/i.test(m.text));
+                const isSpecUnlocked = Boolean(analysis || hasAiReady || hasExplicitRequest || userMsgsCount >= 3);
 
-                      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                        <TouchableOpacity
-                          activeOpacity={0.85}
-                          disabled={analyzing}
-                          onPress={() => {
-                            if (analysis) {
-                              setActiveMode('blueprint');
-                            } else {
-                              handleGenerateBlueprint();
-                            }
-                          }}
-                          style={styles.chatCtaBtn}
-                        >
-                          {analyzing ? (
-                            <ActivityIndicator size="small" color="#0B132B" />
-                          ) : (
-                            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
-                              <Ionicons name={analysis ? "eye-outline" : "flash"} size={16} color="#0B132B" />
-                              <Text style={styles.chatCtaBtnText}>
-                                {analysis ? (isRTL ? 'عرض الخطة' : 'View') : (isRTL ? 'استخراج الآن' : 'Generate')}
+                const bannerBg = analysis 
+                  ? (activeTheme === 'light' ? '#0F172A' : '#0B132B')
+                  : (isSpecUnlocked 
+                      ? (activeTheme === 'light' ? '#0F172A' : '#091E3A')
+                      : (activeTheme === 'light' ? '#F8FAFC' : '#111827'));
+                const bannerBorder = analysis ? '#38BDF8' : (isSpecUnlocked ? '#06B6D4' : (activeTheme === 'light' ? '#E2E8F0' : '#1E293B'));
+
+                return (
+                  <View style={[styles.chatCtaBanner, { backgroundColor: bannerBg, borderColor: bannerBorder, marginBottom: 2 }]}>
+                    {isBannerCollapsed ? (
+                      // Compact Collapsed Bar (takes ~36px height only)
+                      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                          <Ionicons 
+                            name={analysis ? "document-text" : (isSpecUnlocked ? "flash" : "time-outline")} 
+                            size={16} 
+                            color={analysis ? "#38BDF8" : (isSpecUnlocked ? "#06B6D4" : "#F59E0B")} 
+                          />
+                          <Text style={{ color: analysis ? '#38BDF8' : (isSpecUnlocked ? '#06B6D4' : theme.textMuted), fontSize: 12, fontWeight: 'bold' }} numberOfLines={1}>
+                            {analysis 
+                              ? (isRTL ? 'خطة المشروع والـ 3 باقات جاهزة' : 'Blueprint Ready') 
+                              : (isSpecUnlocked 
+                                  ? (isRTL ? '✨ دراسة الجدوى جاهزة للتوليد' : '✨ Feasibility Ready') 
+                                  : (isRTL ? 'دراسة الجدوى (قيد التجميع مع المستشار)' : 'Feasibility (In Progress)'))}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+                          <TouchableOpacity
+                            activeOpacity={0.85}
+                            disabled={analyzing}
+                            onPress={() => {
+                              if (analysis) {
+                                setActiveMode('blueprint');
+                              } else if (isSpecUnlocked) {
+                                handleGenerateBlueprint();
+                              } else {
+                                haptics.selection();
+                                showToast({
+                                  type: 'info',
+                                  title: isRTL ? 'قيد الاستكشاف' : 'In Progress',
+                                  message: isRTL ? 'أجب على أسئلة المستشار لتوضيح متطلبات مشروعك لتفعيل دراسة الجدوى والـ 3 باقات.' : 'Continue chatting to unlock your feasibility study.',
+                                });
+                              }
+                            }}
+                            style={[
+                              styles.chatCtaBtn, 
+                              { 
+                                paddingVertical: 4, 
+                                paddingHorizontal: 8,
+                                backgroundColor: analysis ? '#38BDF8' : (isSpecUnlocked ? '#06B6D4' : theme.btnBg),
+                                opacity: (!analysis && !isSpecUnlocked) ? 0.6 : 1
+                              }
+                            ]}
+                          >
+                            <Text style={[styles.chatCtaBtnText, { fontSize: 11, color: (!analysis && !isSpecUnlocked) ? theme.textMuted : '#0B132B' }]}>
+                              {analysis ? (isRTL ? 'عرض' : 'View') : (isSpecUnlocked ? (isRTL ? 'توليد' : 'Generate') : (isRTL ? 'قيد التجهيز 🔒' : 'Locked 🔒'))}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => {
+                              haptics.selection();
+                              setIsBannerCollapsed(false);
+                            }}
+                            style={{ padding: 4 }}
+                          >
+                            <Ionicons name="chevron-down" size={18} color="#94A3B8" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ) : (
+                      // Full Expanded Card
+                      <View>
+                        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <View style={{ flex: 1, paddingRight: isRTL ? 0 : 8, paddingLeft: isRTL ? 8 : 0 }}>
+                            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                              <Ionicons 
+                                name={analysis ? "document-text" : (isSpecUnlocked ? "sparkles" : "time-outline")} 
+                                size={15} 
+                                color={analysis ? "#38BDF8" : (isSpecUnlocked ? "#06B6D4" : "#F59E0B")} 
+                              />
+                              <Text style={[styles.chatCtaTitle, { textAlign: isRTL ? 'right' : 'left', color: (!analysis && !isSpecUnlocked) ? theme.text : '#38BDF8' }]}>
+                                {analysis 
+                                  ? (isRTL ? 'خطة المشروع والـ 3 باقات جاهزة' : 'Blueprint & 3 Tiers Ready') 
+                                  : (isSpecUnlocked 
+                                      ? (isRTL ? '✨ اكتملت الرؤية! دراسة الجدوى جاهزة' : 'Vision Complete! Ready to Generate') 
+                                      : (isRTL ? 'دراسة الجدوى والـ 3 باقات (قيد التجميع)' : 'Feasibility & 3 Tiers (In Progress)'))}
                               </Text>
                             </View>
-                          )}
-                        </TouchableOpacity>
+                            <Text style={[styles.chatCtaSub, { textAlign: isRTL ? 'right' : 'left', color: theme.textMuted }]}>
+                              {analysis 
+                                ? (isRTL ? 'اضغط لعرض دراسة الجدوى وتحديد الباقة والتعاقد' : 'Tap to view feasibility and choose package') 
+                                : (isSpecUnlocked 
+                                    ? (isRTL ? 'اضغط الآن لتوليد دراسة الجدوى وهندسة الـ 3 باقات وخطة التعاقد' : 'Tap to generate tailored feasibility & 3 packages') 
+                                    : (isRTL ? `المعلومات مكتملة (${Math.min(85, Math.max(25, userMsgsCount * 25))}%) • أجب على أسئلة المستشار لتفعيل دراسة الجدوى` : 'Answer advisor questions to unlock feasibility study & 3 packages'))}
+                            </Text>
+                          </View>
 
-                        <TouchableOpacity
-                          onPress={() => {
-                            haptics.selection();
-                            setIsBannerCollapsed(true);
-                          }}
-                          style={{ padding: 4 }}
-                        >
-                          <Ionicons name="chevron-up" size={18} color="#94A3B8" />
-                        </TouchableOpacity>
+                          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+                            <TouchableOpacity
+                              activeOpacity={0.85}
+                              disabled={analyzing}
+                              onPress={() => {
+                                if (analysis) {
+                                  setActiveMode('blueprint');
+                                } else if (isSpecUnlocked) {
+                                  handleGenerateBlueprint();
+                                } else {
+                                  haptics.selection();
+                                  showToast({
+                                    type: 'info',
+                                    title: isRTL ? 'قيد الاستكشاف' : 'In Progress',
+                                    message: isRTL ? 'أجب على أسئلة المستشار لتوضيح متطلبات مشروعك لتفعيل دراسة الجدوى والـ 3 باقات.' : 'Continue chatting to unlock your feasibility study.',
+                                  });
+                                }
+                              }}
+                              style={[
+                                styles.chatCtaBtn,
+                                {
+                                  backgroundColor: analysis ? '#38BDF8' : (isSpecUnlocked ? '#06B6D4' : theme.btnBg),
+                                  borderColor: (!analysis && !isSpecUnlocked) ? theme.border : undefined,
+                                  borderWidth: (!analysis && !isSpecUnlocked) ? 1 : 0,
+                                  opacity: (!analysis && !isSpecUnlocked) ? 0.7 : 1
+                                }
+                              ]}
+                            >
+                              {analyzing ? (
+                                <ActivityIndicator size="small" color="#0B132B" />
+                              ) : (
+                                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 5 }}>
+                                  <Ionicons 
+                                    name={analysis ? "eye-outline" : (isSpecUnlocked ? "flash" : "lock-closed-outline")} 
+                                    size={15} 
+                                    color={(!analysis && !isSpecUnlocked) ? theme.textMuted : "#0B132B"} 
+                                  />
+                                  <Text style={[styles.chatCtaBtnText, { color: (!analysis && !isSpecUnlocked) ? theme.textMuted : '#0B132B' }]}>
+                                    {analysis ? (isRTL ? 'عرض الخطة' : 'View') : (isSpecUnlocked ? (isRTL ? 'توليد الآن' : 'Generate') : (isRTL ? 'غير مفعّلة 🔒' : 'Locked 🔒'))}
+                                  </Text>
+                                </View>
+                              )}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              onPress={() => {
+                                haptics.selection();
+                                setIsBannerCollapsed(true);
+                              }}
+                              style={{ padding: 4 }}
+                            >
+                              <Ionicons name="chevron-up" size={18} color="#94A3B8" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
                       </View>
-                    </View>
+                    )}
                   </View>
-                )}
-              </View>
+                );
+              })()}
               {/* Quick Concepts Carousel (When chat has only welcome) */}
               {messages.length <= 1 && (
                 <View style={{ marginBottom: 6 }}>
@@ -1579,6 +1669,41 @@ export default function CopilotScreen() {
             </View>
           </View>
 
+          {/* Important Advisory Notice: Approximate Estimates & Direct Team Contact */}
+          <View style={{ backgroundColor: activeTheme === 'light' ? '#FEF3C7' : 'rgba(245, 158, 11, 0.12)', borderColor: '#F59E0B', borderWidth: 1.5, borderRadius: 14, padding: 14, marginBottom: 14 }}>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <Ionicons name="information-circle" size={20} color="#F59E0B" />
+              <Text style={{ color: activeTheme === 'light' ? '#92400E' : '#FBBF24', fontWeight: 'bold', fontSize: 13, flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
+                {isRTL ? 'تنبيه استشاري وتقديري مهم' : 'Important Advisory Notice'}
+              </Text>
+            </View>
+            <Text style={{ color: activeTheme === 'light' ? '#78350F' : '#FDE68A', fontSize: 12, lineHeight: 19, textAlign: isRTL ? 'right' : 'left', marginBottom: 12 }}>
+              {isRTL 
+                ? 'كافة الأسعار والجداول الزمنية والمواصفات المعروضة هنا هي تقديرات ذكية واسترشادية أولية مبنية على متطلبات فكرتك الحالية. لتأكيد المتطلبات الدقيقة، اعتماد بنود العقد الرسمي، وضمان بدء التنفيذ فوراً، يرجى التواصل مباشرة مع فريق مهندسي Apex.' 
+                : 'All pricing, timelines, and specifications shown are preliminary intelligent estimates based on your current inputs. Please connect directly with our engineering team to finalize exact scopes and sign the official contract.'}
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => handleOpenWhatsApp()}
+              style={{
+                backgroundColor: '#10B981',
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                alignItems: 'center',
+                gap: 8,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                borderRadius: 10,
+                justifyContent: 'center'
+              }}
+            >
+              <Ionicons name="logo-whatsapp" size={17} color="#FFF" />
+              <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 12 }}>
+                {isRTL ? 'تأكيد المواصفات والميزانية مع الفريق عبر واتساب' : 'Confirm Specs & Budget via WhatsApp'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* 1. FEASIBILITY & MARKET GAUGE CARD */}
           <View style={[styles.cardSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -1731,12 +1856,21 @@ export default function CopilotScreen() {
                 </Text>
 
                 <View style={{ gap: 6 }}>
-                  {(pkgData.keyDeliverables || [
-                    'تطبيقات الموبايل الموحدة (iOS & Android)',
-                    'لوحة تحكم إدارية سحابية',
-                    'بوابات الدفع الإلكتروني',
-                    'خوادم سحابية ونسخ احتياطي'
-                  ]).map((deliv: string, dIdx: number) => (
+                  {(pkgData.keyDeliverables && pkgData.keyDeliverables.length > 0 ? pkgData.keyDeliverables : (
+                    analysis?.isWebOnly
+                      ? [
+                          isRTL ? 'منصة ويب متجاوبة فائقة السرعة والأداء' : 'High-performance responsive web platform',
+                          isRTL ? 'لوحة تحكم إدارية سحابية متقدمة' : 'Advanced Cloud Admin Dashboard',
+                          isRTL ? 'ربط بوابات الدفع الإلكتروني وقواعد البيانات' : 'Payment Gateways & Database Integration',
+                          isRTL ? 'خوادم سحابية ونسخ احتياطي وحماية SSL' : 'Cloud Hosting, Auto-Backup & SSL Security'
+                        ]
+                      : [
+                          isRTL ? 'تطبيقات الموبايل الموحدة (iOS & Android)' : 'Unified Mobile Apps (iOS & Android)',
+                          isRTL ? 'لوحة تحكم إدارية سحابية' : 'Cloud Admin Dashboard',
+                          isRTL ? 'ربط بوابات الدفع الإلكتروني' : 'Payment Gateways Integration',
+                          isRTL ? 'خوادم سحابية ونسخ احتياطي' : 'Cloud Hosting & Backup'
+                        ]
+                  )).map((deliv: string, dIdx: number) => (
                     <View key={dIdx} style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="checkmark-done" size={15} color="#10B981" />
                       <Text style={{ color: theme.text, fontSize: 12, flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
@@ -1747,6 +1881,41 @@ export default function CopilotScreen() {
                 </View>
               </View>
             )}
+
+            {/* Advisory Footnote under Packages */}
+            <View style={{ marginTop: 12, padding: 12, borderRadius: 12, backgroundColor: activeTheme === 'light' ? '#FFFBEB' : 'rgba(245, 158, 11, 0.08)', borderWidth: 1, borderColor: activeTheme === 'light' ? '#FDE68A' : 'rgba(245, 158, 11, 0.25)' }}>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <Ionicons name="information-circle-outline" size={16} color="#F59E0B" />
+                <Text style={{ color: activeTheme === 'light' ? '#92400E' : '#FBBF24', fontSize: 12, fontWeight: 'bold', flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
+                  {isRTL ? 'أسعار وأوقات تقريبية استرشادية' : 'Indicative Estimates'}
+                </Text>
+              </View>
+              <Text style={{ color: activeTheme === 'light' ? '#78350F' : '#FDE68A', fontSize: 11, lineHeight: 17, textAlign: isRTL ? 'right' : 'left', marginBottom: 10 }}>
+                {isRTL 
+                  ? 'الأسعار والأوقات الموضحة هي تقديرات استرشادية ذكية لحجم العمل. لتثبيت المواصفات النهائية والحصول على عرض السعر الرسمي المعتمد، تواصل مباشرة مع فريق مهندسي Apex.' 
+                  : 'Prices and timelines shown are intelligent indicative estimates. To finalize exact specifications and official proposal, connect directly with Apex engineers.'}
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => handleOpenWhatsApp()}
+                style={{
+                  backgroundColor: '#10B981',
+                  flexDirection: isRTL ? 'row-reverse' : 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 8,
+                  alignSelf: isRTL ? 'flex-start' : 'flex-end'
+                }}
+              >
+                <Ionicons name="logo-whatsapp" size={15} color="#FFF" />
+                <Text style={{ color: '#FFF', fontSize: 11, fontWeight: 'bold' }}>
+                  {isRTL ? 'تأكيد الباقة والتفاصيل عبر واتساب' : 'Confirm Package on WhatsApp'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Deep Architectural Tab Navigation */}
@@ -2560,6 +2729,118 @@ export default function CopilotScreen() {
         </View>
       </Modal>
 
+      {/* Animated Analyzing / Generating Overlay Modal */}
+      <Modal
+        visible={analyzing}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(11, 19, 43, 0.88)' }]}>
+          <View style={[styles.analyzingCard, { backgroundColor: theme.card, borderColor: '#06B6D4' }]}>
+            {/* Glowing Pulsing Chip Icon */}
+            <View style={styles.analyzingIconContainer}>
+              <Animated.View style={[styles.analyzingPulseRing, { transform: [{ scale: pulseAnim }] }]} />
+              <View style={[styles.analyzingIconCircle, { backgroundColor: '#06B6D4' }]}>
+                <Ionicons name="hardware-chip-outline" size={32} color="#0B132B" />
+              </View>
+            </View>
+
+            <Text style={[styles.analyzingTitle, { color: theme.text, textAlign: 'center' }]}>
+              {isRTL ? 'جاري هندسة وإعداد دراسة الجدوى...' : 'Synthesizing Architecture & Feasibility...'}
+            </Text>
+
+            <Text style={[styles.analyzingSubtitle, { color: theme.textMuted, textAlign: 'center' }]}>
+              {isRTL 
+                ? 'يقوم كبير مهندسي Apex بتحليل المتطلبات وهيكلة الـ 3 باقات الآن...' 
+                : 'Apex Chief Architect is synthesizing technical specifications & 3 packages...'}
+            </Text>
+
+            {/* Visual Step Progress Bar */}
+            <View style={styles.analyzingProgressTrack}>
+              <View 
+                style={[
+                  styles.analyzingProgressFill, 
+                  { 
+                    width: analyzingStep === 0 ? '25%' : analyzingStep === 1 ? '55%' : analyzingStep === 2 ? '80%' : '98%' 
+                  }
+                ]} 
+              />
+            </View>
+
+            {/* Sequential Steps with Real-time Status */}
+            <View style={{ width: '100%', gap: 10, marginTop: 14 }}>
+              {[
+                { 
+                  id: 0, 
+                  title: isRTL ? 'فحص المتطلبات وحصر نطاق العمل بدقة' : 'Validating requirements & filtering unneeded scope' 
+                },
+                { 
+                  id: 1, 
+                  title: isRTL ? 'حصر المنصات والشاشات ورحلة المستخدم (User Journey)' : 'Specifying platforms, screens & user journey' 
+                },
+                { 
+                  id: 2, 
+                  title: isRTL ? 'هندسة معمارية السيرفرات وقواعد البيانات وتكاليف الطرف الثالث' : 'Designing cloud architecture & third-party fees' 
+                },
+                { 
+                  id: 3, 
+                  title: isRTL ? 'حساب الميزانية التقديرية الرشيقة وهيكلة الـ 3 باقات' : 'Calculating lean budget & structuring 3 packages' 
+                },
+              ].map((step) => {
+                const isDone = analyzingStep > step.id;
+                const isCurrent = analyzingStep === step.id;
+
+                return (
+                  <View 
+                    key={step.id} 
+                    style={[
+                      styles.analyzingStepRow, 
+                      { 
+                        backgroundColor: isCurrent ? 'rgba(6, 182, 212, 0.10)' : (isDone ? `${theme.primary}08` : 'transparent'),
+                        borderColor: isCurrent ? '#06B6D4' : (isDone ? '#10B98140' : theme.border),
+                        flexDirection: isRTL ? 'row-reverse' : 'row'
+                      }
+                    ]}
+                  >
+                    <View style={styles.analyzingStepIconBox}>
+                      {isDone ? (
+                        <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                      ) : isCurrent ? (
+                        <ActivityIndicator size="small" color="#06B6D4" />
+                      ) : (
+                        <Ionicons name="ellipse-outline" size={16} color="#64748B" />
+                      )}
+                    </View>
+                    <Text 
+                      style={[
+                        styles.analyzingStepText, 
+                        { 
+                          color: isCurrent ? '#06B6D4' : (isDone ? theme.text : theme.textMuted),
+                          fontWeight: isCurrent || isDone ? 'bold' : 'normal',
+                          textAlign: isRTL ? 'right' : 'left',
+                          flex: 1
+                        }
+                      ]}
+                    >
+                      {step.title}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Advisory Footnote */}
+            <View style={{ marginTop: 16, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="shield-checkmark-outline" size={15} color="#10B981" />
+              <Text style={{ fontSize: 11, color: theme.textMuted, textAlign: 'center' }}>
+                {isRTL ? 'تقديرات استرشادية أولية يمكن اعتمادها وتعديلها مع الفريق' : 'Preliminary indicative estimates confirmed with team'}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -3233,5 +3514,82 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  analyzingCard: {
+    width: '100%',
+    maxWidth: 460,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#06B6D4',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  analyzingIconContainer: {
+    width: 76,
+    height: 76,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    position: 'relative',
+  },
+  analyzingPulseRing: {
+    position: 'absolute',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: 'rgba(6, 182, 212, 0.2)',
+  },
+  analyzingIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  analyzingTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    marginBottom: 6,
+  },
+  analyzingSubtitle: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  analyzingProgressTrack: {
+    width: '100%',
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(128, 128, 128, 0.2)',
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  analyzingProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: '#06B6D4',
+  },
+  analyzingStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  analyzingStepIconBox: {
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  analyzingStepText: {
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

@@ -96,6 +96,17 @@ CRITICAL ARCHITECTURAL & PRICING RULES:
    - "domainSsl": "اسم النطاق الدولي (.com/.net) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً",
    - "mapsApi": "خرائط جوجل وتحديد المواقع: رصيد مجاني شهري $200 من Google Cloud يغطي آلاف العمليات مجاناً",
    - "paymentGateways": "بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك شهري، نسبة 2.5% تقتطع عند نجاح العمليات فقط"
+3. STRICT RELEVANCE & NO INVENTED SCOPE (DO NOT ADD UNREQUESTED APPS OR PLATFORMS):
+   - You MUST tailor the platforms strictly to what the client actually requested in the prompt and chat:
+     * If the client asked ONLY for a "website" (موقع إلكتروني), "landing page" (صفحة هبوط), "web portal" (بوابة ويب), or "CRM / Web dashboard" (لوحة إدارة ويب) and DID NOT ask for mobile apps:
+       -> "platforms" MUST contain ONLY the web platforms (e.g. Responsive Web App, Admin Dashboard).
+       -> DO NOT include Mobile Apps (iOS & Android) in "platforms".
+       -> In "annualOperationalEstimate", DO NOT include "appleDeveloper" ($99) or "googlePlay" ($25) because there are no mobile apps!
+     * If the client asked for a "mobile app" (تطبيق موبايل / أندرويد / آيفون):
+       -> Include Mobile App(s) and include the App Store ($99) & Google Play ($25) developer accounts.
+     * If the client asked for a complete on-demand system (e.g. delivery, ride hailing, marketplace):
+       -> Include the required platforms (Customer App, Courier/Partner App, Web Super Admin).
+     * NEVER add extra platforms, mobile apps, or hardware features that contradict the user's explicit scope!
 
 Avoid generic boilerplates. Provide realistic numbers, specific local competitors, actual risks, and tailored screens according to their unique idea.
 You MUST output ONLY a well-formed JSON object (no markdown code blocks, no explanation text).
@@ -419,8 +430,11 @@ Core Behavioral Guidelines:
 7. NEVER assume or invent a project domain (like food delivery or restaurants) that the user did not explicitly mention!
 8. Smart Suggestion Chips: Suggest 2 to 4 high-value, actionable quick-reply chips ("suggestions") in Arabic that directly advance the discussion (e.g. asking for MVP budget, discussing iOS fees, reviewing tech stack, or moving to contract generation).
 9. CRITICAL RULE FOR "readyForSpec":
-   - Set "readyForSpec" to true ONLY IF the client has genuinely described a concrete project idea and its core workflow, OR if the client explicitly requests to generate the contract / blueprint / packages.
-   - NEVER set "readyForSpec" to true for greetings, questions about your identity/name, complaints, or general questions!
+   - Set "readyForSpec" to true ONLY IF:
+     a) The client explicitly requests generating the blueprint / feasibility study / packages ("استخراج الخطة", "دراسة الجدوى", "الباقات", "التعاقد").
+     b) OR after sufficient interactive consultation (usually after 2 to 4 back-and-forth messages) where the core workflow, platforms (web vs mobile), and user types have been clearly explained and understood!
+   - DO NOT set "readyForSpec" to true on the very first message unless the user provided a full, multi-paragraph comprehensive technical specification in that single message.
+   - NEVER set "readyForSpec" to true for greetings, questions about your identity/name, general pricing questions, or complaints!
 
 Language: ${language === 'ar' ? 'Professional, natural Modern Arabic (العربية الفصحى التقنية الراقية والودودة بطابع مهندس معمار برمجيات خبير)' : 'English'}.
 You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, no wrapping text):
@@ -912,104 +926,154 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
   // Synthesize customized platforms with specific screens
   const platforms = [];
 
-  // Platform 1: Customer App
-  platforms.push({
-    id: 'client_app',
-    name: 'تطبيق العميل والمستخدم (iOS & Android)',
-    icon: 'phone-portrait-outline',
-    role: 'تطبيق الهاتف الذكي للعملاء بتجربة مستخدم عصرية وسريعة',
-    keyFeatures: [
-      'تسجيل دخول سلس بالبصمة ورقم الهاتف مع التفعيل بكود OTP',
-      ent.isPharmacy ? 'تصوير الروشتة وقراءتها آلياً بالكاميرا مع البحث عن بدائل الأدوية' : 'محرك بحث وفلاتر ذكية متقدمة للوصول للمطلوب في ثوانٍ',
-      ent.hasMaps ? 'تحديد الموقع الجغرافي التلقائي وتتبع الطلب لحظياً على الخريطة' : 'استعراض الكتالوج مع التقييمات وصور المنتجات الحقيقية',
-      'بوابات دفع إلكترونية متعددة (فيزا، فودافون كاش، إنستاباي، ودفع كاش عند الاستلام)',
-      ent.hasChat ? 'دردشة فورية ومكالمة داخل التطبيق مع الطرف الآخر' : 'سجل تفصيلي للطلبات السابقة وإعادة الطلب بضغطة زر واحدة'
-    ],
-    screens: [
-      { name: 'شاشة البداية والاكتشاف (Home)', desc: 'عرض العروض الرئيسية، الأقسام، وشريط البحث المتقدم' },
-      { name: 'شاشة التفاصيل والخيارات (Details)', desc: 'مواصفات العنصر، الأسعار، الإضافات، والتقييمات' },
-      { name: 'شاشة سلة الطلبات والدفع (Checkout)', desc: 'اختيار عنوان التوصيل، قسائم الخصم، وبوابة الدفع' },
-      { name: 'شاشة التتبع والعمليات الحية (Live Tracking)', desc: 'خريطة تفاعلية توضح حالة الطلب والموقع اللحظي والوقت المتوقع ETA' },
-      { name: 'الملف الشخصي والمحفظة (Profile & Wallet)', desc: 'رصيد المحفظة، الطلبات السابقة، والإشعارات' }
-    ]
-  });
+  const wantsMobileExplicitly = matchAny(['موبايل', 'تطبيق', 'ابلكيشن', 'أبلكيشن', 'اندرويد', 'أندرويد', 'ايفون', 'آيفون', 'ios', 'android', 'app', 'كابتن', 'سائق', 'دليفري', 'مندوب']);
+  const wantsWebExplicitly = matchAny(['موقع', 'موقع الكتروني', 'موقع إلكتروني', 'ويب', 'منصة ويب', 'صفحة هبوط', 'website', 'web', 'portal', 'dashboard', 'لوحة تحكم', 'crm', 'saas']);
+  
+  // If the client explicitly asked for web/website and DID NOT ask for mobile apps
+  const isWebOnly = wantsWebExplicitly && !wantsMobileExplicitly && !ent.isRide && !ent.hasDelivery && !ent.isPharmacy;
 
-  // Platform 2: Partner / Merchant / Vendor / Clinic App
-  if (ent.isPharmacy || ent.isFood || ent.isEcommerce || ent.isHealth || ent.hasMultiVendor || ent.isAuction) {
-    let partnerName = 'بوابة وتطبيق الشريك / التاجر (Partner App)';
-    if (ent.isPharmacy) partnerName = 'بوابة وتطبيق الصيدلية (Pharmacy Portal)';
-    else if (ent.isFood) partnerName = 'لوحة وتطبيق المطعم والمطبخ (Restaurant Portal)';
-    else if (ent.isHealth) partnerName = 'بوابة وتطبيق الطبيب والعيادة (Doctor Portal)';
-
+  if (isWebOnly) {
+    // Web Only Project Structure
     platforms.push({
-      id: 'partner_app',
-      name: partnerName,
-      icon: 'storefront-outline',
-      role: 'لوحة تحكم وتطبيق مخصص لإدارة المنتجات، تأكيد الطلبات، ومتابعة الأرباح',
+      id: 'web_portal',
+      name: 'منصة وموقع الويب التفاعلي (Responsive Web Application)',
+      icon: 'globe-outline',
+      role: 'موقع ويب متكامل متوافق مع كافة الشاشات والأجهزة بتجربة مستخدم عصرية',
       keyFeatures: [
-        'تنبيهات صوتية فورية بالطلبات والعمليات الجديدة الواردة',
-        'إدارة المخزون وتحديد حالة التوفر والأسعار بنقرة زر واحدة',
-        ent.isPharmacy ? 'مراجعة وتأكيد الروشتات الطبية وتحديد البدائل المصرحة' : 'لوحة تحليلات يومية لحجم المبيعات وصافي الأرباح',
-        'طلب سحب الأرباح وإدارة الحسابات البنكية والمحافظ',
-        'أدوات التواصل المباشر مع العميل ومندوب التوصيل'
+        'واجهة تفاعلية حديثة وسريعة متوافقة مع متصفحات الموبايل وأجهزة الكمبيوتر',
+        'نظام تسجيل دخول ومصادقة سحابية مشفرة',
+        'محرك بحث وفلاتر ذكية للخدمات والمنتجات',
+        'بوابات دفع إلكتروني محلية ودولية متكاملة',
+        'تصميم متوافق مع معايير محركات البحث العالمية SEO'
       ],
       screens: [
-        { name: 'لوحة استقبال الطلبات اللحظية (Live Orders)', desc: 'قائمة الطلبات الجديدة مع عداد تنازلي للتأكيد والتجهيز' },
-        { name: 'شاشة إدارة الكتالوج والمخزون (Catalog)', desc: 'إضافة وتعديل الأصناف، الأسعار، وتفعيل التوفر' },
-        { name: 'شاشة المحفظة والتسويات المالية (Finance)', desc: 'سجل العمليات، نسب العمولات، ورصيد الأرباح القابل للسحب' },
-        { name: 'شاشة تقارير الأداء والتقييمات (Analytics)', desc: 'رسم بياني للمبيعات وتقييمات العملاء وملاحظات الجودة' }
+        { name: 'الصفحة الرئيسية واستعراض الخدمات (Home Landing)', desc: 'واجهة بصرية احترافية تستعرض قيمة المشروع وأهم المزايا والخدمات' },
+        { name: 'صفحة تفاصيل الخدمة / الكتالوج (Service Catalog)', desc: 'عرض تفصيلي للخيارات مع الأسعار وآلية الحجز أو الشراء' },
+        { name: 'بوابة الدفع والطلب (Checkout & Booking)', desc: 'إتمام المعاملة المالية وإصدار الفواتير الفورية' },
+        { name: 'حساب العميل (Client Portal)', desc: 'متابعة المعاملات السابقة وإدارة الملف الشخصي' }
+      ]
+    });
+
+    platforms.push({
+      id: 'admin_dashboard',
+      name: 'لوحة التحكم المركزية السحابية (Super Admin Dashboard)',
+      icon: 'desktop-outline',
+      role: 'لوحة ويب سحابية شاملة للإشراف الكامل والتحكم المالي والتشغيلي بالمنصة',
+      keyFeatures: [
+        'لوحة مؤشرات أداء حية (KPIs) للإيرادات والزيارات والعمليات',
+        'إدارة المحتوى، الأسعار، الخدمات، والمستخدمين بسهولة',
+        'نظام الفواتير الإلكترونية وتقارير المبيعات التفصيلية',
+        'صلاحيات متعددة للمشرفين والمديرين',
+        'نسخ احتياطي آلي وحماية سحابية'
+      ],
+      screens: [
+        { name: 'لوحة المؤشرات والتقارير (Analytics)', desc: 'رسوم بيانية حية لحجم العمليات والزيارات' },
+        { name: 'شاشة إدارة المحتوى والخدمات (Content Management)', desc: 'تحديث النصوص والأسعار والمنتجات' },
+        { name: 'شاشة المستخدمين والصلاحيات (Users & Roles)', desc: 'التحكم في وصول المشرفين' },
+        { name: 'التقارير المالية والفواتير (Invoicing)', desc: 'كشوفات الحساب وتصدير ملفات Excel وPDF' }
+      ]
+    });
+  } else {
+    // Normal Mobile / Multi-platform Structure
+    // Platform 1: Customer App
+    platforms.push({
+      id: 'client_app',
+      name: 'تطبيق العميل والمستخدم (iOS & Android)',
+      icon: 'phone-portrait-outline',
+      role: 'تطبيق الهاتف الذكي للعملاء بتجربة مستخدم عصرية وسريعة',
+      keyFeatures: [
+        'تسجيل دخول سلس بالبصمة ورقم الهاتف مع التفعيل بكود OTP',
+        ent.isPharmacy ? 'تصوير الروشتة وقراءتها آلياً بالكاميرا مع البحث عن بدائل الأدوية' : 'محرك بحث وفلاتر ذكية متقدمة للوصول للمطلوب في ثوانٍ',
+        ent.hasMaps ? 'تحديد الموقع الجغرافي التلقائي وتتبع الطلب لحظياً على الخريطة' : 'استعراض الكتالوج مع التقييمات وصور المنتجات الحقيقية',
+        'بوابات دفع إلكترونية متعددة (فيزا، فودافون كاش، إنستاباي، ودفع كاش عند الاستلام)',
+        ent.hasChat ? 'دردشة فورية ومكالمة داخل التطبيق مع الطرف الآخر' : 'سجل تفصيلي للطلبات السابقة وإعادة الطلب بضغطة زر واحدة'
+      ],
+      screens: [
+        { name: 'شاشة البداية والاكتشاف (Home)', desc: 'عرض العروض الرئيسية، الأقسام، وشريط البحث المتقدم' },
+        { name: 'شاشة التفاصيل والخيارات (Details)', desc: 'مواصفات العنصر، الأسعار، الإضافات، والتقييمات' },
+        { name: 'شاشة سلة الطلبات والدفع (Checkout)', desc: 'اختيار عنوان التوصيل، قسائم الخصم، وبوابة الدفع' },
+        { name: 'شاشة التتبع والعمليات الحية (Live Tracking)', desc: 'خريطة تفاعلية توضح حالة الطلب والموقع اللحظي والوقت المتوقع ETA' },
+        { name: 'الملف الشخصي والمحفظة (Profile & Wallet)', desc: 'رصيد المحفظة، الطلبات السابقة، والإشعارات' }
+      ]
+    });
+
+    // Platform 2: Partner / Merchant / Vendor / Clinic App
+    if (ent.isPharmacy || ent.isFood || ent.isEcommerce || ent.isHealth || ent.hasMultiVendor || ent.isAuction) {
+      let partnerName = 'بوابة وتطبيق الشريك / التاجر (Partner App)';
+      if (ent.isPharmacy) partnerName = 'بوابة وتطبيق الصيدلية (Pharmacy Portal)';
+      else if (ent.isFood) partnerName = 'لوحة وتطبيق المطعم والمطبخ (Restaurant Portal)';
+      else if (ent.isHealth) partnerName = 'بوابة وتطبيق الطبيب والعيادة (Doctor Portal)';
+
+      platforms.push({
+        id: 'partner_app',
+        name: partnerName,
+        icon: 'storefront-outline',
+        role: 'لوحة تحكم وتطبيق مخصص لإدارة المنتجات، تأكيد الطلبات، ومتابعة الأرباح',
+        keyFeatures: [
+          'تنبيهات صوتية فورية بالطلبات والعمليات الجديدة الواردة',
+          'إدارة المخزون وتحديد حالة التوفر والأسعار بنقرة زر واحدة',
+          ent.isPharmacy ? 'مراجعة وتأكيد الروشتات الطبية وتحديد البدائل المصرحة' : 'لوحة تحليلات يومية لحجم المبيعات وصافي الأرباح',
+          'طلب سحب الأرباح وإدارة الحسابات البنكية والمحافظ',
+          'أدوات التواصل المباشر مع العميل ومندوب التوصيل'
+        ],
+        screens: [
+          { name: 'لوحة استقبال الطلبات اللحظية (Live Orders)', desc: 'قائمة الطلبات الجديدة مع عداد تنازلي للتأكيد والتجهيز' },
+          { name: 'شاشة إدارة الكتالوج والمخزون (Catalog)', desc: 'إضافة وتعديل الأصناف، الأسعار، وتفعيل التوفر' },
+          { name: 'شاشة المحفظة والتسويات المالية (Finance)', desc: 'سجل العمليات، نسب العمولات، ورصيد الأرباح القابل للسحب' },
+          { name: 'شاشة تقارير الأداء والتقييمات (Analytics)', desc: 'رسم بياني للمبيعات وتقييمات العملاء وملاحظات الجودة' }
+        ]
+      });
+    }
+
+    // Platform 3: Delivery / Driver / Courier App
+    if (ent.hasDelivery || ent.isRide || ent.isPharmacy || ent.isFood) {
+      platforms.push({
+        id: 'delivery_app',
+        name: ent.isRide ? 'تطبيق السائق والكابتن (Driver App)' : 'تطبيق مندوب التوصيل (Courier App)',
+        icon: 'bicycle-outline',
+        role: 'تطبيق موجه للكباتن لتنفيذ المشاوير والملاحة الذكية وحساب الأرباح',
+        keyFeatures: [
+          'زر تبديل الحالة (متاح لتلقي الطلبات / غير متصل / في مهمة)',
+          'استقبال الطلبات القريبة بناءً على النطاق الجغرافي والمسافة الفعلية',
+          'نظام ملاحة GPS ذكي مدمج بأسرع طريق لتفادي الاختناقات المرورية',
+          'محفظة رقمية خاصة بالكابتن لحساب عمولات التوصيل اليومية والحوافز',
+          'تأكيد استلام وتسليم الشحنة عبر رمز التحقق السري (OTP)'
+        ],
+        screens: [
+          { name: 'شاشة الرادار وتلقي المهام (Radar)', desc: 'استعراض الطلب القريب مع المسافة وقيمة الأجرة قبل القبول' },
+          { name: 'شاشة مسار الرحلة والملاحة (Navigation)', desc: 'توجيه خطوة بخطوة عبر الخريطة حتى نقطة الاستلام والتسليم' },
+          { name: 'شاشة محفظة الكابتن (Earnings)', desc: 'إجمالي الأرباح اليومية، البونص، والرحلات المنفذة' },
+          { name: 'شاشة الوثائق والحساب (Account & KYC)', desc: 'تجديد رخصة القيادة والسيارة ومطابقة الهوية' }
+        ]
+      });
+    }
+
+    // Platform 4: Super Admin Dashboard
+    platforms.push({
+      id: 'admin_dashboard',
+      name: 'لوحة التحكم المركزية السحابية (Super Admin Dashboard)',
+      icon: 'desktop-outline',
+      role: 'لوحة ويب سحابية شاملة للإشراف الكامل والتحكم المالي والتشغيلي بالمنصة',
+      keyFeatures: [
+        'خريطة عمليات مركزية حية تظهر حركة الطلبات والكباتن والعمليات بالثانية',
+        'فحص وتدقيق واعتماد وثائق الشركاء والكباتن الجدد قبل التفعيل',
+        'إدارة متقدمة للعمولات والرسوم والضرائب وإصدار الفواتير الرسمية',
+        'إرسال إشعارات جماعية تسويقية وتنبيهات مخصصة لجميع مستخدمي المنظومة',
+        'نظام إدارة المشرفين والصلاحيات وقواعد البيانات السحابية'
+      ],
+      screens: [
+        { name: 'لوحة القيادة والمؤشرات الحيوية (KPIs)', desc: 'إجمالي الإيرادات، الطلبات الحية، ونسب النمو اليومية والشهرية' },
+        { name: 'خريطة العمليات الحية (Live Operations)', desc: 'مراقبة الكباتن والطلبات الجارية لحظياً على خريطة تفاعلية' },
+        { name: 'شاشة إدارة المستخدمين والتراخيص (Users & Approvals)', desc: 'فحص الهويات والشهادات وتفعيل أو إيقاف الحسابات' },
+        { name: 'شاشة التقارير المالية والعمولات (Billing & Ledger)', desc: 'حساب أرباح المنصة، تسويات التجار، وكشوفات الحساب البنكية' },
+        { name: 'مركز التحكم بالإعدادات (System Settings)', desc: 'تحديد أسعار التوصيل، نطاقات التغطية، وكوبونات الخصم' }
       ]
     });
   }
-
-  // Platform 3: Delivery / Driver / Courier App
-  if (ent.hasDelivery || ent.isRide || ent.isPharmacy || ent.isFood) {
-    platforms.push({
-      id: 'delivery_app',
-      name: ent.isRide ? 'تطبيق السائق والكابتن (Driver App)' : 'تطبيق مندوب التوصيل (Courier App)',
-      icon: 'bicycle-outline',
-      role: 'تطبيق موجه للكباتن لتنفيذ المشاوير والملاحة الذكية وحساب الأرباح',
-      keyFeatures: [
-        'زر تبديل الحالة (متاح لتلقي الطلبات / غير متصل / في مهمة)',
-        'استقبال الطلبات القريبة بناءً على النطاق الجغرافي والمسافة الفعلية',
-        'نظام ملاحة GPS ذكي مدمج بأسرع طريق لتفادي الاختناقات المرورية',
-        'محفظة رقمية خاصة بالكابتن لحساب عمولات التوصيل اليومية والحوافز',
-        'تأكيد استلام وتسليم الشحنة عبر رمز التحقق السري (OTP)'
-      ],
-      screens: [
-        { name: 'شاشة الرادار وتلقي المهام (Radar)', desc: 'استعراض الطلب القريب مع المسافة وقيمة الأجرة قبل القبول' },
-        { name: 'شاشة مسار الرحلة والملاحة (Navigation)', desc: 'توجيه خطوة بخطوة عبر الخريطة حتى نقطة الاستلام والتسليم' },
-        { name: 'شاشة محفظة الكابتن (Earnings)', desc: 'إجمالي الأرباح اليومية، البونص، والرحلات المنفذة' },
-        { name: 'شاشة الوثائق والحساب (Account & KYC)', desc: 'تجديد رخصة القيادة والسيارة ومطابقة الهوية' }
-      ]
-    });
-  }
-
-  // Platform 4: Super Admin Dashboard
-  platforms.push({
-    id: 'admin_dashboard',
-    name: 'لوحة التحكم المركزية السحابية (Super Admin Dashboard)',
-    icon: 'desktop-outline',
-    role: 'لوحة ويب سحابية شاملة للإشراف الكامل والتحكم المالي والتشغيلي بالمنصة',
-    keyFeatures: [
-      'خريطة عمليات مركزية حية تظهر حركة الطلبات والكباتن والعمليات بالثانية',
-      'فحص وتدقيق واعتماد وثائق الشركاء والكباتن الجدد قبل التفعيل',
-      'إدارة متقدمة للعمولات والرسوم والضرائب وإصدار الفواتير الرسمية',
-      'إرسال إشعارات جماعية تسويقية وتنبيهات مخصصة لجميع مستخدمي المنظومة',
-      'نظام إدارة المشرفين والصلاحيات وقواعد البيانات السحابية'
-    ],
-    screens: [
-      { name: 'لوحة القيادة والمؤشرات الحيوية (KPIs)', desc: 'إجمالي الإيرادات، الطلبات الحية، ونسب النمو اليومية والشهرية' },
-      { name: 'خريطة العمليات الحية (Live Operations)', desc: 'مراقبة الكباتن والطلبات الجارية لحظياً على خريطة تفاعلية' },
-      { name: 'شاشة إدارة المستخدمين والتراخيص (Users & Approvals)', desc: 'فحص الهويات والشهادات وتفعيل أو إيقاف الحسابات' },
-      { name: 'شاشة التقارير المالية والعمولات (Billing & Ledger)', desc: 'حساب أرباح المنصة، تسويات التجار، وكشوفات الحساب البنكية' },
-      { name: 'مركز التحكم بالإعدادات (System Settings)', desc: 'تحديد أسعار التوصيل، نطاقات التغطية، وكوبونات الخصم' }
-    ]
-  });
 
   // Calculate dynamic lean pricing based on platforms and features
-  const baseCostEGP = 34000;
-  const platformAddonEGP = Math.max(0, (platforms.length - 2)) * 7000;
+  const baseCostEGP = isWebOnly ? 24000 : 34000;
+  const platformAddonEGP = Math.max(0, (platforms.length - 2)) * (isWebOnly ? 5000 : 7000);
   const featuresAddonEGP = (ent.hasMaps ? 4000 : 0) + (ent.hasAI ? 5000 : 0) + (ent.hasVideo ? 6000 : 0) + (ent.isAuction ? 6000 : 0);
   const totalCostEGP = baseCostEGP + platformAddonEGP + featuresAddonEGP;
   const totalCostUSD = Math.round(totalCostEGP / 47);
@@ -1132,7 +1196,11 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
         { category: 'برمجة وتطوير تطبيقات الموبايل الموحدة', costEGP: Math.round(totalCostEGP * 0.30), costUSD: Math.round(totalCostUSD * 0.30), desc: 'تطبيقات أندرويد وآيفون بأحدث تقنيات React Native' },
         { category: 'لوحة التحكم السحابية المركزية (Super Admin)', costEGP: Math.round(totalCostEGP * 0.15), costUSD: Math.round(totalCostUSD * 0.15), desc: 'لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية' }
       ],
-      annualOperationalEstimate: {
+      annualOperationalEstimate: isWebOnly ? {
+        hosting: 'استضافة سحابية VPS وسيرفر: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)',
+        domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+        paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
+      } : {
         appleDeveloper: 'حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS في متجر التطبيقات)',
         googlePlay: 'حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)',
         hosting: 'استضافة سحابية VPS وسيرفر: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)',
