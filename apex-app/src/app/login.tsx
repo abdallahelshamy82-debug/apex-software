@@ -103,8 +103,10 @@ export default function LoginScreen() {
         });
       }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [isVerifyingOtp, resendTimer]);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isVerifyingOtp, resendTimer > 0]);
 
   const handleBiometricLogin = async () => {
     await haptics.light();

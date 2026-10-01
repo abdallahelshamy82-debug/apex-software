@@ -74,10 +74,16 @@ function safeParseJson(rawText) {
 }
 
 // -------------------------------------------------------------
-// 1. Google Gemini Flash API Caller (Gemini 3.5 / 3.1 / Flash-lite)
-// -------------------------------------------------------------
 async function callGeminiAI(prompt, apiKey, language = 'ar') {
-  const modelsToTry = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
+  const modelsToTry = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-pro'
+  ];
   let lastError = null;
 
   const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
@@ -403,8 +409,16 @@ Language: ${language === 'ar' ? 'Arabic' : 'English'}.`;
 // 2.1 Google Gemini Interactive Chat Consultant
 // -------------------------------------------------------------
 async function callGeminiChatConsultant(messages, apiKey, language = 'ar') {
-  // Reliable models ordered by current availability & performance (Gemini 3.5/3.6 Flash first)
-  const modelsToTry = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
+  // Reliable models ordered by current official availability & sub-second performance
+  const modelsToTry = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-pro'
+  ];
   let lastError = null;
 
   const systemInstruction = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency (شركة إيبكس لحلول البرمجيات وتطوير التطبيقات).
@@ -1353,7 +1367,12 @@ async function transcribeAudio(audioBufferOrBase64, mimeType = 'audio/m4a', lang
     }
 
     const cleanMime = (mimeType || 'audio/m4a').split(';')[0].trim();
-    const modelsToTry = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.5-transcribe', 'gemini-flash-lite-latest'];
+    const modelsToTry = [
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-latest'
+    ];
     let lastError = null;
 
     for (const model of modelsToTry) {

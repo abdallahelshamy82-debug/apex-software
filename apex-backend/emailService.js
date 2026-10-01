@@ -122,8 +122,10 @@ const getHtmlTemplate = (title, contentHtml) => `
       </div>
     </div>
     <div class="footer">
-      <p>© 2026 Apex Software Inc. جميع الحقوق محفوظة.</p>
-      <p>إذا لم تكن أنت صاحب هذا الحساب، يرجى تجاهل هذه الرسالة.</p>
+      <p style="margin: 0 0 4px; font-weight: bold; color: #475569;">Apex Software Agency Inc.</p>
+      <p style="margin: 0 0 4px;">حلول البرمجيات السحابية وتطوير تطبيقات الهواتف الذكية</p>
+      <p style="margin: 0 0 4px; font-size: 11px;">الدعم الفني: support@apex-software.com | القاهرة، جمهورية مصر العربية</p>
+      <p style="margin: 0; font-size: 11px; color: #94a3b8;">إذا لم تكن أنت صاحب هذا الحساب، يرجى تجاهل هذه الرسالة.</p>
     </div>
   </div>
 </body>
@@ -141,17 +143,53 @@ async function sendMail({ to, subject, html, customText }) {
     status: 'pending'
   };
 
+  const plainText = customText || html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                        .replace(/<[^>]+>/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+
+  // 1. Try Resend API first if configured (100% Inbox deliverability for transactions)
+  const resendApiKey = (process.env.RESEND_API_KEY || '').trim();
+  if (resendApiKey) {
+    try {
+      const resendFrom = process.env.RESEND_FROM || 'Apex Software <onboarding@resend.dev>';
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: resendFrom,
+          to: [to],
+          subject,
+          html,
+          text: plainText
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.id) {
+        console.log(`✅ [Resend API] Email delivered to ${to} (ID: ${data.id})`);
+        emailRecord.status = 'delivered';
+        emailRecord.messageId = data.id;
+        sentEmailsHistory.unshift(emailRecord);
+        if (sentEmailsHistory.length > 50) sentEmailsHistory.pop();
+        return { success: true, messageId: data.id, delivered: true, provider: 'resend' };
+      } else {
+        console.warn(`⚠️ [Resend API Warning] ${data.message || JSON.stringify(data)}, falling back to SMTP...`);
+      }
+    } catch (err) {
+      console.warn(`⚠️ [Resend API Error] ${err.message}, falling back to SMTP...`);
+    }
+  }
+
+  // 2. High-deliverability SMTP / Gmail
   if (!transporter) {
     initTransporter(GMAIL_USER, GMAIL_PASS, SMTP_HOST, SMTP_PORT);
   }
 
   if (transporter) {
     try {
-      const plainText = customText || html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-                            .replace(/<[^>]+>/g, ' ')
-                            .replace(/\s+/g, ' ')
-                            .trim();
-
       const info = await transporter.sendMail({
         from: `"Apex Software" <${GMAIL_USER}>`,
         replyTo: `"Apex Support" <${GMAIL_USER}>`,
@@ -159,21 +197,21 @@ async function sendMail({ to, subject, html, customText }) {
         subject,
         text: plainText,
         html,
-        priority: 'high',
         headers: {
           'X-Entity-Ref-ID': `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           'X-Auto-Response-Suppress': 'OOF, AutoReply',
-          'Importance': 'high'
+          'List-Unsubscribe': `<mailto:${GMAIL_USER}?subject=unsubscribe>`,
+          'Feedback-ID': 'auth:apex:production'
         }
       });
-      console.log(`✅ [Gmail] Real email delivered to ${to} (ID: ${info.messageId})`);
+      console.log(`✅ [Gmail/SMTP] Real email delivered to ${to} (ID: ${info.messageId})`);
       emailRecord.status = 'delivered';
       emailRecord.messageId = info.messageId;
       sentEmailsHistory.unshift(emailRecord);
       if (sentEmailsHistory.length > 50) sentEmailsHistory.pop();
-      return { success: true, messageId: info.messageId, delivered: true };
+      return { success: true, messageId: info.messageId, delivered: true, provider: 'smtp' };
     } catch (err) {
-      console.error(`❌ [Gmail Error] Failed to send email to ${to}:`, err.message);
+      console.error(`❌ [SMTP Error] Failed to send email to ${to}:`, err.message);
       emailRecord.status = 'failed';
       emailRecord.error = err.message;
       sentEmailsHistory.unshift(emailRecord);

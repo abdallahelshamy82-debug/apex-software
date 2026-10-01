@@ -44,6 +44,167 @@ try {
   }
 }
 
+// Safe loaders for expo-print and expo-sharing
+let SafePrint: any = null;
+try {
+  SafePrint = require('expo-print');
+} catch (e) {
+  SafePrint = null;
+}
+
+let SafeSharing: any = null;
+try {
+  SafeSharing = require('expo-sharing');
+} catch (e) {
+  SafeSharing = null;
+}
+
+// Generates printable HTML for Feasibility Study & Contract
+function generatePdfHtml(
+  analysis: any,
+  pkgData: any,
+  currency: 'EGP' | 'USD',
+  currentCostEGP: number,
+  currentCostUSD: number,
+  currentWeeks: number,
+  isRTL: boolean,
+  clientName?: string
+) {
+  const isAr = isRTL;
+  const projectName = analysis.projectName || (isAr ? 'مشروع برمجي ذكي' : 'Digital Software Project');
+  const tagline = analysis.tagline || '';
+  const summary = analysis.summary || '';
+  const milestones = Array.isArray(analysis.milestones) ? analysis.milestones : [];
+  const cost = currency === 'EGP' ? `${currentCostEGP.toLocaleString()} ج.م` : `$${currentCostUSD.toLocaleString()}`;
+  const now = new Date().toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  return `
+<!DOCTYPE html>
+<html dir="${isAr ? 'rtl' : 'ltr'}" lang="${isAr ? 'ar' : 'en'}">
+<head>
+  <meta charset="utf-8">
+  <title>${projectName} - Feasibility & Contract Blueprint</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #0F172A; background: #FFF; line-height: 1.6; margin: 0; padding: 20px; }
+    .header-table { width: 100%; border-bottom: 3px solid #06B6D4; padding-bottom: 16px; margin-bottom: 24px; }
+    .logo-title { font-size: 24px; font-weight: 900; color: #0891B2; margin: 0; }
+    .meta-text { font-size: 11px; color: #64748B; margin: 0; }
+    .project-banner { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+    .project-title { font-size: 20px; font-weight: 800; color: #0F172A; margin: 0 0 6px; }
+    .project-tagline { font-size: 13px; color: #06B6D4; font-weight: 600; margin: 0 0 10px; }
+    .project-summary { font-size: 13px; color: #334155; margin: 0; line-height: 1.7; }
+    .section-title { font-size: 15px; font-weight: 800; color: #0F172A; border-bottom: 2px solid #E2E8F0; padding-bottom: 6px; margin: 22px 0 12px; }
+    .kpi-row { display: flex; gap: 12px; margin-bottom: 20px; }
+    .kpi-box { flex: 1; background: #F0FDFA; border: 1px solid #99F6E4; border-radius: 10px; padding: 12px; text-align: center; }
+    .kpi-val { font-size: 18px; font-weight: 900; color: #0D9488; }
+    .kpi-lbl { font-size: 11px; color: #134E4A; margin-top: 2px; }
+    .tier-box { background: #F8FAFC; border: 2px solid #06B6D4; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+    .tier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .tier-name { font-size: 17px; font-weight: 900; color: #0891B2; }
+    .tier-price { font-size: 20px; font-weight: 900; color: #0F172A; }
+    .deliverable-item { font-size: 12.5px; color: #334155; margin-bottom: 6px; display: flex; align-items: center; }
+    .deliverable-item::before { content: '✔ '; color: #10B981; font-weight: bold; margin-left: 6px; }
+    .operational-box { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px; padding: 14px; margin-bottom: 20px; }
+    .operational-item { font-size: 12px; color: #78350F; margin-bottom: 5px; }
+    .roadmap-step { display: flex; gap: 12px; margin-bottom: 12px; background: #F8FAFC; padding: 10px; border-radius: 8px; }
+    .step-badge { background: #06B6D4; color: #FFF; font-weight: bold; font-size: 11px; border-radius: 6px; padding: 3px 8px; height: fit-content; }
+    .step-content { flex: 1; }
+    .step-title { font-size: 13px; font-weight: 700; color: #0F172A; }
+    .step-tasks { font-size: 11.5px; color: #64748B; margin-top: 4px; }
+    .stamp-area { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #CBD5E1; padding-top: 16px; }
+    .stamp-box { border: 2px solid #0891B2; border-radius: 10px; padding: 10px 16px; text-align: center; color: #0891B2; font-weight: bold; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <table class="header-table">
+    <tr>
+      <td>
+        <h1 class="logo-title">APEX SOFTWARE ⚡</h1>
+        <p class="meta-text">${isAr ? 'وكالة الحلول البرمجية وتطوير الأنظمة السحابية المتقدمة' : 'Advanced Cloud & Software Engineering Agency'}</p>
+      </td>
+      <td style="text-align: ${isAr ? 'left' : 'right'};">
+        <p class="meta-text"><strong>${isAr ? 'التاريخ:' : 'Date:'}</strong> ${now}</p>
+        <p class="meta-text"><strong>${isAr ? 'العميل:' : 'Client:'}</strong> ${clientName || (isAr ? 'شريك أعمال Apex' : 'Apex Business Partner')}</p>
+        <p class="meta-text"><strong>${isAr ? 'الرقم المرجعي:' : 'Ref ID:'}</strong> APX-${Date.now().toString(36).toUpperCase()}</p>
+      </td>
+    </tr>
+  </table>
+
+  <div class="project-banner">
+    <div class="project-title">${projectName}</div>
+    ${tagline ? `<div class="project-tagline">${tagline}</div>` : ''}
+    <p class="project-summary">${summary}</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-box">
+      <div class="kpi-val">${analysis.feasibilityScore || 90}%</div>
+      <div class="kpi-lbl">${isAr ? 'مؤشر الجدوى والنجاح' : 'Feasibility Score'}</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">${currentWeeks} ${isAr ? 'أسابيع' : 'Weeks'}</div>
+      <div class="kpi-lbl">${isAr ? 'الجدول الزمني المقترح' : 'Estimated Timeline'}</div>
+    </div>
+    <div class="kpi-box">
+      <div class="kpi-val">${cost}</div>
+      <div class="kpi-lbl">${isAr ? 'الاستثمار التقديري المعتمد' : 'Selected Tier Cost'}</div>
+    </div>
+  </div>
+
+  <div class="section-title">${isAr ? 'باقة الاستثمار المختارة ومخرجات التنفيذ' : 'Selected Investment Tier & Deliverables'}</div>
+  <div class="tier-box">
+    <div class="tier-header">
+      <div class="tier-name">${pkgData?.title || 'باقة التنفيذ المعتمدة'}</div>
+      <div class="tier-price">${cost}</div>
+    </div>
+    <p style="font-size: 12px; color: #64748B; margin: 0 0 10px;">${pkgData?.desc || ''}</p>
+    <div style="margin-top: 8px;">
+      ${(pkgData?.keyDeliverables || [
+        isAr ? 'تطبيقات الهواتف الذكية الموحدة (iOS & Android)' : 'Unified Mobile Apps (iOS & Android)',
+        isAr ? 'لوحة تحكم إدارية سحابية متقدمة' : 'Advanced Cloud Admin Dashboard',
+        isAr ? 'بوابات الدفع الإلكتروني وقواعد البيانات السحابية' : 'Payment Gateways & Cloud Database',
+        isAr ? 'إطلاق المنصة في متاجر التطبيقات والاستضافة' : 'Store Launch & Cloud Deployment'
+      ]).map((d: string) => `<div class="deliverable-item">${d}</div>`).join('')}
+    </div>
+  </div>
+
+  <div class="section-title">${isAr ? 'التكاليف التشغيلية السنوية المستمرة (تدفع للجهات العالمية مباشرة)' : 'Annual Recurring Third-Party Costs'}</div>
+  <div class="operational-box">
+    <div class="operational-item">🍏 <strong>${isAr ? 'حساب مطور Apple App Store:' : 'Apple Developer Program:'}</strong> $99 ${isAr ? 'سنوياً لشركة Apple' : 'per year to Apple'}</div>
+    <div class="operational-item">🤖 <strong>${isAr ? 'حساب مطور Google Play Console:' : 'Google Play Console:'}</strong> $25 ${isAr ? 'مرة واحدة مدى الحياة لشركة Google' : 'one-time lifetime fee to Google'}</div>
+    <div class="operational-item">☁️ <strong>${isAr ? 'الخادم السحابي وسيرفر VPS:' : 'Cloud Server / VPS:'}</strong> ${isAr ? 'تبدأ من $10 - $20 شهرياً وفق الاستهلاك الفعلي' : '$10 - $20 / month based on usage'}</div>
+    <div class="operational-item">🌐 <strong>${isAr ? 'حجز النطاق الدولي وشهادة SSL:' : 'Domain & SSL:'}</strong> حوالي $12 - $15 ${isAr ? 'سنوياً' : 'per year'}</div>
+  </div>
+
+  <div class="section-title">${isAr ? 'خطة المراحل والجدول الزمني للتسليم' : 'Project Milestones & Delivery Roadmap'}</div>
+  <div>
+    ${milestones.map((m: any, idx: number) => `
+      <div class="roadmap-step">
+        <div class="step-badge">${isAr ? `المرحلة ${m.phase || idx + 1}` : `Phase ${m.phase || idx + 1}`}</div>
+        <div class="step-content">
+          <div class="step-title">${m.title} (${m.durationWeeks || 2} ${isAr ? 'أسابيع' : 'weeks'})</div>
+          ${m.sprintTasks ? `<div class="step-tasks">${m.sprintTasks.join(' • ')}</div>` : ''}
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="stamp-area">
+    <div>
+      <p style="font-size: 11px; color: #64748B; margin: 0;"><strong>${isAr ? 'تنبيه استشاري:' : 'Advisory Note:'}</strong> ${isAr ? 'هذه الدراسة والعقد استرشاديان أوليان، ويتم اعتمادهما رسمياً مع مهندسي Apex.' : 'This blueprint is indicative and confirmed upon technical kickoff.'}</p>
+      <p style="font-size: 11px; color: #0891B2; margin: 4px 0 0;">www.apex-software.com | support@apex-software.com</p>
+    </div>
+    <div class="stamp-box">
+      <div>APEX SOFTWARE</div>
+      <div style="font-size: 9px; opacity: 0.8;">OFFICIALLY CERTIFIED</div>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -294,6 +455,7 @@ export default function CopilotScreen() {
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [contractSuccessData, setContractSuccessData] = useState<any | null>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   // AI Configuration State
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -1143,6 +1305,79 @@ export default function CopilotScreen() {
   const currentCostUSD = pkgData?.costUSD || analysis?.budgetBreakdown?.currencyUSD || 1450;
   const currentWeeks = pkgData?.weeks || analysis?.timelineWeeks || 8;
 
+  // Export Feasibility Study & Contract as Official PDF
+  const handleExportPdf = async () => {
+    if (!analysis) return;
+    haptics.medium();
+    setExportingPdf(true);
+
+    try {
+      const html = generatePdfHtml(
+        analysis,
+        pkgData,
+        currency,
+        currentCostEGP,
+        currentCostUSD,
+        currentWeeks,
+        isRTL,
+        currentUser?.fullName || currentUser?.name
+      );
+
+      if (Platform.OS === 'web') {
+        if (SafePrint && SafePrint.printAsync) {
+          await SafePrint.printAsync({ html });
+        } else if (typeof window !== 'undefined') {
+          const printWindow = window.open('', '_blank');
+          if (printWindow) {
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+              printWindow.print();
+            }, 300);
+          }
+        }
+        showToast({
+          type: 'success',
+          title: isRTL ? 'جاهز للطباعة' : 'Ready to Print',
+          message: isRTL ? 'تم تجهيز ملف PDF للطباعة بنجاح.' : 'PDF blueprint ready for print.',
+        });
+      } else {
+        // Mobile (iOS & Android)
+        if (SafePrint && SafePrint.printToFileAsync) {
+          const { uri } = await SafePrint.printToFileAsync({ html });
+          if (SafeSharing && SafeSharing.shareAsync) {
+            await SafeSharing.shareAsync(uri, {
+              UTI: '.pdf',
+              mimeType: 'application/pdf',
+              dialogTitle: isRTL ? 'مشاركة دراسة الجدوى والعقد PDF' : 'Share Blueprint & Contract PDF',
+            });
+          }
+          showToast({
+            type: 'success',
+            title: isRTL ? 'تم تصدير PDF' : 'PDF Exported',
+            message: isRTL ? 'تم استخراج وحفظ دراسة الجدوى والعقد بنجاح.' : 'Feasibility PDF exported successfully.',
+          });
+        } else {
+          showToast({
+            type: 'warning',
+            title: isRTL ? 'تنبيه' : 'Notice',
+            message: isRTL ? 'ميزة تصدير PDF غير مدعومة على هذا الجهاز.' : 'Print feature not available on this device.',
+          });
+        }
+      }
+    } catch (err: any) {
+      console.error('PDF export error:', err);
+      showToast({
+        type: 'error',
+        title: isRTL ? 'خطأ في التصدير' : 'Export Error',
+        message: err.message || (isRTL ? 'حدث خطأ أثناء استخراج ملف PDF.' : 'Failed to export PDF.'),
+      });
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
       {/* Top Header */}
@@ -1702,13 +1937,43 @@ export default function CopilotScreen() {
                 </Text>
               </View>
 
-              {/* Engine Source Badge */}
-              <View style={[styles.engineBadge, { backgroundColor: analysis.isLiveAI ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)' }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Ionicons name="ellipse" size={7} color={analysis.isLiveAI ? '#10B981' : '#38BDF8'} />
-                  <Text style={{ fontSize: 11, color: analysis.isLiveAI ? '#10B981' : '#38BDF8', fontWeight: 'bold' }}>
-                    {analysis.isLiveAI ? 'Gemini 3.6 Flash' : 'Apex Deep Engine'}
-                  </Text>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+                {/* Export PDF Button */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  disabled={exportingPdf}
+                  onPress={handleExportPdf}
+                  style={{
+                    flexDirection: isRTL ? 'row-reverse' : 'row',
+                    alignItems: 'center',
+                    gap: 5,
+                    backgroundColor: '#0284C7',
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 8,
+                  }}
+                  accessibilityLabel={isRTL ? 'تصدير دراسة الجدوى PDF' : 'Export Blueprint PDF'}
+                >
+                  {exportingPdf ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="document-text-outline" size={14} color="#FFF" />
+                      <Text style={{ fontSize: 11, color: '#FFF', fontWeight: 'bold' }}>
+                        {isRTL ? 'تصدير PDF' : 'Export PDF'}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                {/* Engine Source Badge */}
+                <View style={[styles.engineBadge, { backgroundColor: analysis.isLiveAI ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)' }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Ionicons name="ellipse" size={7} color={analysis.isLiveAI ? '#10B981' : '#38BDF8'} />
+                    <Text style={{ fontSize: 11, color: analysis.isLiveAI ? '#10B981' : '#38BDF8', fontWeight: 'bold' }}>
+                      {analysis.isLiveAI ? 'Gemini 2.5 Flash' : 'Apex Deep Engine'}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -2502,23 +2767,52 @@ export default function CopilotScreen() {
                 : `Investment: ${currency === 'EGP' ? `${currentCostEGP.toLocaleString()} EGP` : `$${currentCostUSD.toLocaleString()}`} | Duration: ${currentWeeks} weeks\nInstantly registered to your dashboard to begin design sprint.`}
             </Text>
 
-            <TouchableOpacity
-              activeOpacity={0.85}
-              disabled={converting}
-              onPress={handleConvertContract}
-              style={styles.convertHeroBtn}
-            >
-              {converting ? (
-                <ActivityIndicator size="small" color="#0B132B" />
-              ) : (
-                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name="flash" size={18} color="#0B132B" />
-                  <Text style={styles.convertHeroBtnText}>
-                    {isRTL ? `اعتماد العقد وبدء المشروع (${currency === 'EGP' ? `${currentCostEGP.toLocaleString()} ج.م` : `$${currentCostUSD.toLocaleString()}`})` : 'Confirm Contract & Start Project'}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'column', gap: 8, width: '100%', marginTop: 8 }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={converting}
+                onPress={handleConvertContract}
+                style={styles.convertHeroBtn}
+              >
+                {converting ? (
+                  <ActivityIndicator size="small" color="#0B132B" />
+                ) : (
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="flash" size={18} color="#0B132B" />
+                    <Text style={styles.convertHeroBtnText}>
+                      {isRTL ? `اعتماد العقد وبدء المشروع (${currency === 'EGP' ? `${currentCostEGP.toLocaleString()} ج.م` : `$${currentCostUSD.toLocaleString()}`})` : 'Confirm Contract & Start Project'}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={exportingPdf}
+                onPress={handleExportPdf}
+                style={{
+                  width: '100%',
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(56, 189, 248, 0.4)',
+                  backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {exportingPdf ? (
+                  <ActivityIndicator size="small" color="#38BDF8" />
+                ) : (
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="document-text-outline" size={17} color="#38BDF8" />
+                    <Text style={{ color: '#38BDF8', fontSize: 13, fontWeight: 'bold' }}>
+                      {isRTL ? '📄 تحميل وحفظ دراسة الجدوى والعقد كـ PDF' : '📄 Export Feasibility & Contract as PDF'}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       )}
