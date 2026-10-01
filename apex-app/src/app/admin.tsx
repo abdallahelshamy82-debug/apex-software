@@ -1163,13 +1163,21 @@ export default function AdminDashboardScreen() {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity onPress={loadData} style={[styles.refreshBtn, { backgroundColor: `${theme.primary}20` }]}>
-              {loading ? (
-                <ActivityIndicator size="small" color={theme.primary} />
-              ) : (
-                <Ionicons name="refresh" size={16} color={theme.primary} />
-              )}
-            </TouchableOpacity>
+            <View style={{ flexDirection: isRTL ? "row-reverse" : "row", alignItems: "center", gap: 12 }}>
+              <TouchableOpacity onPress={() => router.push("/dashboard")} style={[styles.refreshBtn, { backgroundColor: theme.primary, flexDirection: isRTL ? "row-reverse" : "row", alignItems: "center", gap: 6, paddingHorizontal: 12 }]}>
+                <Ionicons name="person-outline" size={16} color="#FFF" />
+                <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "bold" }}>
+                  {isRTL ? "بوابة العميل" : "Client Portal"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={loadData} style={[styles.refreshBtn, { backgroundColor: `${theme.primary}20` }]}>
+                {loading ? (
+                  <ActivityIndicator size="small" color={theme.primary} />
+                ) : (
+                  <Ionicons name="refresh" size={16} color={theme.primary} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Universal Search Bar */}
