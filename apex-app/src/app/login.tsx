@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, Pressable, Image } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { BlurView } from 'expo-blur';
@@ -416,7 +416,11 @@ export default function LoginScreen() {
       >
           {/* Header Back Button */}
           <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <TouchableOpacity 
+              onPress={() => router.push('/')} 
+              style={styles.backBtn}
+              accessibilityLabel={isRTL ? 'الرجوع للرئيسية' : 'Back to Home'}
+            >
               <Ionicons 
                 name={isRTL ? 'arrow-forward' : 'arrow-back'} 
                 size={24} 
@@ -427,8 +431,15 @@ export default function LoginScreen() {
 
           {/* Central Logo */}
           <View style={styles.logoContainer}>
-            <Ionicons name="hardware-chip" size={48} color={theme.primary} />
-            <Text style={[styles.logoText, { color: theme.text }]}>APEX<Text style={[styles.logoAccent, { color: theme.primary }]}> DEV</Text></Text>
+            <Image 
+              source={require('../../assets/images/icon.png')} 
+              style={styles.brandLogoImage} 
+              resizeMode="contain" 
+            />
+            <Text style={[styles.logoText, { color: theme.text }]}>APEX<Text style={[styles.logoAccent, { color: theme.primary }]}> SOFTWARE</Text></Text>
+            <Text style={[styles.brandTagline, { color: theme.textMuted }]}>
+              {isRTL ? 'بوابة عملاء الأنظمة الذكية' : 'Enterprise Client Portal'}
+            </Text>
           </View>
 
           {/* Form Card */}
@@ -617,7 +628,25 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  logoContainer: { alignItems: 'center', marginBottom: 10 },
+  logoContainer: { alignItems: 'center', marginBottom: 12 },
+  brandLogoImage: {
+    width: 68,
+    height: 68,
+    borderRadius: 18,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    shadowColor: '#00D2FF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+  },
+  brandTagline: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
+    marginBottom: 6,
+  },
   logoText: { fontSize: 26, fontWeight: '900', letterSpacing: 1 },
   logoAccent: { fontSize: 26, fontWeight: '900', letterSpacing: 1 },
   welcomeText: {

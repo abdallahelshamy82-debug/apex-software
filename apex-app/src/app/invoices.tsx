@@ -6,7 +6,6 @@ import { useSettings } from '../context/SettingsContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { api, BASE_URL } from '../services/api';
-import WhatsAppFAB from '../components/WhatsAppFAB';
 import { haptics } from '../utils/haptics';
 import { notifications } from '../utils/notifications';
 import { useResponsive } from '../hooks/useResponsive';
@@ -753,9 +752,6 @@ export default function InvoicesScreen() {
           </View>
         </View>
       </Modal>
-
-      {/* Floating WhatsApp FAB */}
-      <WhatsAppFAB />
     </SafeAreaView>
   );
 }

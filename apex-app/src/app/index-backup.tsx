@@ -6,7 +6,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSettings } from '../context/SettingsContext';
 import { useResponsive } from '../hooks/useResponsive';
-import WhatsAppFAB from '../components/WhatsAppFAB';
 import NotificationModal from '../components/NotificationModal';
 import FloatingGlassNav from '../components/FloatingGlassNav';
 import ScrollReveal from '../components/ScrollReveal';
@@ -272,8 +271,6 @@ export default function HomeScreen() {
         </Animated.ScrollView>
       </SafeAreaView>
 
-      <WhatsAppFAB />
-      
       {responsive.isMobile && <FloatingGlassNav />}
 
       <NotificationModal 

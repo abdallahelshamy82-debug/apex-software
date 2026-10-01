@@ -8,7 +8,6 @@ import { Ionicons } from '@expo/vector-icons';
 import ApexLoader from '../components/ApexLoader';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 import { Skeleton } from '../components/Skeleton';
-import WhatsAppFAB from '../components/WhatsAppFAB';
 import NotificationModal from '../components/NotificationModal';
 import ProjectRoadmap from '../components/ProjectRoadmap';
 import { api } from '../services/api';
@@ -737,9 +736,6 @@ export default function DashboardScreen() {
         </TouchableOpacity>
 
       </ScrollView>
-
-      {/* WhatsApp Floating Button */}
-      <WhatsAppFAB />
 
       {/* In-App Notifications Modal */}
       <NotificationModal 

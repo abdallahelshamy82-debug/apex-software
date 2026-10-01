@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, Platform, Linking } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedScrollHandler,
@@ -10,7 +10,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSettings } from '../context/SettingsContext';
 import { useResponsive } from '../hooks/useResponsive';
-import WhatsAppFAB from '../components/WhatsAppFAB';
 import NotificationModal from '../components/NotificationModal';
 import FloatingGlassNav from '../components/FloatingGlassNav';
 import ScrollReveal from '../components/ScrollReveal';
@@ -66,7 +65,11 @@ export default function HomeScreen() {
         {/* Glass Header */}
           <View style={[styles.glassHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
             <View style={[styles.brandBadge, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-               <Ionicons name="hardware-chip" size={24} color={theme.primary} />
+               <Image 
+                 source={require('../../assets/images/icon.png')} 
+                 style={{ width: 28, height: 28, borderRadius: 7 }} 
+                 resizeMode="contain" 
+               />
                <View style={{ alignItems: isRTL ? 'flex-end' : 'flex-start', marginHorizontal: 8 }}>
                  <Text style={styles.brandTitle}>APEX SOFTWARE</Text>
                  <Text style={styles.brandTagline}>{isRTL ? 'ستوديو التقنية' : 'TECH STUDIO'}</Text>
@@ -264,8 +267,6 @@ export default function HomeScreen() {
         </Animated.ScrollView>
       </SafeAreaView>
 
-      <WhatsAppFAB />
-      
       {responsive.isMobile && <FloatingGlassNav />}
 
       <NotificationModal 

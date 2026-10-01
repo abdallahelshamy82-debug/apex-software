@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '../services/api';
-import WhatsAppFAB from '../components/WhatsAppFAB';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useResponsive } from '../hooks/useResponsive';
 import { BlurView } from 'expo-blur';
@@ -194,10 +193,8 @@ export default function EstimatorScreen() {
   const handleGoBack = () => {
     if (step > 1) {
       setStep(step - 1);
-    } else if (router.canGoBack()) {
-      router.back();
     } else {
-      router.push(currentUser?.role === 'admin' ? '/admin' : (currentUser ? '/dashboard' : '/'));
+      router.push('/');
     }
   };
 
@@ -312,15 +309,6 @@ export default function EstimatorScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      <WhatsAppFAB 
-        bottom={90}
-        customMessage={
-          isRTL
-            ? `مرحباً فريق Apex، لقد قمت بحساب تكلفة مبدئية لمشروعي بقيمة $${calculateTotal()} والمدة ${calculateTime()}، وأود استشارة مهندسيكم.`
-            : `Hello Apex Devs team, I calculated an estimate of $${calculateTotal()} (${calculateTime()}) for my project, and would like to consult your team.`
-        }
-      />
     </ImageBackground>
   );
 }

@@ -77,7 +77,7 @@ export default function ForgotPasswordScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
       <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.push('/login')} style={styles.backBtn}>
           <Text style={[styles.backBtnText, { color: theme.primary }]}>{isRTL ? '← رجوع' : '← Back'}</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text }]}>

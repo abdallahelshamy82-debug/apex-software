@@ -29,9 +29,11 @@ example
 /ios
 /android
 
-# SQLite Runtime & WAL locks
+# SQLite databases and WAL locks (never commit live data)
+*.sqlite
 *.sqlite-shm
 *.sqlite-wal
+apex-backend/database.sqlite
 
 # Uploaded Media in development
 apex-backend/uploads/*

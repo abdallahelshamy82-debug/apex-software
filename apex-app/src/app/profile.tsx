@@ -8,7 +8,6 @@ import { FloatingInput } from '../components/FloatingInput';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, BASE_URL } from '../services/api';
-import WhatsAppFAB from '../components/WhatsAppFAB';
 import { useResponsive } from '../hooks/useResponsive';
 
 export default function ProfileScreen() {
@@ -379,9 +378,6 @@ export default function ProfileScreen() {
         </View>
 
       </ScrollView>
-
-      {/* Floating WhatsApp FAB */}
-      <WhatsAppFAB />
     </SafeAreaView>
   );
 }
