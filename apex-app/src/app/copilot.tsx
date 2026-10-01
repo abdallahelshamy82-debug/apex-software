@@ -143,6 +143,7 @@ interface ChatInputBarProps {
   micPulseAnim: Animated.Value;
   onToggleVoice: () => void;
   onFocus?: () => void;
+  bottomInset?: number;
 }
 
 const ChatInputBar = React.memo(function ChatInputBar({
@@ -157,11 +158,19 @@ const ChatInputBar = React.memo(function ChatInputBar({
   micPulseAnim,
   onToggleVoice,
   onFocus,
+  bottomInset = 0,
 }: ChatInputBarProps) {
   const inputRef = useRef<TextInput>(null);
 
   return (
-    <View style={[styles.chatInputBar, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
+    <View style={[
+      styles.chatInputBar, 
+      { 
+        backgroundColor: theme.card, 
+        borderTopColor: theme.border,
+        paddingBottom: Math.max(10, bottomInset),
+      }
+    ]}>
       <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
         {/* Voice Input Button */}
         <TouchableOpacity
@@ -299,19 +308,31 @@ export default function CopilotScreen() {
   const recognitionRef = useRef<any>(null);
   const chatScrollRef = useRef<ScrollView>(null);
 
-  // Scroll chat messages to end when keyboard appears without re-rendering or running LayoutAnimation
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+  // Track keyboard state and scroll chat messages to end when keyboard appears (only if multiple messages exist)
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
     const showSub = Keyboard.addListener(showEvent, () => {
-      setTimeout(() => {
-        chatScrollRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      setIsKeyboardOpen(true);
+      if (messages.length > 2) {
+        setTimeout(() => {
+          chatScrollRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardOpen(false);
     });
 
     return () => {
       showSub.remove();
+      hideSub.remove();
     };
-  }, []);
+  }, [messages.length]);
 
   useEffect(() => {
     Animated.loop(
@@ -1126,7 +1147,7 @@ export default function CopilotScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
       {/* Top Header */}
       <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ flex: 1, minWidth: 0, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
             onPress={() => {
               haptics.light();
@@ -1134,21 +1155,28 @@ export default function CopilotScreen() {
               else router.push('/dashboard');
             }}
             style={[styles.backBtn, { backgroundColor: theme.btnBg }]}
+            accessibilityLabel={isRTL ? 'رجوع' : 'Back'}
           >
-            <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color={theme.text} />
+            <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={18} color={theme.text} />
           </TouchableOpacity>
-          <View>
-            <Text style={[styles.headerTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
-              {isRTL ? 'مستشار Apex الذكي' : 'Apex AI Consultant'}
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: '#06B6D4', textAlign: isRTL ? 'right' : 'left' }]}>
-              Interactive Architecture & 3 Tiers
+          <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.headerTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={1}>
+                {isRTL ? 'مستشار Apex الذكي' : 'Apex AI Consultant'}
+              </Text>
+              <View style={styles.liveBadgeInline}>
+                <Animated.View style={[styles.liveDot, { transform: [{ scale: pulseAnim }] }]} />
+                <Text style={styles.liveBadgeText}>Online</Text>
+              </View>
+            </View>
+            <Text style={[styles.headerSubtitle, { color: '#06B6D4', textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={1}>
+              {isRTL ? 'هندسة معمارية وحزم استثمارية' : 'Interactive Architecture & 3 Tiers'}
             </Text>
           </View>
         </View>
 
-        {/* Quick Actions & Live Status */}
-        <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
+        {/* Quick Action Buttons */}
+        <View style={{ flexShrink: 0, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 5 }}>
           {/* New Consultation Quick Action */}
           <TouchableOpacity
             activeOpacity={0.8}
@@ -1156,7 +1184,7 @@ export default function CopilotScreen() {
             style={[styles.headerIconBtn, { borderColor: `${theme.primary}60`, backgroundColor: `${theme.primary}18` }]}
             accessibilityLabel={isRTL ? 'استشارة جديدة' : 'New Consultation'}
           >
-            <Ionicons name="add" size={20} color={theme.primary} />
+            <Ionicons name="add" size={18} color={theme.primary} />
           </TouchableOpacity>
 
           {/* Chat Sessions History Button */}
@@ -1169,7 +1197,7 @@ export default function CopilotScreen() {
             style={[styles.headerIconBtn, { borderColor: theme.border, backgroundColor: theme.btnBg, position: 'relative' }]}
             accessibilityLabel={isRTL ? 'سجل الاستشارات' : 'Consultation History'}
           >
-            <Ionicons name="time-outline" size={18} color={theme.text} />
+            <Ionicons name="time-outline" size={16} color={theme.text} />
             {sessions.length > 0 && (
               <View style={styles.historyBadge}>
                 <Text style={styles.historyBadgeText}>{sessions.length > 9 ? '9+' : sessions.length}</Text>
@@ -1184,7 +1212,7 @@ export default function CopilotScreen() {
             style={[styles.headerIconBtn, { borderColor: '#10B98140', backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}
             accessibilityLabel={isRTL ? 'تواصل عبر واتساب' : 'WhatsApp'}
           >
-            <Ionicons name="logo-whatsapp" size={18} color="#10B981" />
+            <Ionicons name="logo-whatsapp" size={16} color="#10B981" />
           </TouchableOpacity>
 
           {/* AI Engine Settings */}
@@ -1197,14 +1225,8 @@ export default function CopilotScreen() {
             style={[styles.headerIconBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
             accessibilityLabel={isRTL ? 'إعدادات محرك AI' : 'AI Engine Settings'}
           >
-            <Ionicons name="settings-outline" size={17} color={theme.text} />
+            <Ionicons name="settings-outline" size={16} color={theme.text} />
           </TouchableOpacity>
-
-          {/* Live Badge */}
-          <View style={styles.liveBadge}>
-            <Animated.View style={[styles.liveDot, { transform: [{ scale: pulseAnim }] }]} />
-            <Text style={styles.liveBadgeText}>Online</Text>
-          </View>
         </View>
       </View>
 
@@ -1223,8 +1245,12 @@ export default function CopilotScreen() {
               { flexDirection: isRTL ? 'row-reverse' : 'row' }
             ]}
           >
-            <Ionicons name="chatbubbles-outline" size={16} color={activeMode === 'chat' ? '#0B132B' : theme.textMuted} />
-            <Text style={[styles.modeToggleText, { color: activeMode === 'chat' ? '#0B132B' : theme.textMuted }]}>
+            <Ionicons name="chatbubbles-outline" size={15} color={activeMode === 'chat' ? '#0B132B' : theme.textMuted} />
+            <Text 
+              style={[styles.modeToggleText, { color: activeMode === 'chat' ? '#0B132B' : theme.textMuted }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {isRTL ? 'المحادثة الاستشارية' : 'AI Consultant Chat'}
             </Text>
           </TouchableOpacity>
@@ -1251,12 +1277,16 @@ export default function CopilotScreen() {
               { flexDirection: isRTL ? 'row-reverse' : 'row' }
             ]}
           >
-            <Ionicons name="document-text-outline" size={16} color={activeMode === 'blueprint' ? '#0B132B' : theme.textMuted} />
-            <Text style={[styles.modeToggleText, { color: activeMode === 'blueprint' ? '#0B132B' : theme.textMuted }]}>
+            <Ionicons name="document-text-outline" size={15} color={activeMode === 'blueprint' ? '#0B132B' : theme.textMuted} />
+            <Text 
+              style={[styles.modeToggleText, { color: activeMode === 'blueprint' ? '#0B132B' : theme.textMuted }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {isRTL ? 'دراسة الجدوى والـ 3 باقات' : 'Feasibility & 3 Tiers'}
             </Text>
             {analysis && (
-              <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#10B981' }} />
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' }} />
             )}
           </TouchableOpacity>
         </View>
@@ -1283,8 +1313,12 @@ export default function CopilotScreen() {
               }}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="on-drag"
-              onContentSizeChange={() => chatScrollRef.current?.scrollToEnd({ animated: true })}
+              keyboardDismissMode="none"
+              onContentSizeChange={() => {
+                if (messages.length > 2) {
+                  chatScrollRef.current?.scrollToEnd({ animated: true });
+                }
+              }}
             >
               {/* Collapsible Project Blueprint Banner */}
               {(() => {
@@ -1629,10 +1663,13 @@ export default function CopilotScreen() {
               isTranscribing={isTranscribing}
               micPulseAnim={micPulseAnim}
               onToggleVoice={toggleVoiceRecording}
+              bottomInset={isKeyboardOpen ? 0 : insets.bottom}
               onFocus={() => {
-                setTimeout(() => {
-                  chatScrollRef.current?.scrollToEnd({ animated: true });
-                }, 120);
+                if (messages.length > 2) {
+                  setTimeout(() => {
+                    chatScrollRef.current?.scrollToEnd({ animated: true });
+                  }, 120);
+                }
               }}
             />
           </View>
@@ -2906,29 +2943,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
   },
   headerIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backBtn: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '900',
   },
   headerSubtitle: {
@@ -2948,6 +2987,15 @@ const styles = StyleSheet.create({
   settingsChipText: {
     fontSize: 11,
     fontWeight: 'bold',
+  },
+  liveBadgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   liveBadge: {
     flexDirection: 'row',
@@ -2970,8 +3018,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modeToggleContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderBottomWidth: 1,
   },
   modeToggleBar: {
@@ -2982,15 +3030,15 @@ const styles = StyleSheet.create({
   },
   modeToggleBtn: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 6,
     borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
   },
   modeToggleText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
   },
   chatCtaBanner: {
@@ -3062,8 +3110,9 @@ const styles = StyleSheet.create({
   },
   chatInputBar: {
     borderTopWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 10,
   },
   chatMicBtn: {
     width: 42,
@@ -3199,8 +3248,9 @@ const styles = StyleSheet.create({
   pkgTabCard: {
     flex: 1,
     borderWidth: 1.5,
-    borderRadius: 14,
-    padding: 10,
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 8,
     alignItems: 'center',
     position: 'relative',
   },
@@ -3208,24 +3258,24 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     backgroundColor: '#F59E0B',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: 6,
   },
   proBadgeText: {
     color: '#0B132B',
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: 'bold',
   },
   pkgTabTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     marginTop: 4,
   },
   pkgTabPrice: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '900',
-    marginTop: 4,
+    marginTop: 3,
   },
   activePkgBox: {
     borderWidth: 1,
