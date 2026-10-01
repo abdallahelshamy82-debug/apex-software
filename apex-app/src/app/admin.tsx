@@ -1042,11 +1042,11 @@ export default function AdminDashboardScreen() {
   
   const renderSidebar = () => {
     const tabs = [
-      { id: "quotes", label: isRTL ? "����� �������" : "Quotes", icon: "document-text-outline", count: quotes.filter((q:any) => q.status === "pending").length },
-      { id: "invoices", label: isRTL ? "��������" : "Invoices", icon: "receipt-outline", count: invoices.filter((i:any) => i.status === "pending").length },
-      { id: "users", label: isRTL ? "������� ���������" : "Clients & Projects", icon: "people-outline", count: users.filter((u:any) => u.role !== "admin").length },
-      { id: "analytics", label: isRTL ? "���������" : "Analytics", icon: "bar-chart-outline", count: 0 },
-      { id: "support", label: isRTL ? "����� �����" : "Support", icon: "chatbubbles-outline", count: chats.length },
+      { id: "quotes", label: isRTL ? "طلبات التسعير" : "Quotes", icon: "document-text-outline", count: quotes.filter((q:any) => q.status === "pending").length },
+      { id: "invoices", label: isRTL ? "الفواتير" : "Invoices", icon: "receipt-outline", count: invoices.filter((i:any) => i.status === "pending").length },
+      { id: "users", label: isRTL ? "العملاء والمشاريع" : "Clients & Projects", icon: "people-outline", count: users.filter((u:any) => u.role !== "admin").length },
+      { id: "analytics", label: isRTL ? "التحليلات" : "Analytics", icon: "bar-chart-outline", count: 0 },
+      { id: "support", label: isRTL ? "الدعم الفني" : "Support", icon: "chatbubbles-outline", count: chats.length },
     ];
     return (
       <View style={{ flex: 1, backgroundColor: theme.card, paddingVertical: 20 }}>
@@ -1178,7 +1178,7 @@ export default function AdminDashboardScreen() {
               <Ionicons name="search" size={18} color={theme.textMuted} />
               <TextInput
                 style={{ flex: 1, color: theme.text, fontSize: 13, paddingVertical: 4, textAlign: isRTL ? "right" : "left" }}
-                placeholder={isRTL ? "��� ������ ������� �������� �� �������..." : "Search by name, email, invoice #, or project..."}
+                placeholder={isRTL ? "البحث بالاسم، الإيميل، رقم الفاتورة، أو المشروع..." : "Search by name, email, invoice #, or project..."}
                 placeholderTextColor={theme.textMuted}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -1223,14 +1223,14 @@ export default function AdminDashboardScreen() {
           <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <Text style={{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
-                {isRTL ? "����� ������ �����" : "Create New Invoice"}
+                {isRTL ? "إنشاء فاتورة جديدة" : "Create New Invoice"}
               </Text>
               <TouchableOpacity onPress={() => setShowNewInvoiceModal(false)}>
                 <Ionicons name="close" size={24} color={theme.textMuted} />
               </TouchableOpacity>
             </View>
             <Text style={{ color: theme.textMuted, fontSize: 13, marginBottom: 6, textAlign: isRTL ? "right" : "left" }}>
-              {isRTL ? "���� ������:" : "Select Client:"}
+              {isRTL ? "اختر العميل:" : "Select Client:"}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
               <View style={{ flexDirection: "row", gap: 8 }}>
@@ -1256,7 +1256,7 @@ export default function AdminDashboardScreen() {
             </ScrollView>
             <TouchableOpacity style={[styles.confirmModalBtn, { backgroundColor: theme.primary }]} onPress={handleCreateManualInvoice}>
               <Text style={{ color: "#FFF", fontSize: 14, fontWeight: "bold" }}>
-                {isRTL ? "������ ������ ��������" : "Continue & Create"}
+                {isRTL ? "متابعة وإنشاء" : "Continue & Create"}
               </Text>
             </TouchableOpacity>
           </View>
