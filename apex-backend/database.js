@@ -33,7 +33,7 @@ if (hasValidPg) {
       connectionString: rawConnStr,
       ssl: { rejectUnauthorized: false }
     });
-    console.log('✅ PostgreSQL connection pool initialized.');
+    console.log(' PostgreSQL connection pool initialized.');
   } catch (e) {
     console.error('Failed to initialize PG pool:', e);
   }
@@ -64,7 +64,7 @@ if (!hasValidPg) {
       if (err) {
         console.error('Error opening SQLite database:', err);
       } else {
-        console.log('✅ Connected to SQLite database at:', sqliteDbPath);
+        console.log(' Connected to SQLite database at:', sqliteDbPath);
         sqliteDb.run('PRAGMA journal_mode = WAL;', () => {});
       }
     });

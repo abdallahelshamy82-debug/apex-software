@@ -269,7 +269,7 @@ export default function CheckoutScreen() {
           {/* Quick Test Cards Picker for Developers & Sandbox */}
           <View style={styles.testCardsContainer}>
             <Text style={[styles.testCardsHeader, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>
-              {isRTL ? '⚡ بطاقات اختبار تجريبية سريعة (Sandbox):' : '⚡ Quick Test Cards (Sandbox):'}
+              {isRTL ? 'بطاقات اختبار تجريبية سريعة (Sandbox):' : 'Quick Test Cards (Sandbox):'}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.testCardsRow}>
               {TEST_CARDS.map((testCard, index) => (

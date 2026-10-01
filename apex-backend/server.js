@@ -75,7 +75,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: corsOptions });
 
-// 🛡️ Security Headers (Helmet)
+//  Security Headers (Helmet)
 app.use(helmet({
   contentSecurityPolicy: false, // permits inline styling for HTML invoice print and landing preview
   crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -83,7 +83,7 @@ app.use(helmet({
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
-// 🛡️ Prevent Directory Traversal & Sensitive File Exposure
+//  Prevent Directory Traversal & Sensitive File Exposure
 app.use((req, res, next) => {
   const p = req.path.toLowerCase();
   if (p.includes('.env') || p.includes('.sqlite') || p.includes('.git') || p.includes('package.json') || p.includes('server.js')) {
@@ -92,7 +92,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// 🛡️ Global API Rate Limiter
+//  Global API Rate Limiter
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
@@ -102,7 +102,7 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
-// 🛡️ Strict Auth Brute-Force Defense
+//  Strict Auth Brute-Force Defense
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -118,7 +118,7 @@ app.use('/api/auth/register-resend-otp', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 app.use('/api/auth/reset-password', authLimiter);
 
-// 🛡️ AI Copilot Quota & DDoS Defense
+//  AI Copilot Quota & DDoS Defense
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
@@ -237,18 +237,18 @@ app.get('/', (req, res) => {
     </head>
     <body>
       <div class="card">
-        <div class="badge">🟢 خادم الـ API والـ Backend يعمل بنجاح (Port 3000)</div>
+        <div class="badge">خادم الـ API والـ Backend يعمل بنجاح (Port 3000)</div>
         <h1>خادم منصة Apex Software</h1>
         <p>هذا الرابط مخصص لخادم البيانات والـ API وقواعد البيانات.<br>لتصفح المنصة التفاعلية وتجربة التطبيق، اضغط على الزر أدناه:</p>
-        <a href="https://apex-admin-seven.vercel.app" class="btn">الانتقال إلى واجهة التطبيق والمنصة 🚀</a>
-        <div class="note">💡 الرابط المباشر لواجهة التطبيق: <strong>https://apex-admin-seven.vercel.app</strong></div>
+        <a href="https://apex-admin-seven.vercel.app" class="btn">الانتقال إلى واجهة التطبيق والمنصة</a>
+        <div class="note">الرابط المباشر لواجهة التطبيق: <strong>https://apex-admin-seven.vercel.app</strong></div>
       </div>
     </body>
     </html>
   `);
 });
 
-// 🛡️ Hardened Multer Config with Strict Extension Whitelist & Cryptographic Renaming
+//  Hardened Multer Config with Strict Extension Whitelist & Cryptographic Renaming
 const ALLOWED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.pdf', '.doc', '.docx', '.txt', '.mp3', '.m4a', '.wav', '.webm']);
 const DANGEROUS_EXTENSIONS = new Set(['.exe', '.bat', '.cmd', '.sh', '.php', '.phtml', '.html', '.htm', '.svg', '.js', '.py', '.rb', '.dll', '.bin', '.msi', '.vbs']);
 
@@ -540,7 +540,7 @@ const authenticateToken = (req, res, next) => {
 
 const verifyToken = authenticateToken;
 
-// 🛡️ Strict Admin Authorization Middleware
+//  Strict Admin Authorization Middleware
 const requireAdmin = (req, res, next) => {
   if (!req.user || !isAdminUser(req.user)) {
     return res.status(403).json({ 
@@ -551,7 +551,7 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-// 🛡️ Centralized Admin Route Protection
+//  Centralized Admin Route Protection
 app.use('/api/admin', authenticateToken, requireAdmin);
 
 // ==================== AUTH & SECURITY ROUTES ====================
@@ -574,7 +574,7 @@ app.post('/api/auth/register-send-otp', (req, res) => {
     return res.status(400).json({ success: false, message: 'كلمة المرور يجب أن تتكون من 6 أحرف على الأقل.' });
   }
 
-  // 🛡️ Check if account already exists with this email
+  //  Check if account already exists with this email
   db.get(`SELECT id, email FROM users WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (checkErr, existingUser) => {
     if (existingUser) {
       return res.status(400).json({
@@ -583,7 +583,7 @@ app.post('/api/auth/register-send-otp', (req, res) => {
       });
     }
 
-    // 🛡️ Device Binding: 1 Account per Mobile Device
+    //  Device Binding: 1 Account per Mobile Device
     if (deviceId && !isAdmin && clientPlatform !== 'web') {
       db.get(
         `SELECT email FROM users WHERE deviceId = ? AND LOWER(email) != LOWER(?) AND role != 'admin'`,
@@ -641,20 +641,20 @@ app.post('/api/auth/register-send-otp', (req, res) => {
               });
 
               if (!mailRes.delivered && !mailRes.success) {
-                console.error(`❌ Verification email delivery failed for ${normalizedEmail}:`, mailRes.error);
+                console.error(` Verification email delivery failed for ${normalizedEmail}:`, mailRes.error);
                 return res.status(500).json({
                   success: false,
                   message: `تعذر إرسال كود التحقق إلى البريد (${normalizedEmail}). يرجى التحقق من صحة البريد والمحاولة مرة أخرى.`
                 });
               }
 
-              console.log(`✅ Verification email successfully delivered to ${normalizedEmail} (code: ${code})`);
+              console.log(` Verification email successfully delivered to ${normalizedEmail} (code: ${code})`);
               return res.json({
                 success: true,
                 message: 'تم إرسال كود التحقق السري (6 أرقام) إلى بريدك الإلكتروني بنجاح.'
               });
             } catch (mailErr) {
-              console.error('❌ Exception in sendVerificationEmail:', mailErr);
+              console.error(' Exception in sendVerificationEmail:', mailErr);
               return res.status(500).json({
                 success: false,
                 message: 'حدث خطأ أثناء إرسال كود التحقق إلى بريدك. يرجى المحاولة بعد قليل.'
@@ -667,7 +667,7 @@ app.post('/api/auth/register-send-otp', (req, res) => {
   });
 });
 
-// 🛡️ Helper: Convert Arabic-Indic / Persian digits to standard ASCII digits
+//  Helper: Convert Arabic-Indic / Persian digits to standard ASCII digits
 const normalizeDigits = (str) => {
   if (!str) return '';
   return str.toString()
@@ -887,7 +887,7 @@ app.post('/api/register', (req, res) => {
     );
   };
 
-  // 🛡️ Device Binding: 1 Account per Mobile Device (protect first-time deals)
+  //  Device Binding: 1 Account per Mobile Device (protect first-time deals)
   if (deviceId && !isAdmin && clientPlatform !== 'web') {
     db.get(
       `SELECT email FROM users WHERE deviceId = ? AND LOWER(email) != LOWER(?) AND role != 'admin'`,
@@ -1524,7 +1524,7 @@ app.post('/api/ai/convert-contract', authenticateToken, (req, res) => {
             db.get(`SELECT id, fullName, email, company, role, phone, avatarUrl, projectName, projectPhase, projectProgress, projectTasks FROM users WHERE id = ?`, [req.user.id], (gErr, updatedUser) => {
               return res.json({
                 success: true,
-                message: 'تم تحويل الفكرة إلى طلب تعاقد رسمي بنجاح! 🚀 تم تحديث لوحة التحكم وتجهيز المشروع.',
+                message: 'تم تحويل الفكرة إلى طلب تعاقد رسمي بنجاح! تم تحديث لوحة التحكم وتجهيز المشروع.',
                 quoteId,
                 user: updatedUser
               });
@@ -1732,7 +1732,7 @@ app.get('/api/notifications', authenticateToken, (req, res) => {
         const firstUnpaid = unpaid[0];
         notifications.push({
           id: `inv-${firstUnpaid.id}`,
-          title: 'فاتورة مستحقة للدفع 📄',
+          title: 'فاتورة مستحقة للدفع',
           body: `لديك فاتورة #${firstUnpaid.invoiceNumber} بمبلغ $${firstUnpaid.amount} مستحقة السداد.`,
           time: firstUnpaid.date || 'مستحقة الآن',
           icon: 'receipt',
@@ -1747,7 +1747,7 @@ app.get('/api/notifications', authenticateToken, (req, res) => {
         const firstPaid = paid[0];
         notifications.push({
           id: `paid-${firstPaid.id}`,
-          title: 'تم تأكيد السداد بنجاح ✅',
+          title: 'تم تأكيد السداد بنجاح',
           body: `تم اعتماد سداد الفاتورة #${firstPaid.invoiceNumber} بمبلغ $${firstPaid.amount}.`,
           time: firstPaid.date || 'مؤكدة',
           icon: 'checkmark-circle',
@@ -1760,7 +1760,7 @@ app.get('/api/notifications', authenticateToken, (req, res) => {
       if (user.projectName && (user.projectProgress || 0) > 0) {
         notifications.push({
           id: `proj-${user.id}`,
-          title: 'تحديث في مرحلة مشروعك 🚀',
+          title: 'تحديث في مرحلة مشروعك',
           body: `مشروعك (${user.projectName}) في مرحلة: ${user.projectPhase || 'قيد التطوير'} بنسبة إنجاز ${user.projectProgress}%.`,
           time: 'محدث الآن',
           icon: 'rocket',
@@ -1775,7 +1775,7 @@ app.get('/api/notifications', authenticateToken, (req, res) => {
         if (delivs.length > 0) {
           notifications.push({
             id: `deliv-${user.id}`,
-            title: 'تم تسليم روابط ومخرجات جديدة 📦',
+            title: 'تم تسليم روابط ومخرجات جديدة',
             body: `قام مهندسو Apex برفع (${delivs.length}) روابط ومخرجات جاهزة للمعاينة والاستخدام.`,
             time: 'جديد',
             icon: 'cube',
@@ -1788,7 +1788,7 @@ app.get('/api/notifications', authenticateToken, (req, res) => {
       // Welcome notification
       notifications.push({
         id: `welcome-${user.id}`,
-        title: 'أهلاً بك في منصة Apex Software ✨',
+        title: 'أهلاً بك في منصة Apex Software',
         body: 'فريق العمل جاهز لمساعدتك دائماً عبر الدردشة المباشرة وبوابة إدارة المشاريع.',
         time: user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG') : 'مرحباً',
         icon: 'sparkles',
@@ -1894,13 +1894,13 @@ app.post('/api/admin/test-email', authenticateToken, async (req, res) => {
     to,
     fullName: 'عميلنا العزيز',
     projectName: 'مشروع تجريبي (Apex Test)',
-    projectPhase: '🧪 اختبار اتصال Gmail الحقيقي',
+    projectPhase: 'اختبار اتصال Gmail الحقيقي',
     projectProgress: 100
   });
   res.json({ success: result.success, result });
 });
 
-// 🛡️ Official Printable Invoice View with Authorization Guard
+//  Official Printable Invoice View with Authorization Guard
 app.get('/invoice-print/:id', (req, res) => {
   const invoiceId = req.params.id;
   const token = req.query.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
@@ -1915,7 +1915,7 @@ app.get('/invoice-print/:id', (req, res) => {
       return res.status(404).send('<h2 style="font-family:sans-serif;text-align:center;margin-top:50px;">الفاتورة غير موجودة</h2>');
     }
 
-    // 🛡️ Verify invoice ownership
+    //  Verify invoice ownership
     let authorized = false;
     if (token) {
       try {
@@ -1938,7 +1938,7 @@ app.get('/invoice-print/:id', (req, res) => {
           p{color:#94A3B8;font-size:14px;line-height:1.7;}
           .btn{display:inline-block;margin-top:16px;background:#38BDF8;color:#0B132B;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:13px;}
         </style></head>
-        <body><div class="box"><h2>🔒 مستند مالي مشفر ومحمي</h2><p>هذه الفاتورة محمية ولا يمكن الوصول إليها إلا من خلال حساب العميل صاحب الفاتورة أو إدارة Apex المعتمدة.</p><a href="http://localhost:8081" class="btn">تسجيل الدخول للتطبيق</a></div></body></html>
+        <body><div class="box"><h2>مستند مالي مشفر ومحمي</h2><p>هذه الفاتورة محمية ولا يمكن الوصول إليها إلا من خلال حساب العميل صاحب الفاتورة أو إدارة Apex المعتمدة.</p><a href="http://localhost:8081" class="btn">تسجيل الدخول للتطبيق</a></div></body></html>
       `);
     }
 
@@ -2002,11 +2002,11 @@ app.get('/invoice-print/:id', (req, res) => {
       <body>
         <div class="no-print-bar">
           <div style="color: #f8fafc; font-size: 14px; font-weight: bold;">
-            📄 معاينة الفاتورة الرسمية #${inv.invoiceNumber || inv.id}
+            معاينة الفاتورة الرسمية #${inv.invoiceNumber || inv.id}
           </div>
           <div>
             <button onclick="window.history.back()" class="btn-back">رجوع</button>
-            <button onclick="window.print()" class="btn-print">🖨️ طباعة / حفظ كـ PDF</button>
+            <button onclick="window.print()" class="btn-print">طباعة / حفظ كـ PDF</button>
           </div>
         </div>
 
@@ -2014,14 +2014,14 @@ app.get('/invoice-print/:id', (req, res) => {
           ${isPaid ? `
             <div class="stamp">
               <div class="stamp-box">
-                ✔ مدفوعة بالكامل<br><span style="font-size: 12px; font-weight: normal;">PAID IN FULL</span>
+                مدفوعة بالكامل<br><span style="font-size: 12px; font-weight: normal;">PAID IN FULL</span>
               </div>
             </div>
           ` : ''}
 
           <div class="header-grid">
             <div>
-              <h1 class="brand-title">${companyName} ⚡</h1>
+              <h1 class="brand-title">${companyName}</h1>
               <div class="brand-subtitle">وكالة تطوير البرمجيات والتطبيقات والحلول الرقمية المتكاملة</div>
               <div style="font-size: 12px; color: #64748b; margin-top: 6px;">
                 البريد: ${companyEmail} | الهاتف: ${companyPhone}
@@ -2029,7 +2029,7 @@ app.get('/invoice-print/:id', (req, res) => {
             </div>
             <div class="inv-meta">
               <div class="inv-badge ${isPaid ? 'badge-paid' : 'badge-pending'}">
-                ${isPaid ? '✅ مدفوعة (PAID)' : '⚠️ بانتظار السداد (PENDING)'}
+                ${isPaid ? 'مدفوعة (PAID)' : 'بانتظار السداد (PENDING)'}
               </div>
               <div style="font-size: 14px; font-weight: bold; color: #1e293b;">رقم الفاتورة: #${inv.invoiceNumber || inv.id}</div>
               <div style="font-size: 12px; color: #64748b; margin-top: 4px;">تاريخ الإصدار: ${invoiceDate}</div>
@@ -2038,7 +2038,7 @@ app.get('/invoice-print/:id', (req, res) => {
 
           <div class="info-cards">
             <div class="info-box" style="border-top: 3px solid #0284c7;">
-              <h4>👤 فاتورة إلى (بيانات العميل والمشروع):</h4>
+              <h4>فاتورة إلى (بيانات العميل والمشروع):</h4>
               <p><strong>اسم العميل:</strong> ${inv.clientName || inv.clientname || 'عميل كريم'}</p>
               <p><strong>الشركة / المؤسسة:</strong> ${inv.clientCompany || inv.clientcompany || 'مؤسسة مستقلة'}</p>
               <p><strong>اسم المشروع:</strong> ${inv.projectName || inv.projectname || 'مشروع برمجي مخصص'}</p>
@@ -2046,7 +2046,7 @@ app.get('/invoice-print/:id', (req, res) => {
               ${(inv.clientPhone || inv.clientphone) ? `<p><strong>الهاتف:</strong> ${inv.clientPhone || inv.clientphone}</p>` : ''}
             </div>
             <div class="info-box" style="border-top: 3px solid #10b981;">
-              <h4>🏢 الشركة المنفذة والمصدرة للفاتورة:</h4>
+              <h4>الشركة المنفذة والمصدرة للفاتورة:</h4>
               <p><strong>الاسم:</strong> ${companyName}</p>
               <p><strong>النشاط:</strong> استشارات وتطوير برمجيات وتطبيقات سحابية</p>
               <p><strong>الرقم الضريبي:</strong> ${taxId}</p>
@@ -2069,7 +2069,7 @@ app.get('/invoice-print/:id', (req, res) => {
                 <td>1</td>
                 <td>
                   <strong>${inv.title || 'دفعة تعاقدية لتطوير البرمجيات'}</strong>
-                  ${(inv.projectName || inv.projectname) ? `<div style="font-size: 13px; color: #0284c7; font-weight: bold; margin-top: 4px;">🚀 المشروع: ${inv.projectName || inv.projectname}</div>` : ''}
+                  ${(inv.projectName || inv.projectname) ? `<div style="font-size: 13px; color: #0284c7; font-weight: bold; margin-top: 4px;">المشروع: ${inv.projectName || inv.projectname}</div>` : ''}
                   ${inv.notes ? `<div style="font-size: 12px; color: #64748b; margin-top: 4px;">${inv.notes}</div>` : ''}
                 </td>
                 <td style="text-align: center;">1</td>
@@ -2097,7 +2097,7 @@ app.get('/invoice-print/:id', (req, res) => {
 
           ${!isPaid ? `
             <div class="payment-info">
-              <strong>💳 طرق السداد المتاحة:</strong>
+              <strong>طرق السداد المتاحة:</strong>
               <p style="margin: 4px 0 0;">
                 • إنستاباي: <strong>${instapayHandle}</strong> | فودافون كاش: <strong>${vodafoneCash}</strong><br>
                 • بنك: <strong>${bankName}</strong> | حساب: <strong>${bankAccount}</strong><br>
@@ -2125,9 +2125,9 @@ app.get('/email-preview', (req, res) => {
   let emailHtml = '';
 
   if (type === 'project') {
-    emailHtml = emailService.getProjectUpdateHtml('تطبيق المتجر الإلكتروني الحديث', '💻 قيد البرمجة والتطوير', 50, 'عبدالله الشامي');
+    emailHtml = emailService.getProjectUpdateHtml('تطبيق المتجر الإلكتروني الحديث', 'قيد البرمجة والتطوير', 50, 'عبدالله الشامي');
   } else if (type === 'invoice') {
-    emailHtml = emailService.getHtmlTemplate('📄 تم إصدار فاتورة جديدة #INV-1002', `
+    emailHtml = emailService.getHtmlTemplate('تم إصدار فاتورة جديدة #INV-1002', `
       <p>مرحباً <strong>عبدالله الشامي</strong>،</p>
       <p>تم إصدار فاتورة جديدة لحسابك في <strong>Apex Software</strong>:</p>
       <div class="card-box">
@@ -2147,7 +2147,7 @@ app.get('/email-preview', (req, res) => {
       <p>يمكنك مراجعة تفاصيل الفاتورة وإتمام الدفع أو رفع إيصال التحويل عبر بوابة العميل.</p>
     `);
   } else if (type === 'quote') {
-    emailHtml = emailService.getHtmlTemplate('تم استلام طلبك لعرض السعر بنجاح 📋', `
+    emailHtml = emailService.getHtmlTemplate('تم استلام طلبك لعرض السعر بنجاح', `
       <p>مرحباً <strong>عبدالله الشامي</strong>،</p>
       <p>شكراً لاستخدامك <strong>المُسعّر الذكي</strong> الخاص بـ Apex Software. لقد تم استلام تفاصيل مشروعك وسيقوم فريقنا بمراجعتها والتواصل معك.</p>
       <div class="card-box">
@@ -2183,18 +2183,18 @@ app.get('/email-preview', (req, res) => {
   </head>
   <body>
     <div class="bar">
-      <h2>✨ معاينة تصاميم البريد الإلكتروني الرسمية لوكالة Apex Devs</h2>
+      <h2>معاينة تصاميم البريد الإلكتروني الرسمية لوكالة Apex Devs</h2>
       <div class="nav">
-        <a href="/email-preview?type=project" class="${type === 'project' ? 'active' : ''}">📊 تقرير إنجاز المشروع (50%)</a>
-        <a href="/email-preview?type=invoice" class="${type === 'invoice' ? 'active' : ''}">📄 إشعار الفاتورة والمبلغ</a>
-        <a href="/email-preview?type=quote" class="${type === 'quote' ? 'active' : ''}">📋 استلام وتأكيد عرض السعر</a>
-        <a href="/email-preview?type=welcome" class="${type === 'welcome' ? 'active' : ''}">👋 رسالة الترحيب</a>
+        <a href="/email-preview?type=project" class="${type === 'project' ? 'active' : ''}">تقرير إنجاز المشروع (50%)</a>
+        <a href="/email-preview?type=invoice" class="${type === 'invoice' ? 'active' : ''}">إشعار الفاتورة والمبلغ</a>
+        <a href="/email-preview?type=quote" class="${type === 'quote' ? 'active' : ''}">استلام وتأكيد عرض السعر</a>
+        <a href="/email-preview?type=welcome" class="${type === 'welcome' ? 'active' : ''}">رسالة الترحيب</a>
       </div>
     </div>
     <div class="frame-wrap">
       <div style="width: 100%; max-width: 650px;">
         <div class="info-banner">
-          💡 هذا هو الشكل الحقيقي الفاخر الذي يستلمه العميل في صندوق بريده بتنسيق متجاوب بالكامل مع الموبايل والكمبيوتر.
+          هذا هو الشكل الحقيقي الفاخر الذي يستلمه العميل في صندوق بريده بتنسيق متجاوب بالكامل مع الموبايل والكمبيوتر.
         </div>
         <div class="frame">
           ${emailHtml}
@@ -2316,7 +2316,7 @@ app.post('/api/upload-base64', authenticateToken, express.json({ limit: '30mb' }
   }
 });
 
-// 💬 Send Message via REST API (Reliable Fallback & State Sync)
+//  Send Message via REST API (Reliable Fallback & State Sync)
 app.post('/api/messages', authenticateToken, (req, res) => {
   const { userId, text, attachmentUrl, attachment, type, timestamp, clientMsgId, id } = req.body;
   const targetId = Number(userId || req.user.id);
@@ -2369,7 +2369,7 @@ app.post('/api/messages', authenticateToken, (req, res) => {
   }
 });
 
-// 🛡️ Chat History Route with Strict IDOR Access Control
+//  Chat History Route with Strict IDOR Access Control
 app.get('/api/messages/:userId', authenticateToken, (req, res) => {
   const targetId = Number(req.params.userId);
   if (Number(req.user.id) !== targetId && !isAdminUser(req.user)) {

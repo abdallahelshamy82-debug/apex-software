@@ -4,7 +4,7 @@ const SECURE_AUTH_TOKEN_KEY = 'apex_sec_user_token_v1';
 const LEGACY_TOKEN_KEY = 'userToken';
 
 /**
- * 🛡️ Web Token Storage
+ *  Web Token Storage
  * Uses AsyncStorage with seamless legacy migration.
  * Free of native hardware modules to guarantee 100% SSR and Web browser stability.
  */

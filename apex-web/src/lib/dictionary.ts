@@ -16,9 +16,9 @@ export const dict = {
       title: "فلسفتنا",
       titleHighlight: "الهندسية",
       features: [
-        { id: 1, icon: '⚡', title: 'الأداء أولاً', desc: 'تحسين كل بايت لضمان أوقات تحميل لحظية وحركات سلسة بسرعة 60 إطاراً في الثانية.' },
-        { id: 2, icon: '🏗️', title: 'بنية متوسعة', desc: 'بناء أنظمة تركيبية آمنة تنمو وتتطور بسلاسة مع احتياجات أعمالك.' },
-        { id: 3, icon: '🎯', title: 'واجهات دقيقة', desc: 'نسد الفجوة بين التصميم المذهل والهندسة القوية بدقة متناهية (Pixel-Perfect).' },
+        { id: 1, icon: 'bolt', title: 'الأداء أولاً', desc: 'تحسين كل بايت لضمان أوقات تحميل لحظية وحركات سلسة بسرعة 60 إطاراً في الثانية.' },
+        { id: 2, icon: 'architecture', title: 'بنية متوسعة', desc: 'بناء أنظمة تركيبية آمنة تنمو وتتطور بسلاسة مع احتياجات أعمالك.' },
+        { id: 3, icon: 'target', title: 'واجهات دقيقة', desc: 'نسد الفجوة بين التصميم المذهل والهندسة القوية بدقة متناهية (Pixel-Perfect).' },
       ]
     },
     services: {
@@ -80,9 +80,9 @@ export const dict = {
       title: "Engineering",
       titleHighlight: "Philosophy",
       features: [
-        { id: 1, icon: '⚡', title: 'Performance First', desc: 'Optimizing every byte for instant load times and buttery smooth 60fps animations.' },
-        { id: 2, icon: '🏗️', title: 'Scalable Architecture', desc: 'Building modular, type-safe systems that grow seamlessly with your business needs.' },
-        { id: 3, icon: '🎯', title: 'Pixel-Perfect UI', desc: 'Bridging the gap between award-winning design and robust engineering with absolute precision.' },
+        { id: 1, icon: 'bolt', title: 'Performance First', desc: 'Optimizing every byte for instant load times and buttery smooth 60fps animations.' },
+        { id: 2, icon: 'architecture', title: 'Scalable Architecture', desc: 'Building modular, type-safe systems that grow seamlessly with your business needs.' },
+        { id: 3, icon: 'target', title: 'Pixel-Perfect UI', desc: 'Bridging the gap between award-winning design and robust engineering with absolute precision.' },
       ]
     },
     services: {

@@ -111,7 +111,7 @@ export default function LoginScreen() {
   const handleBiometricLogin = async () => {
     await haptics.light();
 
-    // 🛡️ Verify that biometrics have been intentionally configured and bound in Settings
+    //  Verify that biometrics have been intentionally configured and bound in Settings
     const isConfigured = await biometrics.isBiometricsConfigured();
     if (!isConfigured) {
       await haptics.warning();
@@ -233,7 +233,7 @@ export default function LoginScreen() {
         Alert.alert(isRTL ? 'خطأ' : 'Error', res.message || 'بيانات الدخول غير صحيحة');
       }
     } else {
-      // 🛡️ Registration Validation
+      //  Registration Validation
       if (!fullName.trim()) {
         await haptics.warning();
         Alert.alert(isRTL ? 'تنبيه' : 'Alert', isRTL ? 'يرجى كتابة الاسم الكامل' : 'Please enter your full name');
@@ -302,7 +302,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem('userData', JSON.stringify(res.user));
       
       notifications.sendLocalNotification(
-        isRTL ? 'تم تفعيل الحساب بنجاح 🚀' : 'Account Activated',
+        isRTL ? 'تم تفعيل الحساب بنجاح' : 'Account Activated',
         isRTL ? `أهلاً بك يا ${res.user.fullName} في Apex Software` : `Welcome to Apex Software, ${res.user.fullName}`
       );
       notifications.registerForPushNotifications().catch(() => {});
@@ -362,7 +362,7 @@ export default function LoginScreen() {
         document.head.appendChild(script);
       }
     } else {
-      // 📱 Initialize native GoogleSignin on mobile (only if native module is present in binary)
+      //  Initialize native GoogleSignin on mobile (only if native module is present in binary)
       try {
         const { TurboModuleRegistry, NativeModules } = require('react-native');
         const hasNative = !!TurboModuleRegistry?.get?.('RNGoogleSignin') || !!NativeModules?.RNGoogleSignin;
@@ -449,7 +449,7 @@ export default function LoginScreen() {
       return;
     }
 
-    // 2. 📱 Check if Native Google Play Services module is compiled in binary
+    // 2.  Check if Native Google Play Services module is compiled in binary
     let hasNative = false;
     try {
       const { TurboModuleRegistry, NativeModules } = require('react-native');
@@ -465,7 +465,7 @@ export default function LoginScreen() {
 
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-        // 🔄 Force Android to show Google account picker
+        //  Force Android to show Google account picker
         try {
           await GoogleSignin.signOut();
         } catch (signOutErr) {}
@@ -605,8 +605,8 @@ export default function LoginScreen() {
 
                 <Text style={{ color: theme.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 14, paddingHorizontal: 10 }}>
                   {isRTL 
-                    ? '💡 يصلك الكود فورياً في البريد الوارد أو التحديثات / الرسائل الترويجية.'
-                    : '💡 Check your inbox or updates/promotions folder for your instant verification code.'}
+                    ? 'يصلك الكود فورياً في البريد الوارد أو التحديثات / الرسائل الترويجية.'
+                    : 'Check your inbox or updates/promotions folder for your instant verification code.'}
                 </Text>
 
                 <OtpInput
@@ -640,7 +640,7 @@ export default function LoginScreen() {
                     <ActivityIndicator color={theme.bg === '#F8FAFC' ? '#FFF' : '#000'} size="small" />
                   ) : (
                     <Text style={[styles.submitBtnText, { color: theme.bg === '#F8FAFC' ? '#FFF' : '#000' }]}>
-                      {isRTL ? 'تفعيل الحساب والدخول 🚀' : 'Activate & Enter Dashboard'}
+                      {isRTL ? 'تفعيل الحساب والدخول' : 'Activate & Enter Dashboard'}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -670,7 +670,7 @@ export default function LoginScreen() {
                       <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '700' }}>
                         {resendLoading 
                           ? (isRTL ? 'جاري الإرسال...' : 'Sending...') 
-                          : (isRTL ? 'إعادة إرسال كود التحقق 🔄' : 'Resend Verification Code 🔄')}
+                          : (isRTL ? 'إعادة إرسال كود التحقق' : 'Resend Verification Code')}
                       </Text>
                     </TouchableOpacity>
                   ) : (
@@ -768,7 +768,7 @@ export default function LoginScreen() {
                     <Text style={[styles.submitBtnText, { color: theme.bg === '#F8FAFC' || theme.bg === '#F8FAFC' ? '#FFF' : '#000' }]}>
                       {loading 
                         ? (isRTL ? 'جاري المعالجة...' : 'Processing...') 
-                        : (isLogin ? t('loginBtn') : (isRTL ? 'إنشاء الحساب وتأكيد البريد 🚀' : 'Create Account & Verify'))}
+                        : (isLogin ? t('loginBtn') : (isRTL ? 'إنشاء الحساب وتأكيد البريد' : 'Create Account & Verify'))}
                     </Text>
                   </TouchableOpacity>
 

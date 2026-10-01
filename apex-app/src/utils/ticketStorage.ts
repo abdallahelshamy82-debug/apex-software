@@ -261,7 +261,7 @@ async function updateTicketIndex(
 
     const summaryText = lastMsg.text 
       ? lastMsg.text 
-      : (lastMsg.attachment ? (lastMsg.attachment.type === 'image' ? '📷 صورة مرفقة' : '📎 مستند مرفق') : '');
+      : (lastMsg.attachment ? (lastMsg.attachment.type === 'image' ? 'صورة مرفقة' : 'مستند مرفق') : '');
 
     const index = tickets.findIndex(t => t.userId === userId || t.id === userId);
     const updatedMeta: SupportTicketMeta = {

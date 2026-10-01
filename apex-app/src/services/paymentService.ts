@@ -5,7 +5,7 @@
  * This service provides a complete, production-ready interface for processing
  * credit/debit card transactions in development mode without legal merchant accounts.
  * 
- * 🔌 PLUG-AND-PLAY MIGRATION TO LIVE GATEWAYS:
+ *  PLUG-AND-PLAY MIGRATION TO LIVE GATEWAYS:
  * When your legal commercial registration is ready, simply replace the simulation logic
  * inside `processPayment()` with your real provider:
  *  - Stripe: Use Stripe PaymentIntents API via backend (`POST /api/create-payment-intent`)
@@ -391,7 +391,7 @@ class PaymentService {
   }
 
   /**
-   * 🔌 LIVE GATEWAY INTEGRATION SLOT:
+   *  LIVE GATEWAY INTEGRATION SLOT:
    * Plug in real Paymob or Stripe credentials here once commercial registration is complete.
    */
   private async processLivePaymentGateway(

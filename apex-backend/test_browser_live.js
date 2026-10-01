@@ -4,7 +4,7 @@ const fs = require('fs');
 const ARTIFACTS_DIR = 'C:\\Users\\CYBER-TECH\\.gemini\\antigravity\\brain\\79369dba-95f8-4045-96ae-4156129ab71e';
 
 async function runTest() {
-  console.log('🚀 Starting Browser Live Test...');
+  console.log(' Starting Browser Live Test...');
   const { default: puppeteer } = await import('puppeteer-core');
   
   let browser;
@@ -18,7 +18,7 @@ async function runTest() {
         browserURL: 'http://localhost:9222',
         defaultViewport: null
       });
-      console.log('✅ Connected to existing Chrome!');
+      console.log(' Connected to existing Chrome!');
     } catch (e) {
       console.log('Could not connect to port 9222, launching Chrome directly...');
       browser = await puppeteer.launch({
@@ -27,7 +27,7 @@ async function runTest() {
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=1280,800'],
         defaultViewport: null
       });
-      console.log('✅ Launched Chrome successfully!');
+      console.log(' Launched Chrome successfully!');
     }
 
     const pages = await browser.pages();
@@ -43,7 +43,7 @@ async function runTest() {
     // Take initial screenshot
     const homeScreenshot = path.join(ARTIFACTS_DIR, 'browser_home.png');
     await page.screenshot({ path: homeScreenshot });
-    console.log('📸 Saved home screenshot to:', homeScreenshot);
+    console.log(' Saved home screenshot to:', homeScreenshot);
 
     // Check if we are on login screen or dashboard
     console.log('Page loaded. Checking for login form...');
@@ -77,7 +77,7 @@ async function runTest() {
         await new Promise(r => setTimeout(r, 5000));
         const afterLoginScreenshot = path.join(ARTIFACTS_DIR, 'browser_after_login.png');
         await page.screenshot({ path: afterLoginScreenshot });
-        console.log('📸 Saved after-login screenshot to:', afterLoginScreenshot);
+        console.log(' Saved after-login screenshot to:', afterLoginScreenshot);
       } else {
         console.log('No login inputs found directly. Current URL:', page.url());
       }
@@ -88,11 +88,11 @@ async function runTest() {
     // Check for Admin navigation or Chat button
     const finalScreenshot = path.join(ARTIFACTS_DIR, 'browser_final_view.png');
     await page.screenshot({ path: finalScreenshot });
-    console.log('📸 Saved final view screenshot to:', finalScreenshot);
+    console.log(' Saved final view screenshot to:', finalScreenshot);
 
-    console.log('✅ Browser live test completed successfully!');
+    console.log(' Browser live test completed successfully!');
   } catch (err) {
-    console.error('❌ Browser test error:', err);
+    console.error(' Browser test error:', err);
   }
 }
 

@@ -59,7 +59,7 @@ export default function SettingsScreen() {
         return;
       }
 
-      // 🛡️ Exclusive Device Biometric Enforcement: Block if bound to another account
+      //  Exclusive Device Biometric Enforcement: Block if bound to another account
       const claimCheck = await biometrics.canUserClaimBiometrics(currentUser.email);
       if (!claimCheck.allowed) {
         await haptics.error();
@@ -110,7 +110,7 @@ export default function SettingsScreen() {
         message: isRTL ? `تم قفل المستشعرات الحيوية حصرياً على حساب (${currentUser.fullName}) بنجاح!` : `Biometrics exclusively linked to ${currentUser.fullName}!`,
       });
     } else {
-      // 🛡️ Ensure only the owner can disable their biometric binding
+      //  Ensure only the owner can disable their biometric binding
       const claimCheck = await biometrics.canUserClaimBiometrics(currentUser?.email);
       if (!claimCheck.allowed) {
         showToast({
@@ -272,8 +272,8 @@ export default function SettingsScreen() {
                 <View style={{ marginTop: 6, padding: 8, borderRadius: 8, backgroundColor: '#EF444415', borderWidth: 1, borderColor: '#EF444433' }}>
                   <Text style={{ fontSize: 11, color: '#EF4444', fontWeight: '700', textAlign: isRTL ? 'right' : 'left' }}>
                     {isRTL 
-                      ? `🔒 مستشعرات الهاتف محجوزة لحساب:\n${boundBiometricEmail}` 
-                      : `🔒 Device biometrics claimed by:\n${boundBiometricEmail}`}
+                      ? `مستشعرات الهاتف محجوزة لحساب:\n${boundBiometricEmail}` 
+                      : `Device biometrics claimed by:\n${boundBiometricEmail}`}
                   </Text>
                 </View>
               )}
@@ -281,8 +281,8 @@ export default function SettingsScreen() {
                 <View style={{ marginTop: 6, padding: 8, borderRadius: 8, backgroundColor: '#10B98115', borderWidth: 1, borderColor: '#10B98133' }}>
                   <Text style={{ fontSize: 11, color: '#10B981', fontWeight: '700', textAlign: isRTL ? 'right' : 'left' }}>
                     {isRTL 
-                      ? `✅ البصمة مفعلة ومربوطة بحسابك الحالي (${currentUser.email})` 
-                      : `✅ Biometrics linked to your account (${currentUser.email})`}
+                      ? `البصمة مفعلة ومربوطة بحسابك الحالي (${currentUser.email})` 
+                      : `Biometrics linked to your account (${currentUser.email})`}
                   </Text>
                 </View>
               )}

@@ -104,7 +104,7 @@ function generatePdfHtml(
     .tier-name { font-size: 17px; font-weight: 900; color: #0891B2; }
     .tier-price { font-size: 20px; font-weight: 900; color: #0F172A; }
     .deliverable-item { font-size: 12.5px; color: #334155; margin-bottom: 6px; display: flex; align-items: center; }
-    .deliverable-item::before { content: '✔ '; color: #10B981; font-weight: bold; margin-left: 6px; }
+    .deliverable-item::before { content: '• '; color: #10B981; font-weight: bold; margin-left: 6px; }
     .operational-box { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px; padding: 14px; margin-bottom: 20px; }
     .operational-item { font-size: 12px; color: #78350F; margin-bottom: 5px; }
     .roadmap-step { display: flex; gap: 12px; margin-bottom: 12px; background: #F8FAFC; padding: 10px; border-radius: 8px; }
@@ -120,7 +120,7 @@ function generatePdfHtml(
   <table class="header-table">
     <tr>
       <td>
-        <h1 class="logo-title">APEX SOFTWARE ⚡</h1>
+        <h1 class="logo-title">APEX SOFTWARE</h1>
         <p class="meta-text">${isAr ? 'وكالة الحلول البرمجية وتطوير الأنظمة السحابية المتقدمة' : 'Advanced Cloud & Software Engineering Agency'}</p>
       </td>
       <td style="text-align: ${isAr ? 'left' : 'right'};">
@@ -171,10 +171,10 @@ function generatePdfHtml(
 
   <div class="section-title">${isAr ? 'التكاليف التشغيلية السنوية المستمرة (تدفع للجهات العالمية مباشرة)' : 'Annual Recurring Third-Party Costs'}</div>
   <div class="operational-box">
-    <div class="operational-item">🍏 <strong>${isAr ? 'حساب مطور Apple App Store:' : 'Apple Developer Program:'}</strong> $99 ${isAr ? 'سنوياً لشركة Apple' : 'per year to Apple'}</div>
-    <div class="operational-item">🤖 <strong>${isAr ? 'حساب مطور Google Play Console:' : 'Google Play Console:'}</strong> $25 ${isAr ? 'مرة واحدة مدى الحياة لشركة Google' : 'one-time lifetime fee to Google'}</div>
-    <div class="operational-item">☁️ <strong>${isAr ? 'الخادم السحابي وسيرفر VPS:' : 'Cloud Server / VPS:'}</strong> ${isAr ? 'تبدأ من $10 - $20 شهرياً وفق الاستهلاك الفعلي' : '$10 - $20 / month based on usage'}</div>
-    <div class="operational-item">🌐 <strong>${isAr ? 'حجز النطاق الدولي وشهادة SSL:' : 'Domain & SSL:'}</strong> حوالي $12 - $15 ${isAr ? 'سنوياً' : 'per year'}</div>
+    <div class="operational-item">• <strong>${isAr ? 'حساب مطور Apple App Store:' : 'Apple Developer Program:'}</strong> $99 ${isAr ? 'سنوياً لشركة Apple' : 'per year to Apple'}</div>
+    <div class="operational-item">• <strong>${isAr ? 'حساب مطور Google Play Console:' : 'Google Play Console:'}</strong> $25 ${isAr ? 'مرة واحدة مدى الحياة لشركة Google' : 'one-time lifetime fee to Google'}</div>
+    <div class="operational-item">• <strong>${isAr ? 'الخادم السحابي وسيرفر VPS:' : 'Cloud Server / VPS:'}</strong> ${isAr ? 'تبدأ من $10 - $20 شهرياً وفق الاستهلاك الفعلي' : '$10 - $20 / month based on usage'}</div>
+    <div class="operational-item">• <strong>${isAr ? 'حجز النطاق الدولي وشهادة SSL:' : 'Domain & SSL:'}</strong> حوالي $12 - $15 ${isAr ? 'سنوياً' : 'per year'}</div>
   </div>
 
   <div class="section-title">${isAr ? 'خطة المراحل والجدول الزمني للتسليم' : 'Project Milestones & Delivery Roadmap'}</div>
@@ -1585,7 +1585,7 @@ export default function CopilotScreen() {
                             {analysis 
                               ? (isRTL ? 'خطة المشروع والـ 3 باقات جاهزة' : 'Blueprint Ready') 
                               : (isSpecUnlocked 
-                                  ? (isRTL ? '✨ دراسة الجدوى جاهزة للتوليد' : '✨ Feasibility Ready') 
+                                  ? (isRTL ? 'دراسة الجدوى جاهزة للتوليد' : 'Feasibility Ready') 
                                   : (isRTL ? 'دراسة الجدوى (قيد التجميع مع المستشار)' : 'Feasibility (In Progress)'))}
                           </Text>
                         </View>
@@ -1618,7 +1618,7 @@ export default function CopilotScreen() {
                             ]}
                           >
                             <Text style={[styles.chatCtaBtnText, { fontSize: 11, color: (!analysis && !isSpecUnlocked) ? theme.textMuted : '#0B132B' }]}>
-                              {analysis ? (isRTL ? 'عرض' : 'View') : (isSpecUnlocked ? (isRTL ? 'توليد' : 'Generate') : (isRTL ? 'قيد التجهيز 🔒' : 'Locked 🔒'))}
+                              {analysis ? (isRTL ? 'عرض' : 'View') : (isSpecUnlocked ? (isRTL ? 'توليد' : 'Generate') : (isRTL ? 'قيد التجهيز' : 'Locked'))}
                             </Text>
                           </TouchableOpacity>
                           <TouchableOpacity
@@ -1647,7 +1647,7 @@ export default function CopilotScreen() {
                                 {analysis 
                                   ? (isRTL ? 'خطة المشروع والـ 3 باقات جاهزة' : 'Blueprint & 3 Tiers Ready') 
                                   : (isSpecUnlocked 
-                                      ? (isRTL ? '✨ اكتملت الرؤية! دراسة الجدوى جاهزة' : 'Vision Complete! Ready to Generate') 
+                                      ? (isRTL ? 'اكتملت الرؤية! دراسة الجدوى جاهزة' : 'Vision Complete! Ready to Generate') 
                                       : (isRTL ? 'دراسة الجدوى والـ 3 باقات (قيد التجميع)' : 'Feasibility & 3 Tiers (In Progress)'))}
                               </Text>
                             </View>
@@ -1698,7 +1698,7 @@ export default function CopilotScreen() {
                                     color={(!analysis && !isSpecUnlocked) ? theme.textMuted : "#0B132B"} 
                                   />
                                   <Text style={[styles.chatCtaBtnText, { color: (!analysis && !isSpecUnlocked) ? theme.textMuted : '#0B132B' }]}>
-                                    {analysis ? (isRTL ? 'عرض الخطة' : 'View') : (isSpecUnlocked ? (isRTL ? 'توليد الآن' : 'Generate') : (isRTL ? 'غير مفعّلة 🔒' : 'Locked 🔒'))}
+                                    {analysis ? (isRTL ? 'عرض الخطة' : 'View') : (isSpecUnlocked ? (isRTL ? 'توليد الآن' : 'Generate') : (isRTL ? 'غير مفعّلة' : 'Locked'))}
                                   </Text>
                                 </View>
                               )}
@@ -2807,7 +2807,7 @@ export default function CopilotScreen() {
                   <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="document-text-outline" size={17} color="#38BDF8" />
                     <Text style={{ color: '#38BDF8', fontSize: 13, fontWeight: 'bold' }}>
-                      {isRTL ? '📄 تحميل وحفظ دراسة الجدوى والعقد كـ PDF' : '📄 Export Feasibility & Contract as PDF'}
+                      {isRTL ? 'تحميل وحفظ دراسة الجدوى والعقد كـ PDF' : 'Export Feasibility & Contract as PDF'}
                     </Text>
                   </View>
                 )}

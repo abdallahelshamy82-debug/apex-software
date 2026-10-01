@@ -36,7 +36,7 @@ export default function HomeScreen() {
     SplashScreen.hideAsync().catch(() => {});
   }, []);
 
-  // 🚀 Persistent Login: Auto-route to Dashboard on launch if user is already authenticated
+  //  Persistent Login: Auto-route to Dashboard on launch if user is already authenticated
   useEffect(() => {
     if (!hasAutoRedirectedOnLaunch && isAppReady && currentUser) {
       hasAutoRedirectedOnLaunch = true;
@@ -47,7 +47,7 @@ export default function HomeScreen() {
     }
   }, [isAppReady, currentUser]);
 
-  // 🔔 Dynamic Notifications: only count if user is logged in
+  //  Dynamic Notifications: only count if user is logged in
   useEffect(() => {
     if (currentUser) {
       // Don't show fake notifications, start clean
@@ -148,7 +148,7 @@ export default function HomeScreen() {
               <View style={[styles.heroBadge, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Ionicons name="rocket-outline" size={14} color="#38BDF8" />
                 <Text style={styles.heroBadgeText}>
-                  {isRTL ? '✨ أبكس سوفتوير • تقنيات الجيل القادم' : '✨ APEX SOFTWARE STUDIO • NEXT-GEN TECH'}
+                  {isRTL ? 'أبكس سوفتوير • تقنيات الجيل القادم' : 'APEX SOFTWARE STUDIO • NEXT-GEN TECH'}
                 </Text>
               </View>
             </AnimatedReveal>

@@ -50,7 +50,7 @@ function initTransporter(user, pass, host, port) {
         greetingTimeout: 10000,
         socketTimeout: 15000
       });
-      console.log(`📧 Email service initialized with Custom SMTP (${host})`);
+      console.log(` Email service initialized with Custom SMTP (${host})`);
       return true;
     } else if (effectiveUser && effectivePass) {
       GMAIL_USER = effectiveUser;
@@ -67,7 +67,7 @@ function initTransporter(user, pass, host, port) {
         greetingTimeout: 10000,
         socketTimeout: 15000
       });
-      console.log(`📧 Email service initialized with Gmail (${GMAIL_USER})`);
+      console.log(` Email service initialized with Gmail (${GMAIL_USER})`);
       return true;
     } else {
       transporter = null;
@@ -83,7 +83,7 @@ function initTransporter(user, pass, host, port) {
 if ((SMTP_HOST && GMAIL_USER && GMAIL_PASS) || (GMAIL_USER && GMAIL_PASS)) {
   initTransporter(GMAIL_USER, GMAIL_PASS, SMTP_HOST, SMTP_PORT);
 } else {
-  console.log('ℹ️ Gmail credentials not set (GMAIL_USER, GMAIL_PASS). Email service running in simulation / preview mode.');
+  console.log('ℹ Gmail credentials not set (GMAIL_USER, GMAIL_PASS). Email service running in simulation / preview mode.');
 }
 
 // Common email wrapper template with Apex Software branding
@@ -111,7 +111,7 @@ const getHtmlTemplate = (title, contentHtml) => `
 <body>
   <div class="container">
     <div class="header">
-      <h1>APEX DEVS ⚡</h1>
+      <h1>APEX DEVS</h1>
       <p>وكالة تطوير البرمجيات والتطبيقات الذكية</p>
     </div>
     <div class="body">
@@ -169,17 +169,17 @@ async function sendMail({ to, subject, html, customText }) {
       });
       const data = await res.json();
       if (res.ok && data.id) {
-        console.log(`✅ [Resend API] Email delivered to ${to} (ID: ${data.id})`);
+        console.log(` [Resend API] Email delivered to ${to} (ID: ${data.id})`);
         emailRecord.status = 'delivered';
         emailRecord.messageId = data.id;
         sentEmailsHistory.unshift(emailRecord);
         if (sentEmailsHistory.length > 50) sentEmailsHistory.pop();
         return { success: true, messageId: data.id, delivered: true, provider: 'resend' };
       } else {
-        console.warn(`⚠️ [Resend API Warning] ${data.message || JSON.stringify(data)}, falling back to SMTP...`);
+        console.warn(` [Resend API Warning] ${data.message || JSON.stringify(data)}, falling back to SMTP...`);
       }
     } catch (err) {
-      console.warn(`⚠️ [Resend API Error] ${err.message}, falling back to SMTP...`);
+      console.warn(` [Resend API Error] ${err.message}, falling back to SMTP...`);
     }
   }
 
@@ -204,21 +204,21 @@ async function sendMail({ to, subject, html, customText }) {
           'Feedback-ID': 'auth:apex:production'
         }
       });
-      console.log(`✅ [Gmail/SMTP] Real email delivered to ${to} (ID: ${info.messageId})`);
+      console.log(` [Gmail/SMTP] Real email delivered to ${to} (ID: ${info.messageId})`);
       emailRecord.status = 'delivered';
       emailRecord.messageId = info.messageId;
       sentEmailsHistory.unshift(emailRecord);
       if (sentEmailsHistory.length > 50) sentEmailsHistory.pop();
       return { success: true, messageId: info.messageId, delivered: true, provider: 'smtp' };
     } catch (err) {
-      console.error(`❌ [SMTP Error] Failed to send email to ${to}:`, err.message);
+      console.error(` [SMTP Error] Failed to send email to ${to}:`, err.message);
       emailRecord.status = 'failed';
       emailRecord.error = err.message;
       sentEmailsHistory.unshift(emailRecord);
       return { success: false, error: err.message, delivered: false };
     }
   } else {
-    console.log('\n================== 📧 [EMAIL PREVIEW / SIMULATION] ==================');
+    console.log('\n==================  [EMAIL PREVIEW / SIMULATION] ==================');
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
     console.log(`Content Title: ${subject}`);
@@ -233,7 +233,7 @@ async function sendMail({ to, subject, html, customText }) {
 
 // 1. Welcome Email
 async function sendWelcomeEmail({ to, fullName }) {
-  const title = `أهلاً بك في عائلة Apex، ${fullName || 'عميلنا العزيز'}! 👋`;
+  const title = `أهلاً بك في عائلة Apex، ${fullName || 'عميلنا العزيز'}`;
   const contentHtml = `
     <p>يسعدنا انضمامك إلى بوابة عملاء <strong>Apex Software</strong>.</p>
     <p>من خلال حسابك يمكنك:</p>
@@ -247,7 +247,7 @@ async function sendWelcomeEmail({ to, fullName }) {
   `;
   return sendMail({
     to,
-    subject: 'مرحباً بك في Apex Software 🚀',
+    subject: 'مرحباً بك في Apex Software',
     html: getHtmlTemplate(title, contentHtml)
   });
 }
@@ -281,14 +281,14 @@ async function sendProjectUpdateEmail({ to, fullName, projectName, projectPhase,
   `;
   return sendMail({
     to,
-    subject: `🔔 تحديث جديد في مشروعك (${projectName || 'Apex'}) - نسبة الإنجاز ${progressPercent}%`,
+    subject: `تحديث جديد في مشروعك (${projectName || 'Apex'}) - نسبة الإنجاز ${progressPercent}%`,
     html: getHtmlTemplate(title, contentHtml)
   });
 }
 
 // 3. Quote Confirmation Email
 async function sendQuoteConfirmationEmail({ to, fullName, details }) {
-  const title = 'تم استلام طلبك لعرض السعر بنجاح 📋';
+  const title = 'تم استلام طلبك لعرض السعر بنجاح';
   const platforms = Array.isArray(details.platforms) ? details.platforms.join(', ') : 'منصات متعددة';
   const contentHtml = `
     <p>مرحباً ${fullName || 'عميلنا العزيز'}،</p>
@@ -304,13 +304,13 @@ async function sendQuoteConfirmationEmail({ to, fullName, details }) {
   `;
   return sendMail({
     to,
-    subject: '📋 تأكيد استلام عرض السعر - Apex Software',
+    subject: 'تأكيد استلام عرض السعر - Apex Software',
     html: getHtmlTemplate(title, contentHtml)
   });
 }
 
 function getWelcomeHtml(fullName = 'عميلنا العزيز') {
-  const title = `أهلاً بك في عائلة Apex، ${fullName}! 👋`;
+  const title = `أهلاً بك في عائلة Apex، ${fullName}`;
   const contentHtml = `
     <p>يسعدنا انضمامك إلى بوابة عملاء <strong>Apex Software</strong>.</p>
     <p>من خلال حسابك يمكنك:</p>
@@ -391,7 +391,7 @@ async function sendVerificationEmail({ to, fullName, code }) {
 }
 
 async function sendNewInvoiceEmail({ to, fullName, invoiceNumber, amount, title: invoiceTitle }) {
-  const title = `📄 تم إصدار فاتورة جديدة #${invoiceNumber}`;
+  const title = `تم إصدار فاتورة جديدة #${invoiceNumber}`;
   const contentHtml = `
     <p>مرحباً ${fullName}،</p>
     <p>تم إصدار فاتورة جديدة لحسابك في <strong>Apex Software</strong>:</p>
@@ -416,12 +416,12 @@ async function sendNewInvoiceEmail({ to, fullName, invoiceNumber, amount, title:
 }
 
 async function sendPaymentConfirmedEmail({ to, fullName, invoiceNumber, amount }) {
-  const title = `✅ تأكيد سداد الفاتورة #${invoiceNumber}`;
+  const title = `تأكيد سداد الفاتورة #${invoiceNumber}`;
   const contentHtml = `
     <p>مرحباً ${fullName}،</p>
     <p>يسعدنا إبلاغك بأنه تم تأكيد واعتماد دفعتك بنجاح للفاتورة <strong>#${invoiceNumber}</strong> بمبلغ <strong>$${amount}</strong>.</p>
     <div class="card-box" style="border-color: #10b981; background: #ecfdf5;">
-      <p style="color: #065f46; font-weight: bold; margin: 0;">🎉 شكراً لثقتكم بنا! جاري استكمال مراحل مشروعك بأعلى درجات الاحترافية.</p>
+      <p style="color: #065f46; font-weight: bold; margin: 0;">شكراً لثقتكم بنا! جاري استكمال مراحل مشروعك بأعلى درجات الاحترافية.</p>
     </div>
   `;
   const html = getHtmlTemplate(title, contentHtml);
@@ -433,18 +433,18 @@ if (sentEmailsHistory.length === 0) {
   sentEmailsHistory.push({
     id: 'demo-proj-update',
     to: 'abdallahelshamy82@gmail.com',
-    subject: '🔔 تحديث جديد في مشروعك (تطبيق المتجر الإلكتروني) - نسبة الإنجاز 50%',
+    subject: 'تحديث جديد في مشروعك (تطبيق المتجر الإلكتروني) - نسبة الإنجاز 50%',
     timestamp: new Date().toISOString(),
     status: 'simulated',
-    html: getProjectUpdateHtml('تطبيق المتجر الإلكتروني الذكي', '💻 قيد البرمجة والتطوير', 50, 'عبدالله الشامي')
+    html: getProjectUpdateHtml('تطبيق المتجر الإلكتروني الذكي', 'قيد البرمجة والتطوير', 50, 'عبدالله الشامي')
   });
   sentEmailsHistory.push({
     id: 'demo-quote-confirm',
     to: 'auabdullah973@gmail.com',
-    subject: '📋 تأكيد استلام عرض السعر - Apex Software',
+    subject: 'تأكيد استلام عرض السعر - Apex Software',
     timestamp: new Date(Date.now() - 3600000).toISOString(),
     status: 'simulated',
-    html: getHtmlTemplate('تم استلام طلبك لعرض السعر بنجاح 📋', `
+    html: getHtmlTemplate('تم استلام طلبك لعرض السعر بنجاح', `
       <p>مرحباً <strong>عميلنا العزيز</strong>،</p>
       <p>شكراً لاستخدامك <strong>المُسعّر الذكي</strong> الخاص بـ Apex Software. لقد تم استلام تفاصيل مشروعك وسيقوم فريقنا بمراجعتها والتواصل معك.</p>
       <div class="card-box">

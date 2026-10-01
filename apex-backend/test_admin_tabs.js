@@ -4,7 +4,7 @@ const fs = require('fs');
 const ARTIFACTS_DIR = 'C:\\Users\\CYBER-TECH\\.gemini\\antigravity\\brain\\79369dba-95f8-4045-96ae-4156129ab71e';
 
 async function testTabsAndAI() {
-  console.log('🚀 Testing Admin Tabs & AI Copilot Live Generation...');
+  console.log(' Testing Admin Tabs & AI Copilot Live Generation...');
   const { default: puppeteer } = await import('puppeteer-core');
   
   const loginRes = await fetch('http://localhost:3000/api/login', {
@@ -34,7 +34,7 @@ async function testTabsAndAI() {
   }, { token: authData.token, user: authData.user });
 
   // 1. Admin Dashboard Tabs
-  console.log('1️⃣ Navigating to Admin Dashboard...');
+  console.log('1⃣ Navigating to Admin Dashboard...');
   await page.goto('http://localhost:8081/admin', { waitUntil: 'networkidle2', timeout: 30000 });
   await new Promise(r => setTimeout(r, 4000));
 
@@ -47,7 +47,7 @@ async function testTabsAndAI() {
   });
   await new Promise(r => setTimeout(r, 3000));
   await page.screenshot({ path: path.join(ARTIFACTS_DIR, '06_admin_support_tab.png') });
-  console.log('📸 Saved 06_admin_support_tab.png');
+  console.log(' Saved 06_admin_support_tab.png');
 
   // Click on "الفواتير" tab
   console.log('Clicking "الفواتير" tab...');
@@ -58,10 +58,10 @@ async function testTabsAndAI() {
   });
   await new Promise(r => setTimeout(r, 3000));
   await page.screenshot({ path: path.join(ARTIFACTS_DIR, '07_admin_invoices_tab.png') });
-  console.log('📸 Saved 07_admin_invoices_tab.png');
+  console.log(' Saved 07_admin_invoices_tab.png');
 
   // 2. AI Copilot Generation
-  console.log('2️⃣ Navigating to AI Copilot...');
+  console.log('2⃣ Navigating to AI Copilot...');
   await page.goto('http://localhost:8081/copilot', { waitUntil: 'networkidle2', timeout: 30000 });
   await new Promise(r => setTimeout(r, 4000));
 
@@ -78,9 +78,9 @@ async function testTabsAndAI() {
   await new Promise(r => setTimeout(r, 12000));
 
   await page.screenshot({ path: path.join(ARTIFACTS_DIR, '08_copilot_ai_response.png') });
-  console.log('📸 Saved 08_copilot_ai_response.png');
+  console.log(' Saved 08_copilot_ai_response.png');
 
-  console.log('🎉 Tabs & AI Copilot Test Completed Successfully!');
+  console.log(' Tabs & AI Copilot Test Completed Successfully!');
 }
 
 testTabsAndAI().catch(console.error);

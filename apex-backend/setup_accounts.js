@@ -29,13 +29,13 @@ async function setup() {
       if (user) {
         db.run(`UPDATE users SET fullName = 'AbdAllah Elshamy (Admin)', role = 'admin', company = 'Apex Software Agency', password = ? WHERE id = ?`,
           [hashedPassword, user.id], (updErr) => {
-            console.log('✅ Admin 1 updated: abdallahelshamy82@gmail.com (Pass: 123456)');
+            console.log(' Admin 1 updated: abdallahelshamy82@gmail.com (Pass: 123456)');
             resolve();
           });
       } else {
         db.run(`INSERT INTO users (fullName, email, company, password, role) VALUES ('AbdAllah Elshamy (Admin)', 'abdallahelshamy82@gmail.com', 'Apex Software Agency', ?, 'admin')`,
           [hashedPassword], (insErr) => {
-            console.log('✅ Admin 1 created: abdallahelshamy82@gmail.com (Pass: 123456)');
+            console.log(' Admin 1 created: abdallahelshamy82@gmail.com (Pass: 123456)');
             resolve();
           });
       }
@@ -55,20 +55,20 @@ async function setup() {
           phone = '+20 100 987 6543',
           password = ?,
           projectName = 'تطبيق متجر إلكتروني متكامل',
-          projectPhase = '🎨 التصميم UI/UX واجهات المستخدم',
+          projectPhase = 'التصميم UI/UX واجهات المستخدم',
           projectProgress = 40,
           projectTasks = ?,
           projectDeliverables = ?
           WHERE id = ?`,
           [hashedPassword, sampleTasks, sampleDeliverables, user.id], (updErr) => {
-            console.log('✅ Client updated: auabdullah973@gmail.com (Pass: 123456)');
+            console.log('Client updated: auabdullah973@gmail.com (Pass: 123456)');
             createClientOrderData(user.id, email, resolve);
           });
       } else {
         db.run(`INSERT INTO users (fullName, email, company, phone, password, role, projectName, projectPhase, projectProgress, projectTasks, projectDeliverables)
-          VALUES ('Abdullah (Client)', ?, 'Abdullah Tech', '+20 100 987 6543', ?, 'client', 'تطبيق متجر إلكتروني متكامل', '🎨 التصميم UI/UX واجهات المستخدم', 40, ?, ?)`,
+          VALUES ('Abdullah (Client)', ?, 'Abdullah Tech', '+20 100 987 6543', ?, 'client', 'تطبيق متجر إلكتروني متكامل', 'التصميم UI/UX واجهات المستخدم', 40, ?, ?)`,
           [email, hashedPassword, sampleTasks, sampleDeliverables], function(insErr) {
-            console.log('✅ Client created: auabdullah973@gmail.com (Pass: 123456)');
+            console.log('Client created: auabdullah973@gmail.com (Pass: 123456)');
             createClientOrderData(this.lastID, email, resolve);
           });
       }
@@ -105,7 +105,7 @@ function createClientInvoice(userId, quoteId, done) {
       db.run(`INSERT INTO invoices (userId, quoteId, invoiceNumber, title, amount, date, status, notes)
         VALUES (?, ?, 'INV-109281', 'دفعة التعاقد الأولى وتصميم الواجهات (50%)', 650, 'Sep 7, 2026', 'PENDING', 'مستحقة السداد عبر فودافون كاش أو انستاباي أو التحويل البنكي')`,
         [userId, quoteId], () => {
-          console.log('✅ Created initial project quote & invoice for client');
+          console.log(' Created initial project quote & invoice for client');
           done();
         });
     } else {

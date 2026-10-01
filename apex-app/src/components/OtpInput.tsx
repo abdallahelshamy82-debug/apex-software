@@ -12,7 +12,7 @@ interface OtpInputProps {
   onFocus?: () => void;
 }
 
-// 🛡️ Helper: Convert Arabic-Indic (١ ٢ ٣) and Persian (۱ ۲ ۳) numerals to standard ASCII (1 2 3)
+//  Helper: Convert Arabic-Indic (١ ٢ ٣) and Persian (۱ ۲ ۳) numerals to standard ASCII (1 2 3)
 const toAsciiDigits = (str: string): string => {
   if (!str) return '';
   return str
@@ -113,7 +113,7 @@ export function OtpInput({
   };
 
   return (
-    // ⚠️ NOTE: Numbers and OTP codes are ALWAYS rendered Left-to-Right (LTR) worldwide
+    //  NOTE: Numbers and OTP codes are ALWAYS rendered Left-to-Right (LTR) worldwide
     <View style={styles.container}>
       {code.map((digit, index) => {
         const isFocused = focusedIndex === index;

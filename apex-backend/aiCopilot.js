@@ -108,6 +108,7 @@ CRITICAL ARCHITECTURAL & PRICING RULES:
      * If the client asked for a complete on-demand system (e.g. delivery, ride hailing, marketplace):
        -> Include the required platforms (Customer App, Courier/Partner App, Web Super Admin).
      * NEVER add extra platforms, mobile apps, or hardware features that contradict the user's explicit scope!
+4. STRICT NO-EMOJI CONSTRAINT: You must NEVER use any emojis or emoji-like unicode symbols anywhere in the JSON response (in projectName, tagline, summary, features, screens, milestones, etc.). The text must remain strictly formal, professional, and completely free of emojis.
 
 Avoid generic boilerplates. Provide realistic numbers, specific local competitors, actual risks, and tailored screens according to their unique idea.
 You MUST output ONLY a well-formed JSON object (no markdown code blocks, no explanation text).
@@ -440,6 +441,7 @@ Core Behavioral Guidelines:
      b) OR after sufficient interactive consultation (usually after 2 to 4 back-and-forth messages) where the core workflow, platforms (web vs mobile), and user types have been clearly explained and understood!
    - DO NOT set "readyForSpec" to true on the very first message unless the user provided a full, multi-paragraph comprehensive technical specification in that single message.
    - NEVER set "readyForSpec" to true for greetings, questions about your identity/name, general pricing questions, or complaints!
+10. STRICT NO-EMOJI CONSTRAINT: You must NEVER use any emojis or emoji symbols anywhere in your replies ("reply") or in the suggestion chips ("suggestions"). Keep the text formal, dignified, professional, and strictly free of emojis under all circumstances.
 
 Language: ${language === 'ar' ? 'Professional, natural Modern Arabic (العربية الفصحى التقنية الراقية والودودة بطابع مهندس معمار برمجيات خبير)' : 'English'}.
 You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, no wrapping text):
@@ -617,7 +619,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
 
   // 1. Identity & Name Questions ("انت مين", "اسمك ايه", "اقولك ايه عشان معرفش اسمك")
   if (ent.isIdentity) {
-    reply = 'أهلاً بك يا فندم! أنا **مستشار Apex البرمجي الذكي (Apex Software Architect)**.\n\nتقدر تناديني **"مستشار Apex"** أو **"بشمهندس"** زي ما تحب! 😊\n\nأنا مهندسك المعماري التقني هنا في شركة **Apex Software**: أسمع فكرة تطبيقك، أساعدك في اختيار أفضل لغات البرمجة والمعمارية (React Native، Node.js، الخرائط، الدفع الإلكتروني)، وأستخرج لك دراسة جدوى فنية و3 باقات استثمارية واضحة بالتكلفة والمدة.\n\nقول لي، هل في فكرة تطبيق أو مشروع يدور في بالك تحب نبدأ ندردش فيها ونحللها؟';
+    reply = 'أهلاً بك يا فندم! أنا **مستشار Apex البرمجي الذكي (Apex Software Architect)**.\n\nتقدر تناديني **"مستشار Apex"** أو **"بشمهندس"** زي ما تحب!\n\nأنا مهندسك المعماري التقني هنا في شركة **Apex Software**: أسمع فكرة تطبيقك، أساعدك في اختيار أفضل لغات البرمجة والمعمارية (React Native، Node.js، الخرائط، الدفع الإلكتروني)، وأستخرج لك دراسة جدوى فنية و3 باقات استثمارية واضحة بالتكلفة والمدة.\n\nقول لي، هل في فكرة تطبيق أو مشروع يدور في بالك تحب نبدأ ندردش فيها ونحللها؟';
     suggestions = [
       'عندي فكرة تطبيق وأريد استشارتك فيها',
       'ما هي الخدمات التي تقدمها شركة Apex؟',
@@ -627,7 +629,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   }
   // 2. Apology / Misunderstanding / Complaint Handling ("مش فاهمني", "انت مش فاهم", "محللتش")
   else if (ent.isComplaint) {
-    reply = 'أعتذر منك بشدة يا فندم، حقك عليّ تماماً! 🙏\n\nأنا هنا الآن بكامل تركيزي معك دون أي افتراضات مسبقة. تفضل باختصار أو بالتفصيل: ما هي الفكرة أو السؤال الذي يدور في ذهنك؟ وسأجيبك عليه بدقة كمهندس برمجيات.';
+    reply = 'أعتذر منك بشدة يا فندم، حقك عليّ تماماً!\n\nأنا هنا الآن بكامل تركيزي معك دون أي افتراضات مسبقة. تفضل باختصار أو بالتفصيل: ما هي الفكرة أو السؤال الذي يدور في ذهنك؟ وسأجيبك عليه بدقة كمهندس برمجيات.';
     suggestions = [
       'أريد شرح فكرة تطبيقي بالتفصيل',
       'عندي استفسار عن تكلفة تطبيق موبايل',
@@ -668,7 +670,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   }
   // 6. General Pricing Inquiries ("اسعاركم كام", "التكلفة كام", "بكام")
   else if (ent.isPricing && !ent.hasRealProjectIdea) {
-    reply = 'في **Apex Software** نعتمد فلسفة الهندسة الرشيقة (Lean Architecture): نبدأ معك بأقل ميزانية ممكنة لإطلاق النموذج الأولي (MVP) لتجربة السوق والتحقق من فكرتك بأقل مخاطرة مالية، مع شفافية كاملة في كافة التكاليف:\n\n• **باقة الانطلاق السريع (MVP):** تبدأ من 18,000 - 28,000 ج.م / $380 - $600 (أقل تكلفة لتطبيق عملي متقن لاختبار الإقبال في السوق بأقل مخاطرة).\n• **باقة النمو المتكاملة (Pro):** تبدأ من 45,000 - 65,000 ج.م / $950 - $1,400 (تطبيقات متكاملة مع تتبع GPS ودفع إلكتروني ولوحة تحكم).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية Microservices متطورة.\n\n⚠️ **الشفافية في التكاليف التشغيلية السنوية (رسوم الطرف الثالث):**\nلضمان دراستك للمشروع باحترافية، نوضح لك التكاليف التي تدفعها مباشرة للشركات الخارجية:\n- **تطبيق آبل (iOS):** حساب مطور أبل ($99 سنوياً تدفع لشركة Apple مباشرة لإبقاء التطبيق على App Store).\n- **تطبيق أندرويد:** حساب مطور جوجل ($25 لمرة واحدة مدى الحياة تدفع لـ Google).\n- **السيرفر والاستضافة السحابية:** تبدأ من $10 - $20 شهرياً وتزيد تدريجياً مع نمو الزوار.\n- **الدومين وشهادة الأمان:** حوالي $12 - $15 سنوياً للنطاق الدولي.\n\nما هي فكرة تطبيقك التي تود حساب تكلفتها بدقة؟';
+    reply = 'في **Apex Software** نعتمد فلسفة الهندسة الرشيقة (Lean Architecture): نبدأ معك بأقل ميزانية ممكنة لإطلاق النموذج الأولي (MVP) لتجربة السوق والتحقق من فكرتك بأقل مخاطرة مالية، مع شفافية كاملة في كافة التكاليف:\n\n• **باقة الانطلاق السريع (MVP):** تبدأ من 18,000 - 28,000 ج.م / $380 - $600 (أقل تكلفة لتطبيق عملي متقن لاختبار الإقبال في السوق بأقل مخاطرة).\n• **باقة النمو المتكاملة (Pro):** تبدأ من 45,000 - 65,000 ج.م / $950 - $1,400 (تطبيقات متكاملة مع تتبع GPS ودفع إلكتروني ولوحة تحكم).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية Microservices متطورة.\n\n**الشفافية في التكاليف التشغيلية السنوية (رسوم الطرف الثالث):**\nلضمان دراستك للمشروع باحترافية، نوضح لك التكاليف التي تدفعها مباشرة للشركات الخارجية:\n- **تطبيق آبل (iOS):** حساب مطور أبل ($99 سنوياً تدفع لشركة Apple مباشرة لإبقاء التطبيق على App Store).\n- **تطبيق أندرويد:** حساب مطور جوجل ($25 لمرة واحدة مدى الحياة تدفع لـ Google).\n- **السيرفر والاستضافة السحابية:** تبدأ من $10 - $20 شهرياً وتزيد تدريجياً مع نمو الزوار.\n- **الدومين وشهادة الأمان:** حوالي $12 - $15 سنوياً للنطاق الدولي.\n\nما هي فكرة تطبيقك التي تود حساب تكلفتها بدقة؟';
     suggestions = [
       'أريد باقة MVP بأقل تكلفة ممكنة',
       'تطبيق موبايل متكامل للآيفون والأندرويد',
