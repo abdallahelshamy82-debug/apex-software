@@ -67,7 +67,14 @@ export default function AdminDashboardScreen() {
   const [showNewInvoiceModal, setShowNewInvoiceModal] = useState(false);
   const [selectedUserForInvoice, setSelectedUserForInvoice] = useState<any>(null);
   const [newInvTitle, setNewInvTitle] = useState('دفعة أولى من التعاقد (50%)');
-  const [newInvAmount, setNewInvAmount] = useState('500');
+  const [newInvAmount, setNewInvAmount] = useState('5000');
+  const [newInvCurrency, setNewInvCurrency] = useState<'EGP' | 'USD' | 'SAR'>('EGP');
+  const [invVodafoneCash, setInvVodafoneCash] = useState('01012685763');
+  const [invInstapay, setInvInstapay] = useState('abdallah@instapay');
+  const [invBankName, setInvBankName] = useState('CIB - البنك التجاري الدولي');
+  const [invBankAccount, setInvBankAccount] = useState('100029384729');
+  const [invBankIban, setInvBankIban] = useState('EG1200000000100029384729');
+  const [saveAccountsAsDefault, setSaveAccountsAsDefault] = useState(false);
   const [newInvNotes, setNewInvNotes] = useState('');
   const [creatingInv, setCreatingInv] = useState(false);
 
@@ -122,7 +129,14 @@ export default function AdminDashboardScreen() {
       if (configRes.rawUser) setGmailUser(configRes.rawUser);
     }
     if (sentRes.success) setSentEmails(sentRes.emails);
-    if (agencyRes?.success && agencyRes.settings) setAgencySettings(agencyRes.settings);
+    if (agencyRes?.success && agencyRes.settings) {
+      setAgencySettings(agencyRes.settings);
+      if (agencyRes.settings.vodafoneCash) setInvVodafoneCash(agencyRes.settings.vodafoneCash);
+      if (agencyRes.settings.instapayHandle) setInvInstapay(agencyRes.settings.instapayHandle);
+      if (agencyRes.settings.bankName) setInvBankName(agencyRes.settings.bankName);
+      if (agencyRes.settings.bankAccount) setInvBankAccount(agencyRes.settings.bankAccount);
+      if (agencyRes.settings.bankIban) setInvBankIban(agencyRes.settings.bankIban);
+    }
     if (analyticsRes?.success && analyticsRes.analytics) setAnalytics(analyticsRes.analytics);
     setLoading(false);
   }, []);
@@ -243,26 +257,70 @@ export default function AdminDashboardScreen() {
 
   const handleCreateManualInvoice = async () => {
     if (!selectedUserForInvoice || !newInvAmount) {
-      Alert.alert('Error', isRTL ? 'يرجى اختيار العميل وتحديد المبلغ' : 'Please select client and amount');
+      const msg = isRTL ? 'يرجى اختيار العميل وتحديد المبلغ المطلوب' : 'Please select client and specify amount';
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.alert(msg);
+      else Alert.alert('Error', msg);
       return;
     }
 
     setCreatingInv(true);
-    const res = await api.createInvoice({
-      userId: selectedUserForInvoice.id,
-      title: newInvTitle,
-      amount: parseInt(newInvAmount) || 100,
-      notes: newInvNotes
-    });
-    setCreatingInv(false);
 
-    if (res.success) {
-      setShowNewInvoiceModal(false);
-      setSelectedUserForInvoice(null);
-      setNewInvAmount('');
-      setNewInvNotes('');
-      loadData();
-      Alert.alert(isRTL ? 'تم بنجاح' : 'Success', isRTL ? 'تم إصدار الفاتورة وإشعار العميل.' : 'Invoice issued successfully.');
+    try {
+      // 1. If admin opted to save accounts as default, update agency settings
+      if (saveAccountsAsDefault) {
+        await api.updateAgencySettings({
+          companyName: agencySettings?.companyName || 'Apex Software',
+          companyPhone: agencySettings?.companyPhone || '01012685763',
+          companyEmail: agencySettings?.companyEmail || 'contact@apex.com',
+          vodafoneCash: invVodafoneCash,
+          instapayHandle: invInstapay,
+          bankName: invBankName,
+          bankAccount: invBankAccount,
+          bankIban: invBankIban,
+        });
+      }
+
+      // 2. Format payment accounts into invoice notes so client sees them permanently
+      const paymentInstructions = [
+        isRTL ? 'طرق وأرقام السداد المعتمدة لهذه الفاتورة:' : 'Approved payment methods for this invoice:',
+        invVodafoneCash ? `• فودافون كاش: ${invVodafoneCash}` : null,
+        invInstapay ? `• إنستاباي: ${invInstapay}` : null,
+        invBankAccount ? `• تحويل بنكي (${invBankName}): ${invBankAccount}` : null,
+        invBankIban ? `• الآيبان (IBAN): ${invBankIban}` : null,
+        newInvNotes ? `\nملاحظات: ${newInvNotes}` : null,
+      ].filter(Boolean).join('\n');
+
+      const amountNum = parseFloat(newInvAmount) || 100;
+      const res = await api.createInvoice({
+        userId: selectedUserForInvoice.id,
+        title: `${newInvTitle} (${newInvCurrency})`,
+        amount: amountNum,
+        notes: paymentInstructions
+      });
+
+      setCreatingInv(false);
+
+      if (res.success) {
+        setShowNewInvoiceModal(false);
+        setSelectedUserForInvoice(null);
+        setNewInvAmount('5000');
+        setNewInvNotes('');
+        loadData();
+        const successMsg = isRTL 
+          ? `تم إصدار الفاتورة بقيمة ${amountNum} ${newInvCurrency} مع أرقام وحسابات السداد وإشعار العميل بنجاح!`
+          : 'Invoice issued with payment accounts successfully!';
+        if (Platform.OS === 'web' && typeof window !== 'undefined') window.alert(successMsg);
+        else Alert.alert('Success', successMsg);
+      } else {
+        const errMsg = res.message || (isRTL ? 'حدث خطأ أثناء إصدار الفاتورة' : 'Failed to create invoice');
+        if (Platform.OS === 'web' && typeof window !== 'undefined') window.alert(errMsg);
+        else Alert.alert('Error', errMsg);
+      }
+    } catch (e: any) {
+      setCreatingInv(false);
+      const errMsg = e.message || 'Error creating invoice';
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.alert(errMsg);
+      else Alert.alert('Error', errMsg);
     }
   };
 
@@ -1357,45 +1415,313 @@ export default function AdminDashboardScreen() {
       {/* Manual Invoice Creation Modal */}
       <Modal visible={showNewInvoiceModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <Text style={{ color: theme.text, fontSize: 18, fontWeight: "bold" }}>
-                {isRTL ? "إنشاء فاتورة جديدة" : "Create New Invoice"}
-              </Text>
-              <TouchableOpacity onPress={() => setShowNewInvoiceModal(false)}>
-                <Ionicons name="close" size={24} color={theme.textMuted} />
+          <View style={[styles.modalContent, { backgroundColor: theme.card, borderColor: theme.border, maxHeight: '90%', maxWidth: 540 }]}>
+            
+            {/* Modal Header */}
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, borderBottomWidth: 1, borderBottomColor: theme.border, paddingBottom: 12 }}>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: `${theme.primary}20`, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="receipt" size={18} color={theme.primary} />
+                </View>
+                <View style={{ alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
+                  <Text style={{ color: theme.text, fontSize: 16, fontWeight: 'bold' }}>
+                    {isRTL ? 'إصدار فاتورة جديدة للعميل' : 'Issue New Invoice'}
+                  </Text>
+                  <Text style={{ color: theme.textMuted, fontSize: 11 }}>
+                    {isRTL ? 'حدد المبلغ وأرقام الحسابات المعتمدة للسداد' : 'Specify amount and payment accounts'}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setShowNewInvoiceModal(false)} style={{ padding: 4 }}>
+                <Ionicons name="close" size={22} color={theme.textMuted} />
               </TouchableOpacity>
             </View>
-            <Text style={{ color: theme.textMuted, fontSize: 13, marginBottom: 6, textAlign: isRTL ? "right" : "left" }}>
-              {isRTL ? "اختر العميل:" : "Select Client:"}
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                {users.filter(u => u.role !== "admin").map(u => (
-                  <TouchableOpacity
-                    key={u.id}
-                    onPress={() => setSelectedUserForInvoice(u)}
-                    style={{
-                      paddingVertical: 6,
-                      paddingHorizontal: 12,
-                      borderRadius: 10,
-                      borderWidth: 1,
-                      backgroundColor: selectedUserForInvoice?.id === u.id ? theme.primary : theme.bg,
-                      borderColor: selectedUserForInvoice?.id === u.id ? theme.primary : theme.border,
-                    }}
-                  >
-                    <Text style={{ fontSize: 13, color: selectedUserForInvoice?.id === u.id ? "#FFF" : theme.text }}>
-                      {u.fullName || u.email}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-            <TouchableOpacity style={[styles.confirmModalBtn, { backgroundColor: theme.primary }]} onPress={handleCreateManualInvoice}>
-              <Text style={{ color: "#FFF", fontSize: 14, fontWeight: "bold" }}>
-                {isRTL ? "متابعة وإنشاء" : "Continue & Create"}
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ flexGrow: 0 }}>
+              
+              {/* 1. Client Selector */}
+              <Text style={{ color: theme.text, fontSize: 13, fontWeight: 'bold', marginBottom: 6, textAlign: isRTL ? 'right' : 'left' }}>
+                {isRTL ? '1. العميل المستهدف:' : '1. Select Client:'}
               </Text>
-            </TouchableOpacity>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8 }}>
+                  {users.filter(u => u.role !== 'admin').map(u => {
+                    const isSelected = selectedUserForInvoice?.id === u.id;
+                    return (
+                      <TouchableOpacity
+                        key={u.id}
+                        onPress={() => {
+                          setSelectedUserForInvoice(u);
+                          if (u.projectName) {
+                            setNewInvTitle(isRTL ? `دفعة مشروع: ${u.projectName}` : `Invoice for: ${u.projectName}`);
+                          }
+                        }}
+                        style={{
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                          borderRadius: 10,
+                          borderWidth: 1.5,
+                          backgroundColor: isSelected ? `${theme.primary}20` : theme.bg,
+                          borderColor: isSelected ? theme.primary : theme.border,
+                          alignItems: isRTL ? 'flex-end' : 'flex-start',
+                        }}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: isSelected ? 'bold' : 'normal', color: isSelected ? theme.primary : theme.text }}>
+                          {u.fullName || u.email}
+                        </Text>
+                        {u.projectName ? (
+                          <Text style={{ fontSize: 10, color: theme.textMuted, marginTop: 2 }}>
+                            {u.projectName.substring(0, 25)}...
+                          </Text>
+                        ) : null}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+
+              {/* 2. Amount and Currency */}
+              <View style={{ marginBottom: 14 }}>
+                <Text style={{ color: theme.text, fontSize: 13, fontWeight: 'bold', marginBottom: 6, textAlign: isRTL ? 'right' : 'left' }}>
+                  {isRTL ? '2. المبلغ المطلوب سداده:' : '2. Amount to Pay:'}
+                </Text>
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
+                  <TextInput
+                    style={[styles.input, { flex: 1, backgroundColor: theme.bg, color: theme.text, borderColor: theme.border, fontSize: 16, fontWeight: 'bold' }]}
+                    value={newInvAmount}
+                    onChangeText={setNewInvAmount}
+                    keyboardType="numeric"
+                    placeholder={isRTL ? 'أدخل المبلغ (مثال: 5000)' : 'Amount (e.g. 5000)'}
+                    placeholderTextColor={theme.textMuted}
+                    textAlign={isRTL ? 'right' : 'left'}
+                  />
+                  {/* Currency Selector Chips */}
+                  <View style={{ flexDirection: 'row', gap: 4 }}>
+                    {(['EGP', 'USD', 'SAR'] as const).map(curr => (
+                      <TouchableOpacity
+                        key={curr}
+                        onPress={() => setNewInvCurrency(curr)}
+                        style={{
+                          paddingHorizontal: 10,
+                          paddingVertical: 8,
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          backgroundColor: newInvCurrency === curr ? theme.primary : theme.bg,
+                          borderColor: newInvCurrency === curr ? theme.primary : theme.border,
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: newInvCurrency === curr ? '#FFF' : theme.text }}>
+                          {curr}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+                {/* Quick Amount Chips */}
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 6, marginTop: 6 }}>
+                  {['1000', '2500', '5000', '10000', '20000'].map(amt => (
+                    <TouchableOpacity
+                      key={amt}
+                      onPress={() => setNewInvAmount(amt)}
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        backgroundColor: `${theme.primary}12`,
+                        borderWidth: 1,
+                        borderColor: `${theme.primary}25`
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, color: theme.primary, fontWeight: '600' }}>
+                        {amt} {newInvCurrency}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* 3. Title / Purpose */}
+              <View style={{ marginBottom: 14 }}>
+                <Text style={{ color: theme.text, fontSize: 13, fontWeight: 'bold', marginBottom: 6, textAlign: isRTL ? 'right' : 'left' }}>
+                  {isRTL ? '3. مسمى الفاتورة وغرض الدفعة:' : '3. Invoice Title / Purpose:'}
+                </Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.bg, color: theme.text, borderColor: theme.border, fontSize: 13 }]}
+                  value={newInvTitle}
+                  onChangeText={setNewInvTitle}
+                  placeholder={isRTL ? 'مثال: الدفعة الأولى - مقدم التعاقد' : 'e.g., Phase 1 Deposit'}
+                  placeholderTextColor={theme.textMuted}
+                  textAlign={isRTL ? 'right' : 'left'}
+                />
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                  {[
+                    isRTL ? 'دفعة أولى (50% مقدم)' : '50% Deposit',
+                    isRTL ? 'دفعة ثانية (25% مرحلة الـ APIs)' : '25% Milestone 2',
+                    isRTL ? 'دفعة ختامية عند التسليم (25%)' : 'Final Payment',
+                    isRTL ? 'سداد كامل المبلغ (100%)' : 'Full Payment',
+                    isRTL ? 'رسوم الاستضافة والدومين' : 'Hosting & Domain'
+                  ].map(preset => (
+                    <TouchableOpacity
+                      key={preset}
+                      onPress={() => setNewInvTitle(preset)}
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        backgroundColor: theme.bg,
+                        borderWidth: 1,
+                        borderColor: theme.border
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, color: theme.textMuted }}>{preset}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* 4. Payment Accounts & Numbers Section (The User's specific request!) */}
+              <View style={{
+                backgroundColor: theme.bg,
+                padding: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: `${theme.primary}33`,
+                marginBottom: 14
+              }}>
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <Ionicons name="card-outline" size={16} color={theme.primary} />
+                  <Text style={{ color: theme.primary, fontSize: 13, fontWeight: 'bold' }}>
+                    {isRTL ? '4. تحديد أرقام وحسابات الدفع (تظهر للعميل للسداد):' : '4. Payment Accounts (Shown to Client):'}
+                  </Text>
+                </View>
+
+                {/* Vodafone Cash */}
+                <Text style={{ color: theme.textMuted, fontSize: 11, marginBottom: 3, textAlign: isRTL ? 'right' : 'left' }}>
+                  {isRTL ? 'رقم فودافون كاش / المحفظة الذكية:' : 'Vodafone Cash / Wallet Number:'}
+                </Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border, marginBottom: 8, fontSize: 13 }]}
+                  value={invVodafoneCash}
+                  onChangeText={setInvVodafoneCash}
+                  placeholder="010xxxxxxxx"
+                  placeholderTextColor={theme.textMuted}
+                  keyboardType="phone-pad"
+                  textAlign="left"
+                />
+
+                {/* InstaPay */}
+                <Text style={{ color: theme.textMuted, fontSize: 11, marginBottom: 3, textAlign: isRTL ? 'right' : 'left' }}>
+                  {isRTL ? 'معرف إنستاباي (InstaPay Address):' : 'InstaPay Handle:'}
+                </Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border, marginBottom: 8, fontSize: 13 }]}
+                  value={invInstapay}
+                  onChangeText={setInvInstapay}
+                  placeholder="name@instapay"
+                  placeholderTextColor={theme.textMuted}
+                  textAlign="left"
+                />
+
+                {/* Bank Name & Account Number */}
+                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8, marginBottom: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: theme.textMuted, fontSize: 11, marginBottom: 3, textAlign: isRTL ? 'right' : 'left' }}>
+                      {isRTL ? 'اسم البنك:' : 'Bank Name:'}
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border, fontSize: 13 }]}
+                      value={invBankName}
+                      onChangeText={setInvBankName}
+                      placeholder="CIB / NBE"
+                      placeholderTextColor={theme.textMuted}
+                      textAlign={isRTL ? 'right' : 'left'}
+                    />
+                  </View>
+                  <View style={{ flex: 1.5 }}>
+                    <Text style={{ color: theme.textMuted, fontSize: 11, marginBottom: 3, textAlign: isRTL ? 'right' : 'left' }}>
+                      {isRTL ? 'رقم الحساب البنكي:' : 'Account Number:'}
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border, fontSize: 13 }]}
+                      value={invBankAccount}
+                      onChangeText={setInvBankAccount}
+                      placeholder="1000xxxxxxxx"
+                      placeholderTextColor={theme.textMuted}
+                      keyboardType="numeric"
+                      textAlign="left"
+                    />
+                  </View>
+                </View>
+
+                {/* IBAN */}
+                <Text style={{ color: theme.textMuted, fontSize: 11, marginBottom: 3, textAlign: isRTL ? 'right' : 'left' }}>
+                  {isRTL ? 'الآيبان الدولي (IBAN):' : 'IBAN:'}
+                </Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border, fontSize: 12 }]}
+                  value={invBankIban}
+                  onChangeText={setInvBankIban}
+                  placeholder="EG1200000000xxxxxxxxxxxx"
+                  placeholderTextColor={theme.textMuted}
+                  textAlign="left"
+                />
+
+                {/* Checkbox Save As Default */}
+                <TouchableOpacity
+                  onPress={() => setSaveAccountsAsDefault(!saveAccountsAsDefault)}
+                  style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginTop: 8 }}
+                >
+                  <Ionicons name={saveAccountsAsDefault ? 'checkbox' : 'square-outline'} size={18} color={theme.primary} />
+                  <Text style={{ color: theme.text, fontSize: 12 }}>
+                    {isRTL ? 'حفظ هذه الأرقام كأرقام استلام افتراضية للشركة' : 'Save as default agency payment accounts'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* 5. Notes */}
+              <View style={{ marginBottom: 14 }}>
+                <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 4, textAlign: isRTL ? 'right' : 'left' }}>
+                  {isRTL ? 'ملاحظات إضافية للعميل (اختياري):' : 'Additional Notes (Optional):'}
+                </Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.bg, color: theme.text, borderColor: theme.border, height: 60, fontSize: 12 }]}
+                  value={newInvNotes}
+                  onChangeText={setNewInvNotes}
+                  multiline
+                  numberOfLines={2}
+                  placeholder={isRTL ? 'مثال: يرجى إرسال صورة إيصال التحويل عبر التطبيق...' : 'e.g., Please upload receipt after transfer...'}
+                  placeholderTextColor={theme.textMuted}
+                  textAlign={isRTL ? 'right' : 'left'}
+                />
+              </View>
+
+            </ScrollView>
+
+            {/* Action Buttons */}
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginTop: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: theme.border }}>
+              <TouchableOpacity
+                style={[styles.confirmModalBtn, { flex: 1, backgroundColor: theme.primary }]}
+                onPress={handleCreateManualInvoice}
+                disabled={creatingInv}
+              >
+                {creatingInv ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={{ color: "#FFF", fontSize: 14, fontWeight: "bold" }}>
+                    {isRTL ? 'إصدار الفاتورة وإرسالها للعميل' : 'Issue Invoice'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, borderWidth: 1, borderColor: theme.border }}
+                onPress={() => setShowNewInvoiceModal(false)}
+              >
+                <Text style={{ color: theme.textMuted, fontSize: 13 }}>
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
           </View>
         </View>
       </Modal>
@@ -1412,7 +1738,7 @@ const PHASE_PRESETS = [
   'إطلاق المشروع والتسليم النهائي',
 ];
 
-const PROGRESS_PRESETS = [25, 50, 75, 100];
+const PROGRESS_PRESETS = [0, 20, 25, 50, 75, 100];
 
 interface UserProjectCardProps {
   u: any;
@@ -1488,6 +1814,36 @@ function UserProjectCard({
   const handleToggleTask = async (taskId: string) => {
     const updated = tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
     setTasks(updated);
+
+    // Smart Dynamic Progress Calculation based on completed milestones
+    if (updated.length > 0) {
+      const completedCount = updated.filter(t => t.completed).length;
+      const smartPct = Math.round((completedCount / updated.length) * 100);
+      setProjectProgress(String(smartPct));
+
+      // Auto-suggest realistic phase based on milestones
+      let suggestedPhase = projectPhase;
+      if (smartPct === 0) {
+        suggestedPhase = isRTL ? 'المرحلة 1: التخطيط الفني وتحليل متطلبات النظام (ERD)' : 'Phase 1: Planning & Specs';
+      } else if (smartPct <= 25) {
+        suggestedPhase = isRTL ? 'المرحلة 1: إنجاز المتطلبات والـ ERD - جاري تطوير الـ APIs' : 'Phase 1: Requirements Done';
+      } else if (smartPct <= 50) {
+        suggestedPhase = isRTL ? 'المرحلة 2: إنجاز خوادم الباك إند - جاري تطوير التطبيقات' : 'Phase 2: Backend & Database Done';
+      } else if (smartPct <= 75) {
+        suggestedPhase = isRTL ? 'المرحلة 3: إنجاز التطبيقات ولوحة التحكم - جاري فحص الـ QA' : 'Phase 3: Apps & Dashboard Done';
+      } else if (smartPct < 100) {
+        suggestedPhase = isRTL ? 'المرحلة 4: اختبارات الاستقرار والأمان (QA) والتجهيز للإطلاق' : 'Phase 4: QA & Security Polish';
+      } else {
+        suggestedPhase = isRTL ? 'اكتمل المشروع بنجاح 100% وتم التسليم النهائي والاعتماد' : 'Project 100% Completed & Delivered';
+      }
+      setProjectPhase(suggestedPhase);
+
+      // Auto-save live to backend so client sees real changes immediately
+      if (onUpdateTasks) await onUpdateTasks(u.id, updated);
+      if (onSaveProject) await onSaveProject(u.id, projectName, suggestedPhase, smartPct);
+      return;
+    }
+
     if (onUpdateTasks) {
       await onUpdateTasks(u.id, updated);
     }
