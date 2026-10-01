@@ -141,17 +141,22 @@ export default function DashboardScreen() {
       
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8 }]}>
-        <View style={[styles.headerLeft, { flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center' }]}>
-          <TouchableOpacity 
-            onPress={() => { 
-              haptics.light();
-              if (router.canGoBack()) router.back(); else router.push('/'); 
-            }} 
-            style={styles.backBtn}
-          >
-            <Text style={[styles.backBtnText, { color: theme.primary }]}>{t('back')}</Text>
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text, marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
+        <View style={[styles.headerLeft, { flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }]}>
+          {(currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') ? (
+            <TouchableOpacity 
+              onPress={() => { 
+                haptics.light();
+                router.push('/admin'); 
+              }} 
+              style={[styles.backBtn, { backgroundColor: `${theme.primary}20`, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4, marginLeft: 0 }]}
+            >
+              <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={16} color={theme.primary} />
+              <Text style={[styles.backBtnText, { color: theme.primary, fontSize: 13 }]}>
+                {isRTL ? 'لوحة الإدارة' : 'Admin Panel'}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+          <Text style={[styles.headerTitle, { color: theme.text }]}>
             {t('dashboard')}
           </Text>
         </View>

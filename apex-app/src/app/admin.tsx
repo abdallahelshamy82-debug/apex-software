@@ -18,7 +18,7 @@ export default function AdminDashboardScreen() {
   const responsive = useResponsive();
   const { theme, t, isRTL, activeTheme, currentUser, setCurrentUser, isAppReady } = useSettings();
   
-  const [activeTab, setActiveTab] = useState<'quotes' | 'invoices' | 'users' | 'analytics' | 'support'>('quotes');
+  const [activeTab, setActiveTab] = useState<'projects' | 'quotes' | 'invoices' | 'users' | 'analytics' | 'support'>('projects');
   const [quotes, setQuotes] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -693,6 +693,95 @@ export default function AdminDashboardScreen() {
     );
   };
 
+
+  const renderProjects = () => {
+    const projectUsers = users.filter(u => {
+      const hasProject = !!(u.projectName && u.projectName !== 'لا يوجد');
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return hasProject;
+      const name = (u.fullName || '').toLowerCase();
+      const email = (u.email || '').toLowerCase();
+      const project = (u.projectName || '').toLowerCase();
+      return hasProject && (name.includes(query) || email.includes(query) || project.includes(query));
+    });
+
+    if (projectUsers.length === 0) {
+      return (
+        <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 50 }}>
+          <View style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: `${theme.primary}18`, alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <Ionicons name="cube-outline" size={34} color={theme.primary} />
+          </View>
+          <Text style={{ color: theme.text, fontSize: 17, fontWeight: 'bold', marginBottom: 6 }}>
+            {isRTL ? 'لا توجد مشاريع جارية مسجلة حالياً' : 'No active projects currently'}
+          </Text>
+          <Text style={{ color: theme.textMuted, fontSize: 13, textAlign: 'center', maxWidth: 320, marginBottom: 18, lineHeight: 20 }}>
+            {isRTL ? 'يمكنك إسناد مشروع جديد وتحديث نسب الإنجاز لأي عميل من تبويب "حسابات العملاء".' : 'You can assign a project and manage milestones from the "Clients" tab.'}
+          </Text>
+          <TouchableOpacity 
+            onPress={() => setActiveTab('users')} 
+            style={{ backgroundColor: theme.primary, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10 }}
+          >
+            <Text style={{ color: '#FFF', fontWeight: 'bold', fontSize: 13 }}>
+              {isRTL ? 'استعراض العملاء' : 'Browse Clients'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <View>
+        {/* KPI Banner for Live Projects */}
+        <View style={{
+          backgroundColor: `${theme.primary}12`,
+          borderColor: `${theme.primary}33`,
+          borderWidth: 1,
+          borderRadius: 14,
+          padding: 16,
+          marginBottom: 16,
+          flexDirection: isRTL ? 'row-reverse' : 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12
+        }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="rocket" size={24} color="#FFF" />
+            </View>
+            <View style={{ alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
+              <Text style={{ color: theme.text, fontSize: 16, fontWeight: 'bold' }}>
+                {isRTL ? 'لوحة متابعة المشاريع الحية' : 'Live Projects Dashboard'}
+              </Text>
+              <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 2 }}>
+                {isRTL ? `يوجد ${projectUsers.length} مشروع نشط قيد التنفيذ والمتابعة` : `${projectUsers.length} active project(s) in progress`}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {projectUsers.map((u, idx) => (
+          <UserProjectCard
+            key={u.id || idx}
+            u={u}
+            theme={theme}
+            isRTL={isRTL}
+            onSaveProject={handleSaveUserProject}
+            onSendEmail={handleSendUserEmail}
+            onOpenInvoiceModal={(clientUser) => {
+              setSelectedUserForInvoice(clientUser);
+              setShowNewInvoiceModal(true);
+            }}
+            onDeleteUser={handleDeleteUser}
+            onUpdateTasks={handleUpdateProjectTasks}
+            onUpdateDeliverables={handleUpdateDeliverables}
+            router={router}
+          />
+        ))}
+      </View>
+    );
+  };
+
   const renderUsers = () => {
     const filteredUsers = users.filter(u => {
       const query = searchQuery.trim().toLowerCase();
@@ -1139,15 +1228,7 @@ export default function AdminDashboardScreen() {
                 </TouchableOpacity>
               )}
 
-              <TouchableOpacity 
-                onPress={() => {
-                  if (router.canGoBack()) router.back();
-                  else router.push("/dashboard");
-                }} 
-                style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
-              >
-                <Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={20} color={theme.text} />
-              </TouchableOpacity>
+              
               
               <View style={{ flex: 1, alignItems: isRTL ? "flex-end" : "flex-start" }}>
                 <View style={{ flexDirection: isRTL ? "row-reverse" : "row", alignItems: "center", gap: 6 }}>
@@ -1213,6 +1294,7 @@ export default function AdminDashboardScreen() {
               </View>
             ) : (
               <>
+                {activeTab === "projects" && renderProjects()}
                 {activeTab === "quotes" && renderQuotes()}
                 {activeTab === "invoices" && renderInvoices()}
                 {activeTab === "users" && renderUsers()}

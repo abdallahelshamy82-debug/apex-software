@@ -184,8 +184,11 @@ export default function InvoicesScreen() {
 
   const handleGoBack = () => {
     haptics.light();
-    if (router.canGoBack()) router.back();
-    else router.push('/dashboard');
+    if (currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') {
+      router.push('/admin');
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   return (

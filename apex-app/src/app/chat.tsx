@@ -823,10 +823,10 @@ export default function ChatScreen() {
   };
 
   const handleGoBack = () => {
-    if (router.canGoBack()) {
-      router.back();
+    if (currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') {
+      router.push('/admin');
     } else {
-      router.push(currentUser?.role === 'admin' ? '/admin' : '/dashboard');
+      router.push('/dashboard');
     }
   };
 

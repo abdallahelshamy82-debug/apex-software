@@ -198,7 +198,16 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
       <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity 
+          onPress={() => {
+            if (currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') {
+              router.push('/admin');
+            } else {
+              router.push('/dashboard');
+            }
+          }} 
+          style={styles.backBtn}
+        >
           <Text style={[styles.backBtnText, { color: theme.primary }]}>{t('back')}</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.text }]}>{t('settings')}</Text>

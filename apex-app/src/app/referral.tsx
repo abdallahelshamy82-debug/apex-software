@@ -58,7 +58,7 @@ export default function ReferralScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
       <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
         <TouchableOpacity 
-          onPress={() => router.back()} 
+          onPress={() => router.push('/dashboard')} 
           style={[styles.backBtn, { flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4 }]}
         >
           <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={18} color={theme.primary} />
