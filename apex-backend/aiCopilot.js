@@ -76,13 +76,8 @@ function safeParseJson(rawText) {
 // -------------------------------------------------------------
 async function callGeminiAI(prompt, apiKey, language = 'ar') {
   const modelsToTry = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-pro'
+    'gemini-3.7-flash',
+    'gemini-3.8-flash'
   ];
   let lastError = null;
 
@@ -316,6 +311,7 @@ The JSON must follow this exact schema:
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(14000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -411,13 +407,8 @@ Language: ${language === 'ar' ? 'Arabic' : 'English'}.`;
 async function callGeminiChatConsultant(messages, apiKey, language = 'ar') {
   // Reliable models ordered by current official availability & sub-second performance
   const modelsToTry = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-pro'
+    'gemini-3.7-flash',
+    'gemini-3.8-flash'
   ];
   let lastError = null;
 
@@ -505,6 +496,7 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(10000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemInstruction }]
@@ -612,8 +604,8 @@ Output JSON only:
 // -------------------------------------------------------------
 function deepSemanticChatConsultant(messages = [], language = 'ar') {
   const userMessages = messages.filter(m => m.role === 'user');
-  const lastUserMsg = (userMessages[userMessages.length - 1]?.text || '').trim();
-  const allUserText = userMessages.map(m => m.text || '').join(' ');
+  const lastUserMsg = (userMessages[userMessages.length - 1]?.text || userMessages[userMessages.length - 1]?.content || '').trim();
+  const allUserText = userMessages.map(m => m.text || m.content || '').join(' ');
   const userMsgCount = userMessages.length;
 
   const ent = extractKeywordsAndEntities(lastUserMsg);
@@ -822,20 +814,21 @@ async function chatConsultant(messages = [], options = {}) {
 // -------------------------------------------------------------
 // 3. Deep Generative Semantic Analysis Engine (Offline / Fallback)
 // -------------------------------------------------------------
-function extractKeywordsAndEntities(prompt = '') {
-  const p = prompt.toLowerCase();
-
-  // Helper: Match full word or clean token (prevents 'اكلمك' from matching 'اكل')
-  const matchWord = (word) => {
+function matchAnyInText(text, words) {
+  if (!text || !Array.isArray(words)) return false;
+  const p = String(text).toLowerCase();
+  return words.some(word => {
     try {
       const regex = new RegExp(`(?:^|[^\\p{L}\\p{N}])${word}(?:[^\\p{L}\\p{N}]|$)`, 'iu');
       return regex.test(p);
     } catch {
-      return p.includes(word);
+      return p.includes(String(word).toLowerCase());
     }
-  };
+  });
+}
 
-  const matchAny = (words) => words.some(w => matchWord(w));
+function extractKeywordsAndEntities(prompt = '') {
+  const matchAny = (words) => matchAnyInText(prompt, words);
 
   const entities = {
     // Conversational & Identity Intents
@@ -872,7 +865,8 @@ function extractKeywordsAndEntities(prompt = '') {
 
 function deepSemanticAnalysis(prompt = '', language = 'ar') {
   const ent = extractKeywordsAndEntities(prompt);
-  const cleanPrompt = prompt.trim();
+  const cleanPrompt = (prompt || '').trim();
+  const matchAny = (words) => matchAnyInText(cleanPrompt, words);
 
   // Dynamic project title synthesis
   let projectName = 'منظومة المنصة الرقمية الذكية المتكاملة';
@@ -1368,10 +1362,12 @@ async function transcribeAudio(audioBufferOrBase64, mimeType = 'audio/m4a', lang
 
     const cleanMime = (mimeType || 'audio/m4a').split(';')[0].trim();
     const modelsToTry = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-latest'
+      'gemini-3.8-flash',
+      'gemini-3.5-transcribe',
+      'gemini-3.7-flash',
+      'gemini-3.5-flash',
+      'gemini-flash-latest',
+      'gemini-2.5-flash'
     ];
     let lastError = null;
 
