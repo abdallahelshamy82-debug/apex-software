@@ -125,6 +125,120 @@ const QUICK_SUGGESTIONS = [
   },
 ];
 
+interface ChatInputBarProps {
+  theme: any;
+  isRTL: boolean;
+  chatInput: string;
+  onChangeText: (text: string) => void;
+  onSend: () => void;
+  chatLoading: boolean;
+  isListening: boolean;
+  isTranscribing: boolean;
+  micPulseAnim: Animated.Value;
+  onToggleVoice: () => void;
+  onFocus?: () => void;
+}
+
+const ChatInputBar = React.memo(function ChatInputBar({
+  theme,
+  isRTL,
+  chatInput,
+  onChangeText,
+  onSend,
+  chatLoading,
+  isListening,
+  isTranscribing,
+  micPulseAnim,
+  onToggleVoice,
+  onFocus,
+}: ChatInputBarProps) {
+  const inputRef = useRef<TextInput>(null);
+
+  return (
+    <View style={[styles.chatInputBar, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
+      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
+        {/* Voice Input Button */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          disabled={isTranscribing}
+          onPress={onToggleVoice}
+          style={[
+            styles.chatMicBtn,
+            {
+              backgroundColor: isListening ? '#EF4444' : theme.btnBg,
+              borderColor: isListening ? '#EF4444' : theme.border,
+              opacity: isTranscribing ? 0.7 : 1,
+            }
+          ]}
+        >
+          {isTranscribing ? (
+            <ActivityIndicator size="small" color={theme.primary} />
+          ) : (
+            <Animated.View style={{ transform: [{ scale: micPulseAnim }] }}>
+              <Ionicons
+                name={isListening ? 'stop' : 'mic-outline'}
+                size={20}
+                color={isListening ? '#FFF' : theme.primary}
+              />
+            </Animated.View>
+          )}
+        </TouchableOpacity>
+
+        {/* Text Input */}
+        <TextInput
+          ref={inputRef}
+          style={[
+            styles.chatTextInput,
+            {
+              backgroundColor: theme.btnBg,
+              borderColor: theme.border,
+              color: theme.text,
+              textAlign: isRTL ? 'right' : 'left',
+            }
+          ]}
+          placeholder={isRTL ? 'اكتب فكرتك أو إجابتك هنا...' : 'Type your idea or answer here...'}
+          placeholderTextColor={theme.textMuted}
+          multiline
+          numberOfLines={2}
+          value={chatInput}
+          onChangeText={onChangeText}
+          blurOnSubmit={false}
+          onKeyPress={(e: any) => {
+            if (Platform.OS === 'web' && e.nativeEvent?.key === 'Enter' && !e.nativeEvent?.shiftKey) {
+              e.preventDefault?.();
+              if (chatInput.trim() && !chatLoading) {
+                onSend();
+              }
+            }
+          }}
+          onFocus={onFocus}
+        />
+
+        {/* Send Button */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          disabled={!chatInput.trim() || chatLoading}
+          onPress={onSend}
+          style={[
+            styles.chatSendBtn,
+            {
+              backgroundColor: theme.primary,
+              opacity: (!chatInput.trim() || chatLoading) ? 0.5 : 1,
+            }
+          ]}
+        >
+          <Ionicons
+            name="send"
+            size={17}
+            color="#0B132B"
+            style={isRTL ? { transform: [{ scaleX: -1 }] } : undefined}
+          />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
+
 export default function CopilotScreen() {
   const router = useRouter();
   const responsive = useResponsive();
@@ -132,16 +246,6 @@ export default function CopilotScreen() {
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
   const [recording, setRecording] = useState<any>(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-
-  // Precision Android keyboard offset: if keyboardDidShow doesn't fire (e.g. Samsung One UI Edge-to-Edge),
-  // fallback to guaranteed isInputFocused keyboard height
-  const effectiveKeyboardOffset = Platform.OS === 'android'
-    ? (keyboardHeight > 0
-        ? Math.max(0, keyboardHeight - insets.bottom)
-        : (isInputFocused ? Math.max(0, 310 - insets.bottom) : 0))
-    : 0;
 
   // Mode: 'chat' | 'blueprint'
   const [activeMode, setActiveMode] = useState<'chat' | 'blueprint'>('chat');
@@ -189,36 +293,17 @@ export default function CopilotScreen() {
   const recognitionRef = useRef<any>(null);
   const chatScrollRef = useRef<ScrollView>(null);
 
-  // Track soft keyboard height on mobile to guarantee chat input stays above keyboard
+  // Scroll chat messages to end when keyboard appears without re-rendering or running LayoutAnimation
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, (e: any) => {
-      const h = e?.endCoordinates?.height || 0;
-      if (Platform.OS === 'android') {
-        try {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        } catch (err) {}
-      }
-      setKeyboardHeight(h);
+    const showSub = Keyboard.addListener(showEvent, () => {
       setTimeout(() => {
         chatScrollRef.current?.scrollToEnd({ animated: true });
-      }, 60);
-    });
-
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      if (Platform.OS === 'android') {
-        try {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        } catch (err) {}
-      }
-      setKeyboardHeight(0);
+      }, 100);
     });
 
     return () => {
       showSub.remove();
-      hideSub.remove();
     };
   }, []);
 
@@ -752,7 +837,6 @@ export default function CopilotScreen() {
     };
 
     Keyboard.dismiss();
-    setIsInputFocused(false);
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
@@ -1136,8 +1220,8 @@ export default function CopilotScreen() {
       {activeMode === 'chat' && (
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
           <View style={{ flex: 1 }}>
             {/* Chat Messages Stream */}
@@ -1152,12 +1236,6 @@ export default function CopilotScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
-              onScrollBeginDrag={() => {
-                if (isInputFocused) {
-                  Keyboard.dismiss();
-                  setIsInputFocused(false);
-                }
-              }}
               onContentSizeChange={() => chatScrollRef.current?.scrollToEnd({ animated: true })}
             >
               {/* Collapsible Project Blueprint Banner */}
@@ -1491,94 +1569,24 @@ export default function CopilotScreen() {
               )}
             </ScrollView>
 
-            {/* Chat Input Bar */}
-            <View style={[styles.chatInputBar, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
-                {/* Voice Input Button */}
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  disabled={isTranscribing}
-                  onPress={toggleVoiceRecording}
-                  style={[
-                    styles.chatMicBtn,
-                    {
-                      backgroundColor: isListening ? '#EF4444' : theme.btnBg,
-                      borderColor: isListening ? '#EF4444' : theme.border,
-                      opacity: isTranscribing ? 0.7 : 1,
-                    }
-                  ]}
-                >
-                  {isTranscribing ? (
-                    <ActivityIndicator size="small" color={theme.primary} />
-                  ) : (
-                    <Animated.View style={{ transform: [{ scale: micPulseAnim }] }}>
-                      <Ionicons
-                        name={isListening ? 'stop' : 'mic-outline'}
-                        size={20}
-                        color={isListening ? '#FFF' : theme.primary}
-                      />
-                    </Animated.View>
-                  )}
-                </TouchableOpacity>
-
-                {/* Text Input */}
-                <TextInput
-                  style={[
-                    styles.chatTextInput,
-                    {
-                      backgroundColor: theme.btnBg,
-                      borderColor: theme.border,
-                      color: theme.text,
-                      textAlign: isRTL ? 'right' : 'left',
-                    }
-                  ]}
-                  placeholder={isRTL ? 'اكتب فكرتك أو إجابتك هنا...' : 'Type your idea or answer here...'}
-                  placeholderTextColor={theme.textMuted}
-                  multiline
-                  numberOfLines={2}
-                  value={chatInput}
-                  onChangeText={setChatInput}
-                  onKeyPress={(e: any) => {
-                    if (Platform.OS === 'web' && e.nativeEvent?.key === 'Enter' && !e.nativeEvent?.shiftKey) {
-                      e.preventDefault?.();
-                      if (chatInput.trim() && !chatLoading) {
-                        handleSendChatMessage();
-                      }
-                    }
-                  }}
-                  onFocus={() => {
-                    setIsInputFocused(true);
-                    setTimeout(() => {
-                      chatScrollRef.current?.scrollToEnd({ animated: true });
-                    }, 100);
-                  }}
-                  onBlur={() => {
-                    setIsInputFocused(false);
-                  }}
-                />
-
-                {/* Send Button */}
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  disabled={!chatInput.trim() || chatLoading}
-                  onPress={() => handleSendChatMessage()}
-                  style={[
-                    styles.chatSendBtn,
-                    {
-                      backgroundColor: theme.primary,
-                      opacity: (!chatInput.trim() || chatLoading) ? 0.5 : 1,
-                    }
-                  ]}
-                >
-                  <Ionicons
-                    name="send"
-                    size={17}
-                    color="#0B132B"
-                    style={isRTL ? { transform: [{ scaleX: -1 }] } : undefined}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
+            {/* Stable Memoized Chat Input Bar */}
+            <ChatInputBar
+              theme={theme}
+              isRTL={isRTL}
+              chatInput={chatInput}
+              onChangeText={setChatInput}
+              onSend={() => handleSendChatMessage()}
+              chatLoading={chatLoading}
+              isListening={isListening}
+              isTranscribing={isTranscribing}
+              micPulseAnim={micPulseAnim}
+              onToggleVoice={toggleVoiceRecording}
+              onFocus={() => {
+                setTimeout(() => {
+                  chatScrollRef.current?.scrollToEnd({ animated: true });
+                }, 120);
+              }}
+            />
           </View>
         </KeyboardAvoidingView>
       )}
