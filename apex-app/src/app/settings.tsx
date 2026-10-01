@@ -548,6 +548,8 @@ export default function SettingsScreen() {
               } catch (e) {}
               await removeSecureToken();
               await AsyncStorage.removeItem('userData');
+              await AsyncStorage.removeItem('@apex_copilot_sessions_guest').catch(() => {});
+              await AsyncStorage.removeItem('@apex_copilot_sessions').catch(() => {});
               setCurrentUser(null);
               router.replace('/login');
             }}

@@ -66,7 +66,13 @@ export interface ChatSession {
   hasBlueprint: boolean;
 }
 
-const SESSIONS_STORAGE_KEY = '@apex_copilot_sessions';
+const getCopilotStorageKey = (user: any): string => {
+  if (user && (user.id || user.email)) {
+    const safeId = user.id ? `id_${user.id}` : `email_${user.email.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    return `@apex_copilot_sessions_${safeId}`;
+  }
+  return '@apex_copilot_sessions_guest';
+};
 
 const getInitialMessages = (rtl: boolean): ChatMessage[] => [
   {
@@ -336,11 +342,40 @@ export default function CopilotScreen() {
         }
       } catch (e) {}
     })();
+  }, [pulseAnim]);
 
-    // Load Saved Chat Sessions from AsyncStorage
+  // Track currentUserRef for fresh state access in async callbacks
+  const currentUserRef = useRef(currentUser);
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
+  // Load Saved Chat Sessions dynamically scoped to the authenticated user
+  useEffect(() => {
+    let isCancelled = false;
+    const userKey = getCopilotStorageKey(currentUser);
+
     (async () => {
       try {
-        const storedSessions = await AsyncStorage.getItem(SESSIONS_STORAGE_KEY);
+        // Clean legacy un-scoped key if exists to prevent leaking old data to new accounts
+        const legacyGlobalSessions = await AsyncStorage.getItem('@apex_copilot_sessions');
+        if (legacyGlobalSessions) {
+          const adminEmails = ['abdallahelshamy82@gmail.com'];
+          const userEmail = (currentUser?.email || '').toLowerCase().trim();
+          // If the logged-in user is the primary admin who created those test sessions, migrate them
+          if (adminEmails.includes(userEmail)) {
+            const existingUserSessions = await AsyncStorage.getItem(userKey);
+            if (!existingUserSessions) {
+              await AsyncStorage.setItem(userKey, legacyGlobalSessions);
+            }
+          }
+          // Remove global key permanently so new accounts never see other people's chats
+          await AsyncStorage.removeItem('@apex_copilot_sessions');
+        }
+
+        const storedSessions = await AsyncStorage.getItem(userKey);
+        if (isCancelled) return;
+
         if (storedSessions) {
           const parsed: ChatSession[] = JSON.parse(storedSessions);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -350,21 +385,32 @@ export default function CopilotScreen() {
               setCurrentSessionId(latest.id);
               if (latest.messages && latest.messages.length > 0) {
                 setMessages(latest.messages);
+              } else {
+                setMessages(getInitialMessages(isRTL));
               }
-              if (latest.analysis) {
-                setAnalysis(latest.analysis);
-              }
-              if (latest.selectedPackage) {
-                setSelectedPackage(latest.selectedPackage);
-              }
+              setAnalysis(latest.analysis || null);
+              setSelectedPackage(latest.selectedPackage || 'pro');
             }
+            return;
           }
         }
+
+        // Fresh empty slate for new accounts or users without prior sessions
+        setSessions([]);
+        setCurrentSessionId(`session_${Date.now()}`);
+        setMessages(getInitialMessages(isRTL));
+        setAnalysis(null);
+        setSelectedPackage('pro');
+        setActiveMode('chat');
       } catch (e) {
-        console.warn('Failed to load copilot sessions', e);
+        console.warn('Failed to load user-scoped copilot sessions', e);
       }
     })();
-  }, [pulseAnim]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentUser?.id, currentUser?.email, isRTL]);
 
   useEffect(() => {
     if (isListening) {
@@ -711,7 +757,7 @@ export default function CopilotScreen() {
           newSessions = [newSession, ...prevSessions];
         }
 
-        AsyncStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(newSessions)).catch(() => {});
+        AsyncStorage.setItem(getCopilotStorageKey(currentUserRef.current), JSON.stringify(newSessions)).catch(() => {});
         return newSessions;
       });
     } catch (err) {
@@ -759,10 +805,11 @@ export default function CopilotScreen() {
   // Delete a specific session
   const handleDeleteSession = (sessionId: string) => {
     haptics.warning();
+    const userKey = getCopilotStorageKey(currentUserRef.current);
     const performDelete = () => {
       setSessions(prev => {
         const filtered = prev.filter(s => s.id !== sessionId);
-        AsyncStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(filtered)).catch(() => {});
+        AsyncStorage.setItem(userKey, JSON.stringify(filtered)).catch(() => {});
         return filtered;
       });
 
@@ -796,9 +843,10 @@ export default function CopilotScreen() {
   // Clear all saved sessions
   const handleClearAllSessions = () => {
     haptics.heavy();
+    const userKey = getCopilotStorageKey(currentUserRef.current);
     const performClear = () => {
       setSessions([]);
-      AsyncStorage.removeItem(SESSIONS_STORAGE_KEY).catch(() => {});
+      AsyncStorage.removeItem(userKey).catch(() => {});
       handleStartNewChat();
       showToast({
         type: 'info',
