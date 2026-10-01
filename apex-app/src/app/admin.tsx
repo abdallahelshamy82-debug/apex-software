@@ -24,7 +24,8 @@ export default function AdminDashboardScreen() {
   const [users, setUsers] = useState<any[]>([]);
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
 
   // Agency Settings State
   const [agencySettings, setAgencySettings] = useState<any>({
@@ -1129,23 +1130,44 @@ export default function AdminDashboardScreen() {
   };
 
   
-  const renderSidebar = () => {
+  const renderSidebar = (isMobileView = false) => {
+    const activeProjectsCount = users.filter((u:any) => u.projectName && u.projectName !== 'لا يوجد').length;
     const tabs = [
+      { id: "projects", label: isRTL ? "المشاريع النشطة" : "Active Projects", icon: "cube-outline", count: activeProjectsCount },
       { id: "quotes", label: isRTL ? "طلبات التسعير" : "Quotes", icon: "document-text-outline", count: quotes.filter((q:any) => q.status === "pending").length },
       { id: "invoices", label: isRTL ? "الفواتير" : "Invoices", icon: "receipt-outline", count: invoices.filter((i:any) => i.status === "pending").length },
-      { id: "users", label: isRTL ? "العملاء والمشاريع" : "Clients & Projects", icon: "people-outline", count: users.filter((u:any) => u.role !== "admin").length },
-      { id: "analytics", label: isRTL ? "التحليلات" : "Analytics", icon: "bar-chart-outline", count: 0 },
-      { id: "support", label: isRTL ? "الدعم الفني" : "Support", icon: "chatbubbles-outline", count: chats.length },
+      { id: "users", label: isRTL ? "حسابات العملاء" : "Clients & Accounts", icon: "people-outline", count: users.filter((u:any) => u.role !== "admin").length },
+      { id: "analytics", label: isRTL ? "التحليلات المالية" : "Analytics", icon: "bar-chart-outline", count: 0 },
+      { id: "support", label: isRTL ? "الدعم والمحادثات" : "Support & Chat", icon: "chatbubbles-outline", count: chats.length },
     ];
     return (
       <View style={{ flex: 1, backgroundColor: theme.card, paddingVertical: 20 }}>
-        <View style={{ alignItems: "center", marginBottom: 30, paddingHorizontal: 16 }}>
-          <View style={{ width: 60, height: 60, borderRadius: 16, backgroundColor: `${theme.primary}20`, alignItems: "center", justifyContent: "center", marginBottom: 4 }}>
-            <Text style={{ color: theme.primary, fontSize: 28, fontWeight: "900" }}>A.</Text>
+        {/* Header with Close Button for Mobile */}
+        <View style={{ alignItems: "center", marginBottom: 24, paddingHorizontal: 16, position: 'relative' }}>
+          {isMobileView && (
+            <TouchableOpacity 
+              onPress={() => setShowMobileSidebar(false)}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: isRTL ? 12 : undefined,
+                right: !isRTL ? 12 : undefined,
+                padding: 6,
+                borderRadius: 20,
+                backgroundColor: `${theme.primary}18`,
+                zIndex: 10
+              }}
+            >
+              <Ionicons name="close" size={20} color={theme.primary} />
+            </TouchableOpacity>
+          )}
+          <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: `${theme.primary}20`, alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
+            <Text style={{ color: theme.primary, fontSize: 26, fontWeight: "900" }}>A.</Text>
           </View>
-          <Text style={{ color: theme.text, fontSize: 15, fontWeight: "bold" }}>Apex Admin</Text>
+          <Text style={{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>Apex Admin</Text>
           <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Workspace</Text>
         </View>
+
         <ScrollView style={{ flex: 1 }}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -1163,7 +1185,10 @@ export default function AdminDashboardScreen() {
                   borderColor: theme.primary,
                   marginBottom: 4
                 }}
-                onPress={() => { setActiveTab(tab.id as any); setShowSidebar(false); }}
+                onPress={() => {
+                  setActiveTab(tab.id as any);
+                  if (isMobileView) setShowMobileSidebar(false);
+                }}
               >
                 <Ionicons name={tab.icon as any} size={20} color={isActive ? theme.primary : theme.textMuted} />
                 <Text style={{ flex: 1, color: isActive ? theme.primary : theme.text, fontSize: 14, fontWeight: isActive ? "bold" : "normal", marginHorizontal: 12, textAlign: isRTL ? "right" : "left" }}>
@@ -1182,28 +1207,30 @@ export default function AdminDashboardScreen() {
     );
   };
 
+  const isMobile = responsive.width <= 768;
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
       <View style={{ flex: 1, flexDirection: isRTL ? "row-reverse" : "row" }}>
         
         {/* Desktop Sidebar */}
-        {Number(responsive.containerWidth) > 768 && (
+        {(!isMobile && desktopSidebarOpen) && (
           <View style={{ width: 260, borderRightWidth: isRTL ? 0 : 1, borderLeftWidth: isRTL ? 1 : 0, borderColor: theme.border, backgroundColor: theme.card }}>
             {renderSidebar()}
           </View>
         )}
 
         {/* Mobile Drawer Overlay */}
-        {Number(responsive.containerWidth) <= 768 && showSidebar && (
+        {isMobile && showMobileSidebar && (
           <TouchableOpacity 
             activeOpacity={1} 
-            onPress={() => setShowSidebar(false)}
+            onPress={() => setShowMobileSidebar(false)}
             style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 99 }}
           />
         )}
 
         {/* Mobile Drawer Content */}
-        {Number(responsive.containerWidth) <= 768 && showSidebar && (
+        {isMobile && showMobileSidebar && (
           <View style={{ 
             position: "absolute", top: 0, bottom: 0, 
             left: !isRTL ? 0 : undefined, right: isRTL ? 0 : undefined, 
@@ -1222,11 +1249,31 @@ export default function AdminDashboardScreen() {
             <View style={[styles.headerLeft, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               
               {/* Hamburger Button for Mobile */}
-              {Number(responsive.containerWidth) <= 768 && (
-                <TouchableOpacity onPress={() => setShowSidebar(true)} style={[styles.backBtn, { backgroundColor: theme.card, borderColor: theme.border, marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }]}>
-                  <Ionicons name="menu" size={22} color={theme.text} />
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity 
+                onPress={() => {
+                  if (isMobile) {
+                    setShowMobileSidebar(true);
+                  } else {
+                    setDesktopSidebarOpen(!desktopSidebarOpen);
+                  }
+                }} 
+                style={[styles.backBtn, { 
+                  backgroundColor: theme.card, 
+                  borderWidth: 1, 
+                  borderColor: theme.border, 
+                  padding: 8, 
+                  borderRadius: 10,
+                  marginRight: isRTL ? 0 : 8,
+                  marginLeft: isRTL ? 8 : 0
+                }]}
+                accessibilityLabel="Toggle Sidebar"
+              >
+                <Ionicons 
+                  name={isMobile ? "menu" : (desktopSidebarOpen ? (isRTL ? "chevron-forward" : "chevron-back") : "menu")} 
+                  size={22} 
+                  color={theme.primary} 
+                />
+              </TouchableOpacity>
 
               
               
