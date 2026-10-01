@@ -2079,6 +2079,78 @@ export default function CopilotScreen() {
                   </View>
                 )}
               </View>
+
+              {/* Recurring Annual Operational Costs (Third-Party) */}
+              {analysis.budgetBreakdown?.annualOperationalEstimate && (
+                <View style={[styles.cardSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <Ionicons name="repeat-outline" size={18} color="#F59E0B" />
+                    <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                      {isRTL ? 'المصاريف التشغيلية السنوية ورسوم المنصات (طرف ثالث)' : 'Recurring Operational & Platform Fees'}
+                    </Text>
+                  </View>
+                  <Text style={{ color: theme.textMuted, fontSize: 12, textAlign: isRTL ? 'right' : 'left', marginBottom: 12, lineHeight: 18 }}>
+                    {isRTL 
+                      ? 'ملاحظة المستشار المعماري: هذه المبالغ تُسدد مباشرة لمزودي الخدمات العالميين (Apple, Google, Cloud) لضمان استقرار ونشر المنظومة، وليست أتعاباً لشركة Apex.' 
+                      : 'Architectural Note: These fees are paid directly to external global providers (Apple, Google, Cloud) to guarantee infrastructure uptime and app publishing.'}
+                  </Text>
+
+                  <View style={{ gap: 8 }}>
+                    {Object.entries(analysis.budgetBreakdown.annualOperationalEstimate).map(([key, val]: [string, any], opIdx: number) => {
+                      let iconName = 'globe-outline';
+                      let badgeText = isRTL ? 'خدمة سحابية' : 'Cloud Service';
+                      let badgeColor = theme.primary;
+
+                      const keyLower = key.toLowerCase();
+                      if (keyLower.includes('apple')) {
+                        iconName = 'logo-apple';
+                        badgeText = isRTL ? 'سنوياً ($99)' : 'Annual ($99)';
+                        badgeColor = '#60A5FA';
+                      } else if (keyLower.includes('google')) {
+                        iconName = 'logo-google-playstore';
+                        badgeText = isRTL ? 'مرة واحدة ($25)' : 'One-Time ($25)';
+                        badgeColor = '#34D399';
+                      } else if (keyLower.includes('host') || keyLower.includes('server')) {
+                        iconName = 'server-outline';
+                        badgeText = isRTL ? 'شهرياً ($10-$20)' : 'Monthly ($10-$20)';
+                        badgeColor = '#F59E0B';
+                      } else if (keyLower.includes('domain') || keyLower.includes('ssl')) {
+                        iconName = 'shield-checkmark-outline';
+                        badgeText = isRTL ? 'سنوياً (~$15)' : 'Annual (~$15)';
+                        badgeColor = '#A78BFA';
+                      } else if (keyLower.includes('map')) {
+                        iconName = 'map-outline';
+                        badgeText = isRTL ? 'رصيد مجاني شهري' : 'Free Tier Credit';
+                        badgeColor = '#10B981';
+                      } else if (keyLower.includes('pay')) {
+                        iconName = 'card-outline';
+                        badgeText = isRTL ? '0 رسوم ثابتة' : '0 Fixed Fees';
+                        badgeColor = '#EC4899';
+                      }
+
+                      return (
+                        <View key={opIdx} style={[styles.budgetItemRow, { backgroundColor: theme.btnBg, borderColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center' }]}>
+                          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: `${badgeColor}20`, alignItems: 'center', justifyContent: 'center' }}>
+                              <Ionicons name={iconName as any} size={16} color={badgeColor} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ color: theme.text, fontSize: 12, lineHeight: 18, textAlign: isRTL ? 'right' : 'left' }}>
+                                {typeof val === 'string' ? val : JSON.stringify(val)}
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={{ backgroundColor: `${badgeColor}20`, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }}>
+                            <Text style={{ color: badgeColor, fontSize: 10, fontWeight: 'bold' }}>
+                              {badgeText}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
             </View>
           )}
 

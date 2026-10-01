@@ -77,11 +77,26 @@ function safeParseJson(rawText) {
 // 1. Google Gemini Flash API Caller (Gemini 3.5 / 3.1 / Flash-lite)
 // -------------------------------------------------------------
 async function callGeminiAI(prompt, apiKey, language = 'ar') {
-  const modelsToTry = ['gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
+  const modelsToTry = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
   let lastError = null;
 
-  const systemPrompt = `You are an elite Principal Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
+  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
 Your mission is to perform an EXTREMELY DETAILED, SPECIFIC, HIGHLY TAILORED architectural, technical, operational, and financial analysis of the user's software concept.
+
+CRITICAL ARCHITECTURAL & PRICING RULES:
+1. Lean MVP Philosophy: Always configure the Minimum Viable Product (MVP) package at the absolute lowest realistic cost to let the client launch and test market demand with minimal financial risk.
+   - For simple projects or lean MVPs: start around 18,000 - 28,000 EGP ($380 - $600).
+   - For Pro systems: 45,000 - 65,000 EGP ($950 - $1,400).
+   - For Enterprise: 85,000 - 130,000 EGP ($1,800 - $2,800).
+2. Transparent Annual Recurring Third-Party Costs:
+   Under "annualOperationalEstimate", you MUST clearly itemize the essential recurring fees that the client pays directly to third-party providers (Apple, Google, Cloud hosting, Domain):
+   - "appleDeveloper": "حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة للحفاظ على نشر تطبيق iOS في متجر التطبيقات)",
+   - "googlePlay": "حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)",
+   - "hosting": "خادم سحابي وسيرفر VPS: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)",
+   - "domainSsl": "اسم النطاق الدولي (.com/.net) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً",
+   - "mapsApi": "خرائط جوجل وتحديد المواقع: رصيد مجاني شهري $200 من Google Cloud يغطي آلاف العمليات مجاناً",
+   - "paymentGateways": "بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك شهري، نسبة 2.5% تقتطع عند نجاح العمليات فقط"
+
 Avoid generic boilerplates. Provide realistic numbers, specific local competitors, actual risks, and tailored screens according to their unique idea.
 You MUST output ONLY a well-formed JSON object (no markdown code blocks, no explanation text).
 Language of the output: ${language === 'ar' ? 'Professional Arabic (العربية الفصحى التقنية الدقيقة)' : 'English'}.
@@ -161,7 +176,7 @@ The JSON must follow this exact schema:
     "devops": "Docker & Nginx reverse proxy with SSL certificate & automated daily backups",
     "aiVision": "AI / OCR module if applicable to project, or null"
   },
-  "timelineWeeks": 10,
+  "timelineWeeks": 8,
   "milestones": [
     {
       "phase": 1,
@@ -176,7 +191,7 @@ The JSON must follow this exact schema:
     {
       "phase": 2,
       "title": "المرحلة 2: بناء خوادم الباك إند وقواعد البيانات والربط اللحظي والخرائط",
-      "durationWeeks": 3,
+      "durationWeeks": 2,
       "sprintTasks": [
         "بناء الـ RESTful APIs ونظام التوثيق والمصادقة المشفر JWT",
         "هندسة قواعد البيانات وعلاقات الجداول وخدمات التتبع",
@@ -186,7 +201,7 @@ The JSON must follow this exact schema:
     {
       "phase": 3,
       "title": "المرحلة 3: تطوير وتكامل تطبيقات الموبايل ولوحة التحكم المركزية",
-      "durationWeeks": 3,
+      "durationWeeks": 2,
       "sprintTasks": [
         "برمجة شاشات التطبيقات لجميع أطراف المنظومة",
         "ربط الـ APIs واختبار مسار العمليات والرحلات الكاملة End-to-End",
@@ -205,18 +220,21 @@ The JSON must follow this exact schema:
     }
   ],
   "budgetBreakdown": {
-    "currencyEGP": 68000,
-    "currencyUSD": 1450,
+    "currencyEGP": 48000,
+    "currencyUSD": 1050,
     "items": [
-      { "category": "تصميم تجربة وواجهات المستخدم (UI/UX Design)", "costEGP": 15000, "costUSD": 320, "desc": "تصميم تفاعلي كامل لكافة المنصات والشاشات على Figma" },
-      { "category": "تطوير الباك إند وقواعد البيانات والـ APIs", "costEGP": 23000, "costUSD": 490, "desc": "الخوادم، المقابس اللحظية، محرك الخرائط، وبوابات الدفع" },
-      { "category": "برمجة وتطوير تطبيقات الموبايل الموحدة", "costEGP": 20000, "costUSD": 430, "desc": "تطبيقات أندرويد وآيفون بأحدث تقنيات React Native" },
-      { "category": "لوحة التحكم السحابية المركزية (Super Admin)", "costEGP": 10000, "costUSD": 210, "desc": "لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية" }
+      { "category": "تصميم تجربة وواجهات المستخدم (UI/UX Design)", "costEGP": 11000, "costUSD": 240, "desc": "تصميم تفاعلي كامل لكافة المنصات والشاشات على Figma" },
+      { "category": "تطوير الباك إند وقواعد البيانات والـ APIs", "costEGP": 16000, "costUSD": 350, "desc": "الخوادم، المقابس اللحظية، محرك الخرائط، وبوابات الدفع" },
+      { "category": "برمجة وتطوير تطبيقات الموبايل الموحدة", "costEGP": 14000, "costUSD": 310, "desc": "تطبيقات أندرويد وآيفون بأحدث تقنيات React Native" },
+      { "category": "لوحة التحكم السحابية المركزية (Super Admin)", "costEGP": 7000, "costUSD": 150, "desc": "لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية" }
     ],
     "annualOperationalEstimate": {
-      "hosting": "استضافة سحابية VPS عالية الأداء: تبدأ من $15 - $25 شهرياً",
-      "mapsApi": "خرائط جوجل: رصيد مجاني شهري $200 من Google Cloud يكفي للبداية",
-      "domainSsl": "اسم النطاق وشهادة التشفير SSL: مجاناً للسنة الأولى مع الاستضافة"
+      "appleDeveloper": "حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS)",
+      "googlePlay": "حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)",
+      "hosting": "استضافة سحابية VPS وسيرفر: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)",
+      "domainSsl": "اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً",
+      "mapsApi": "خرائط جوجل: رصيد مجاني شهري $200 من Google Cloud يكفي للبداية مجاناً",
+      "paymentGateways": "بوابات الدفع (Paymob / فيزا): 0 رسوم تأسيس، اقتطاع 2.5% فقط عند العمليات الناجحة"
     }
   },
   "paymentPlan": [
@@ -232,11 +250,11 @@ The JSON must follow this exact schema:
   ],
   "packages": {
     "mvp": {
-      "title": "باقة إطلاق النموذج الأولي (MVP)",
-      "costEGP": 34000,
-      "costUSD": 750,
-      "weeks": 5,
-      "desc": "النسخة الأساسية للتحقق السريع من السوق واختبار الإقبال بأقل تكلفة ومخاطرة",
+      "title": "باقة إطلاق النموذج الأولي (MVP - الأقل تكلفة)",
+      "costEGP": 22000,
+      "costUSD": 480,
+      "weeks": 4,
+      "desc": "النسخة الأساسية الرشيقة للتحقق السريع من السوق واختبار الإقبال بأقل تكلفة ومخاطرة مالية",
       "keyDeliverables": [
         "تطبيق موبايل مخصص (Android & iOS)",
         "لوحة إدارة مصغرة للمشرفين",
@@ -246,9 +264,9 @@ The JSON must follow this exact schema:
     },
     "pro": {
       "title": "باقة المنظومة المتكاملة (Pro Growth - الموصى بها)",
-      "costEGP": 68000,
-      "costUSD": 1450,
-      "weeks": 10,
+      "costEGP": 48000,
+      "costUSD": 1050,
+      "weeks": 8,
       "desc": "المنظومة الاحترافية المتكاملة مع كافة تطبيقات الأطراف والتتبع اللحظي والإشعارات المتقدمة",
       "keyDeliverables": [
         "تطبيقات العملاء والشركاء مع التتبع الحي",
@@ -260,9 +278,9 @@ The JSON must follow this exact schema:
     },
     "enterprise": {
       "title": "باقة المؤسسات والأنظمة الكبرى (Enterprise Scale)",
-      "costEGP": 115000,
-      "costUSD": 2450,
-      "weeks": 14,
+      "costEGP": 89000,
+      "costUSD": 1950,
+      "weeks": 12,
       "desc": "حلول برمجية ضخمة بمواصفات مخصصة، معمارية Microservices، خوادم مخصصة وميزات ذكاء اصطناعي",
       "keyDeliverables": [
         "كافة تطبيقات ومنصات المنظومة (عميل، كابتن، شركاء، لوحة سوبر أدمن)",
@@ -374,25 +392,37 @@ Language: ${language === 'ar' ? 'Arabic' : 'English'}.`;
 // 2.1 Google Gemini Interactive Chat Consultant
 // -------------------------------------------------------------
 async function callGeminiChatConsultant(messages, apiKey, language = 'ar') {
-  // Reliable models ordered by current availability & performance
-  const modelsToTry = ['gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
+  // Reliable models ordered by current availability & performance (Gemini 3.5/3.6 Flash first)
+  const modelsToTry = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
   let lastError = null;
 
   const systemInstruction = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency (شركة إيبكس لحلول البرمجيات وتطوير التطبيقات).
 You are having an interactive live consultation discussion with a client exploring a new software, mobile app, or SaaS idea.
 
 Core Behavioral Guidelines:
-1. Speak with the authority, clarity, warmth, empathy, and deep technical knowledge of a world-class software architect.
-2. If the user asks who you are, what your name is, or what they should call you, answer warmly and directly: tell them you are "مستشار Apex البرمجي الذكي" (Apex Software Architect) and they can call you "مستشار Apex" or "بشمهندس".
-3. If the user greets you or says hi, greet them back warmly and ask how you can assist with their software idea or technical question today.
-4. If the user describes an idea, engage deeply with THEIR specific idea: analyze its core value, suggest modern tech stack elements (React Native, Node.js, real-time sockets, cloud databases), and ask 1 to 2 sharp clarifying questions.
-5. NEVER assume or invent a project domain (like food delivery or restaurants) that the user did not explicitly mention!
-6. Suggest 2 to 4 quick-reply chips ("suggestions") in Arabic that the user can tap to answer or guide the conversation.
-7. CRITICAL RULE FOR "readyForSpec":
+1. Persona: Speak with the authority, clarity, warmth, technical mastery, and strategic wisdom of a world-class CTO and Software Architect.
+2. Identity: If the user asks who you are, what your name is, or what they should call you, answer warmly and directly: tell them you are "مستشار Apex البرمجي الذكي" (Apex Chief Architect & CTO) and they can call you "مستشار Apex" or "بشمهندس".
+3. Greetings: If the user greets you or says hi, greet them back warmly and ask how you can assist with their software idea or technical question today.
+4. Lean MVP Philosophy & Lowest Cost Strategy:
+   - Always prioritize the client's return on investment. Emphasize starting with the leanest viable MVP (النموذج الأولي بأقل ميزانية ممكنة) to test and validate their idea in the market without draining their capital.
+   - Tailor the tech stack and architecture to avoid unnecessary overhead in the beginning while keeping it scalable.
+5. COMPLETE TRANSPARENCY ON RECURRING OPERATIONAL COSTS (مصاريف الطرف الثالث المستمرة):
+   Whenever discussing pricing, budgets, mobile apps (especially iOS), cloud servers, or feasibility:
+   - Clarify that Apex's software development is a one-time project fee divided across completed deliverables and milestones.
+   - PROACTIVELY and clearly explain the essential ongoing operational costs that the client pays directly to global providers:
+     * Apple Developer Program: $99 / سنة (اشتراك سنوي إلزامي لشركة Apple لنشر وإبقاء تطبيق iOS في متجر App Store باسم العميل أو الشركة).
+     * Google Play Console: $25 تدفع لمرة واحدة فقط مدى الحياة (لشركة Google لنشر تطبيقات Android).
+     * Cloud Server / VPS: يبدأ من $10 - $20 شهرياً ويتم ترقيته تدريجياً وفق عدد المستخدمين الفعليين دون إهدار.
+     * Domain & SSL: حوالي $12 - $15 سنوياً لحجز النطاق الدولي (.com/.net).
+     * Payment Gateways: بدون رسوم اشتراك شهرية ثابتة، اقتطاع نسبة بسيطة (~2.5%) فقط عند نجاح أي عملية شراء.
+6. Tailored Engagement: If the user describes an idea, engage deeply with THEIR specific idea: analyze its core value, suggest modern tech stack elements (React Native, Node.js, real-time sockets, cloud databases), and ask 1 to 2 sharp clarifying questions.
+7. NEVER assume or invent a project domain (like food delivery or restaurants) that the user did not explicitly mention!
+8. Smart Suggestion Chips: Suggest 2 to 4 high-value, actionable quick-reply chips ("suggestions") in Arabic that directly advance the discussion (e.g. asking for MVP budget, discussing iOS fees, reviewing tech stack, or moving to contract generation).
+9. CRITICAL RULE FOR "readyForSpec":
    - Set "readyForSpec" to true ONLY IF the client has genuinely described a concrete project idea and its core workflow, OR if the client explicitly requests to generate the contract / blueprint / packages.
    - NEVER set "readyForSpec" to true for greetings, questions about your identity/name, complaints, or general questions!
 
-Language: ${language === 'ar' ? 'Professional, natural Modern Arabic (العربية الفصحى التقنية الراقية والودودة بطابع مهندس خبير)' : 'English'}.
+Language: ${language === 'ar' ? 'Professional, natural Modern Arabic (العربية الفصحى التقنية الراقية والودودة بطابع مهندس معمار برمجيات خبير)' : 'English'}.
 You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, no wrapping text):
 {
   "reply": "نص الرد الاستشاري الحواري...",
@@ -618,12 +648,12 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   }
   // 6. General Pricing Inquiries ("اسعاركم كام", "التكلفة كام", "بكام")
   else if (ent.isPricing && !ent.hasRealProjectIdea) {
-    reply = 'تسعير المشاريع في **Apex Software** يعتمد على حجم المتطلبات والشاشات ونوع المنظومة، ونقسمها عادة إلى 3 باقات استثمارية واضحة:\n\n• **باقة الانطلاق السريع (MVP):** لتجربة السوق بأقل تكلفة وأسرع وقت (تبدأ من 35,000 - 45,000 ج.م / $800 - $1,000).\n• **باقة النمو المتكاملة (Pro):** التطبيقات الكاملة مع كباتن وتتبع GPS ودفع إلكتروني ولوحة تحكم (تبدأ من 60,000 - 75,000 ج.م / $1,300 - $1,600).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية Microservices وخوادم مخصصة وميزات ذكاء اصطناعي.\n\nإذا شاركتني فكرة تطبيقك بكلمات بسيطة، سأقوم فوراً بحساب التكلفة والمدة الدقيقة الخاصة بك!';
+    reply = 'في **Apex Software** نعتمد فلسفة الهندسة الرشيقة (Lean Architecture): نبدأ معك بأقل ميزانية ممكنة لإطلاق النموذج الأولي (MVP) لتجربة السوق والتحقق من فكرتك بأقل مخاطرة مالية، مع شفافية كاملة في كافة التكاليف:\n\n• **باقة الانطلاق السريع (MVP):** تبدأ من 18,000 - 28,000 ج.م / $380 - $600 (أقل تكلفة لتطبيق عملي متقن لاختبار الإقبال في السوق بأقل مخاطرة).\n• **باقة النمو المتكاملة (Pro):** تبدأ من 45,000 - 65,000 ج.م / $950 - $1,400 (تطبيقات متكاملة مع تتبع GPS ودفع إلكتروني ولوحة تحكم).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية Microservices متطورة.\n\n⚠️ **الشفافية في التكاليف التشغيلية السنوية (رسوم الطرف الثالث):**\nلضمان دراستك للمشروع باحترافية، نوضح لك التكاليف التي تدفعها مباشرة للشركات الخارجية:\n- **تطبيق آبل (iOS):** حساب مطور أبل ($99 سنوياً تدفع لشركة Apple مباشرة لإبقاء التطبيق على App Store).\n- **تطبيق أندرويد:** حساب مطور جوجل ($25 لمرة واحدة مدى الحياة تدفع لـ Google).\n- **السيرفر والاستضافة السحابية:** تبدأ من $10 - $20 شهرياً وتزيد تدريجياً مع نمو الزوار.\n- **الدومين وشهادة الأمان:** حوالي $12 - $15 سنوياً للنطاق الدولي.\n\nما هي فكرة تطبيقك التي تود حساب تكلفتها بدقة؟';
     suggestions = [
-      'تطبيق توصيل وطلبات مع تتبع GPS',
-      'متجر إلكتروني متعدد التجار',
-      'منصة حجز عيادات وخدمات طبية',
-      'فكرة تطبيق مخصصة أخرى'
+      'أريد باقة MVP بأقل تكلفة ممكنة',
+      'تطبيق موبايل متكامل للآيفون والأندرويد',
+      'ما هي خطة الدفعات ومراحل التسليم؟',
+      'مناقشة فكرة مشروعي بالتفصيل'
     ];
     readyForSpec = false;
   }
@@ -977,10 +1007,10 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     ]
   });
 
-  // Calculate dynamic pricing based on platforms and features
-  const baseCostEGP = 42000;
-  const platformAddonEGP = (platforms.length - 2) * 11000;
-  const featuresAddonEGP = (ent.hasMaps ? 5000 : 0) + (ent.hasAI ? 6000 : 0) + (ent.hasVideo ? 8000 : 0) + (ent.isAuction ? 8000 : 0);
+  // Calculate dynamic lean pricing based on platforms and features
+  const baseCostEGP = 34000;
+  const platformAddonEGP = Math.max(0, (platforms.length - 2)) * 7000;
+  const featuresAddonEGP = (ent.hasMaps ? 4000 : 0) + (ent.hasAI ? 5000 : 0) + (ent.hasVideo ? 6000 : 0) + (ent.isAuction ? 6000 : 0);
   const totalCostEGP = baseCostEGP + platformAddonEGP + featuresAddonEGP;
   const totalCostUSD = Math.round(totalCostEGP / 47);
 
@@ -1103,9 +1133,12 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
         { category: 'لوحة التحكم السحابية المركزية (Super Admin)', costEGP: Math.round(totalCostEGP * 0.15), costUSD: Math.round(totalCostUSD * 0.15), desc: 'لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية' }
       ],
       annualOperationalEstimate: {
-        hosting: 'استضافة سحابية VPS عالية الأداء: تبدأ من $15 - $25 شهرياً',
-        mapsApi: 'خرائط جوجل: رصيد مجاني شهري $200 من Google Cloud يكفي للبداية',
-        domainSsl: 'اسم النطاق وشهادة التشفير SSL: مجاناً للسنة الأولى مع الاستضافة'
+        appleDeveloper: 'حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS في متجر التطبيقات)',
+        googlePlay: 'حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)',
+        hosting: 'استضافة سحابية VPS وسيرفر: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)',
+        domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+        mapsApi: 'خرائط جوجل وتحديد المواقع: رصيد مجاني شهري $200 من Google Cloud يغطي آلاف العمليات مجاناً',
+        paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
       }
     },
     paymentPlan: [
@@ -1130,11 +1163,11 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     ],
     packages: {
       mvp: {
-        title: 'باقة إطلاق النموذج الأولي (MVP)',
-        costEGP: Math.round(totalCostEGP * 0.55),
-        costUSD: Math.round(totalCostUSD * 0.55),
-        weeks: Math.max(4, Math.round(timelineWeeks * 0.6)),
-        desc: 'النسخة الأساسية للتحقق السريع من السوق واختبار الإقبال بأقل تكلفة ومخاطرة',
+        title: 'باقة إطلاق النموذج الأولي (MVP - الأقل تكلفة)',
+        costEGP: Math.round(totalCostEGP * 0.48),
+        costUSD: Math.round(totalCostUSD * 0.48),
+        weeks: Math.max(3, Math.round(timelineWeeks * 0.5)),
+        desc: 'النسخة الأساسية الرشيقة للتحقق السريع من السوق واختبار الإقبال بأقل تكلفة ومخاطرة مالية',
         keyDeliverables: [
           'تطبيق موبايل موحد للعملاء (Android & iOS)',
           'لوحة إدارة مصغرة لمتابعة العمليات',
@@ -1252,7 +1285,7 @@ async function transcribeAudio(audioBufferOrBase64, mimeType = 'audio/m4a', lang
     }
 
     const cleanMime = (mimeType || 'audio/m4a').split(';')[0].trim();
-    const modelsToTry = ['gemini-3.5-transcribe', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite', 'gemini-3.5-flash'];
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.5-transcribe', 'gemini-flash-lite-latest'];
     let lastError = null;
 
     for (const model of modelsToTry) {
