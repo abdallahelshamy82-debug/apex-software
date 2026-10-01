@@ -98,7 +98,9 @@ export default function InvoicesScreen() {
       if (receiptImage.startsWith('file:') || receiptImage.startsWith('blob:') || receiptImage.startsWith('content:') || receiptImage.startsWith('data:')) {
         const upRes = await api.uploadFile(receiptImage, 'receipt.jpg', 'image/jpeg');
         if (upRes && upRes.success && upRes.url) {
-          uploadedUrl = `${BASE_URL}${upRes.url}`;
+          uploadedUrl = (upRes.url.startsWith('http://') || upRes.url.startsWith('https://') || upRes.url.startsWith('data:'))
+            ? upRes.url
+            : `${BASE_URL}${upRes.url.startsWith('/') ? '' : '/'}${upRes.url}`;
         }
       }
 

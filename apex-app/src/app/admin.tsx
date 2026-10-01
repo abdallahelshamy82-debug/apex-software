@@ -79,7 +79,7 @@ export default function AdminDashboardScreen() {
   const [creatingInv, setCreatingInv] = useState(false);
 
   // Receipt Preview Modal
-  const [viewingReceipt, setViewingReceipt] = useState<string | null>(null);
+  const [viewingReceipt, setViewingReceipt] = useState<any | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -322,6 +322,18 @@ export default function AdminDashboardScreen() {
       if (Platform.OS === 'web' && typeof window !== 'undefined') window.alert(errMsg);
       else Alert.alert('Error', errMsg);
     }
+  };
+
+  
+  const getCleanReceiptUrl = (raw: any): string => {
+    if (!raw) return '';
+    const str = typeof raw === 'string' ? raw : (raw.receiptUrl || raw.url || '');
+    if (!str) return '';
+    if (str.includes('data:image')) {
+      const idx = str.indexOf('data:image');
+      return str.substring(idx);
+    }
+    return str;
   };
 
   const handleUpdateInvoiceStatus = async (invoiceId: number, status: string) => {
@@ -718,7 +730,7 @@ export default function AdminDashboardScreen() {
                   {inv.receiptUrl ? (
                     <TouchableOpacity 
                       style={[styles.smallActionBtn, { backgroundColor: '#3B82F6', flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4 }]}
-                      onPress={() => setViewingReceipt(inv.receiptUrl)}
+                      onPress={() => setViewingReceipt(inv)}
                     >
                       <Ionicons name="eye-outline" size={14} color="#FFF" />
                       <Text style={styles.smallActionText}>{isRTL ? 'معاينة الإيصال' : 'View Receipt'}</Text>
@@ -1725,6 +1737,188 @@ export default function AdminDashboardScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Receipt Preview Modal */}
+      <Modal visible={!!viewingReceipt} transparent animationType="fade" onRequestClose={() => setViewingReceipt(null)}>
+        <View style={[styles.modalOverlay, { alignItems: 'center' }]}>
+          <View style={[styles.modalContent, { 
+            backgroundColor: theme.card, 
+            borderColor: theme.border, 
+            maxHeight: '92%', 
+            width: '100%', 
+            maxWidth: 620,
+            padding: 18,
+            borderRadius: 20,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.35,
+            shadowRadius: 20,
+            elevation: 10,
+          }]}>
+            {/* Modal Header */}
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.border, paddingBottom: 10 }}>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#3B82F620', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="receipt-outline" size={20} color="#3B82F6" />
+                </View>
+                <View style={{ alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
+                  <Text style={{ color: theme.text, fontSize: 16, fontWeight: 'bold' }}>
+                    {isRTL ? 'معاينة إيصال سداد الفاتورة' : 'Invoice Payment Receipt'}
+                  </Text>
+                  <Text style={{ color: theme.textMuted, fontSize: 11 }}>
+                    {viewingReceipt?.invoiceNumber ? `#${viewingReceipt.invoiceNumber}` : ''} 
+                    {viewingReceipt?.clientName ? ` • ${viewingReceipt.clientName}` : ''}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setViewingReceipt(null)} style={{ padding: 6, borderRadius: 8, backgroundColor: `${theme.textMuted}15` }}>
+                <Ionicons name="close" size={20} color={theme.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Receipt Details Card (Notes, Sender info) */}
+            {viewingReceipt?.notes ? (
+              <View style={{ 
+                backgroundColor: theme.bg, 
+                borderRadius: 10, 
+                padding: 10, 
+                marginBottom: 12, 
+                borderWidth: 1, 
+                borderColor: theme.border,
+                flexDirection: isRTL ? 'row-reverse' : 'row',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <Ionicons name="information-circle-outline" size={18} color="#3B82F6" />
+                <Text style={{ color: theme.text, fontSize: 12, flex: 1, textAlign: isRTL ? 'right' : 'left' }}>
+                  {viewingReceipt.notes}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Receipt Image Container */}
+            <ScrollView 
+              contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }}
+              style={{ maxHeight: 460, backgroundColor: '#00000030', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: theme.border }}
+              showsVerticalScrollIndicator={true}
+            >
+              {(() => {
+                const cleanUrl = getCleanReceiptUrl(viewingReceipt);
+                if (!cleanUrl) {
+                  return (
+                    <View style={{ padding: 40, alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="image-outline" size={48} color={theme.textMuted} />
+                      <Text style={{ color: theme.textMuted, marginTop: 10, fontSize: 13 }}>
+                        {isRTL ? 'تعذر تحميل صورة الإيصال أو الرابط غير صالح' : 'Unable to load receipt image'}
+                      </Text>
+                    </View>
+                  );
+                }
+                return (
+                  <Image 
+                    source={{ uri: cleanUrl }} 
+                    style={{ 
+                      width: '100%', 
+                      height: 440,
+                      minWidth: 320,
+                    }} 
+                    resizeMode="contain" 
+                  />
+                );
+              })()}
+            </ScrollView>
+
+            {/* Footer Action Buttons */}
+            <View style={{ 
+              flexDirection: isRTL ? 'row-reverse' : 'row', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              gap: 8, 
+              marginTop: 14, 
+              paddingTop: 12, 
+              borderTopWidth: 1, 
+              borderTopColor: theme.border 
+            }}>
+              {/* External open / Download button */}
+              <TouchableOpacity
+                onPress={() => {
+                  const cleanUrl = getCleanReceiptUrl(viewingReceipt);
+                  if (!cleanUrl) return;
+                  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    const win = window.open();
+                    if (win) {
+                      win.document.write(`<img src="${cleanUrl}" style="max-width:100%; height:auto;" />`);
+                    }
+                  } else {
+                    Linking.openURL(cleanUrl).catch(() => {});
+                  }
+                }}
+                style={{
+                  flexDirection: isRTL ? 'row-reverse' : 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingVertical: 9,
+                  paddingHorizontal: 14,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  backgroundColor: theme.bg
+                }}
+              >
+                <Ionicons name="open-outline" size={15} color={theme.text} />
+                <Text style={{ color: theme.text, fontSize: 12, fontWeight: '600' }}>
+                  {isRTL ? 'فتح بالحجم الكامل' : 'Open Full'}
+                </Text>
+              </TouchableOpacity>
+
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 8, flex: 1, justifyContent: isRTL ? 'flex-start' : 'flex-end' }}>
+                {/* Direct "Mark Paid" button if not already paid */}
+                {viewingReceipt?.status !== 'PAID' && viewingReceipt?.id ? (
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                      backgroundColor: '#10B981',
+                      paddingVertical: 9,
+                      paddingHorizontal: 16,
+                      borderRadius: 10,
+                    }}
+                    onPress={async () => {
+                      const invId = viewingReceipt.id;
+                      setViewingReceipt(null);
+                      await handleUpdateInvoiceStatus(invId, 'PAID');
+                    }}
+                  >
+                    <Ionicons name="checkmark-done-circle" size={16} color="#FFF" />
+                    <Text style={{ color: '#FFF', fontSize: 13, fontWeight: 'bold' }}>
+                      {isRTL ? 'اعتماد كمدفوعة الآن' : 'Approve Payment'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+
+                {/* Close Button */}
+                <TouchableOpacity
+                  style={{
+                    paddingVertical: 9,
+                    paddingHorizontal: 16,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  }}
+                  onPress={() => setViewingReceipt(null)}
+                >
+                  <Text style={{ color: theme.textMuted, fontSize: 12 }}>
+                    {isRTL ? 'إغلاق' : 'Close'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+          </View>
+        </View>
+      </Modal>
+
 
     </SafeAreaView>
   );
