@@ -667,6 +667,24 @@ app.post('/api/auth/register-send-otp', (req, res) => {
   });
 });
 
+// 🛡️ Helper: Convert Arabic-Indic / Persian digits to standard ASCII digits
+const normalizeDigits = (str) => {
+  if (!str) return '';
+  return str.toString()
+    .replace(/[٠۰]/g, '0')
+    .replace(/[١۱]/g, '1')
+    .replace(/[٢۲]/g, '2')
+    .replace(/[٣۳]/g, '3')
+    .replace(/[٤۴]/g, '4')
+    .replace(/[٥۵]/g, '5')
+    .replace(/[٦۶]/g, '6')
+    .replace(/[٧۷]/g, '7')
+    .replace(/[٨۸]/g, '8')
+    .replace(/[٩۹]/g, '9')
+    .replace(/\s+/g, '')
+    .trim();
+};
+
 // 2. Verify OTP and Activate Account
 app.post('/api/auth/register-verify-otp', (req, res) => {
   const { email, code, deviceId } = req.body;
@@ -675,7 +693,7 @@ app.post('/api/auth/register-verify-otp', (req, res) => {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
-  const cleanCode = code.toString().trim();
+  const cleanCode = normalizeDigits(code);
 
   const handleActivation = (record) => {
     if (!record) {
@@ -688,23 +706,26 @@ app.post('/api/auth/register-verify-otp', (req, res) => {
       return res.status(400).json({ success: false, message: 'انتهت صلاحية كود التحقق (15 دقيقة). يرجى طلب كود جديد.' });
     }
 
-    if (record.code !== cleanCode) {
+    const targetCode = normalizeDigits(record.code);
+    if (targetCode !== cleanCode) {
       return res.status(400).json({ success: false, message: 'كود التحقق غير صحيح. يرجى التأكد من الرمز المرسل لبريدك الإلكتروني.' });
     }
 
     const isAdmin = getAdminEmails().includes(normalizedEmail);
     const role = isAdmin ? 'admin' : 'client';
-    const effectiveDeviceId = deviceId || record.deviceId || null;
+    const effectiveDeviceId = deviceId || record.deviceId || record.deviceid || null;
+    const effectiveFullName = record.fullName || record.fullname || 'Apex Client';
+    const effectiveCompany = record.company || 'Apex Client';
 
     db.run(
       `INSERT INTO users (fullName, email, company, password, role, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
-      [record.fullName, normalizedEmail, record.company || 'Apex Client', record.password, role, effectiveDeviceId],
+      [effectiveFullName, normalizedEmail, effectiveCompany, record.password, role, effectiveDeviceId],
       function(insertErr) {
         if (insertErr) {
           // If already exists, update and proceed
           db.run(
             `UPDATE users SET password = ?, fullName = ?, company = ?, deviceId = COALESCE(?, deviceId) WHERE LOWER(email) = LOWER(?)`,
-            [record.password, record.fullName, record.company || 'Apex Client', effectiveDeviceId, normalizedEmail]
+            [record.password, effectiveFullName, effectiveCompany, effectiveDeviceId, normalizedEmail]
           );
         }
 
@@ -717,15 +738,15 @@ app.post('/api/auth/register-verify-otp', (req, res) => {
 
           const user = {
             id: row.id,
-            fullName: row.fullName,
+            fullName: row.fullName || row.fullname,
             email: row.email,
             role: row.role,
             company: row.company,
             phone: row.phone,
-            avatarUrl: row.avatarUrl,
-            projectName: row.projectName,
-            projectPhase: row.projectPhase,
-            projectProgress: row.projectProgress || 0
+            avatarUrl: row.avatarUrl || row.avatarurl,
+            projectName: row.projectName || row.projectname,
+            projectPhase: row.projectPhase || row.projectphase,
+            projectProgress: row.projectProgress || row.projectprogress || 0
           };
           const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
 
@@ -777,11 +798,14 @@ app.post('/api/auth/register-resend-otp', (req, res) => {
     record.expires = expires;
     pendingRegistrations.set(normalizedEmail, record);
 
-    db.run(`UPDATE email_verifications SET code = ?, expires = ? WHERE LOWER(email) = LOWER(?)`, [code, expires, normalizedEmail], async () => {
+    db.run(`UPDATE email_verifications SET code = ?, expires = ? WHERE LOWER(email) = LOWER(?)`, [code, expires, normalizedEmail], async (updateErr) => {
+      if (updateErr) {
+        console.warn('Warning: db update in register-resend-otp failed:', updateErr.message);
+      }
       try {
         const mailRes = await emailService.sendVerificationEmail({
           to: normalizedEmail,
-          fullName: record.fullName,
+          fullName: record.fullName || record.fullname,
           code
         });
 

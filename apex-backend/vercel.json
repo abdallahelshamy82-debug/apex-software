@@ -15,6 +15,8 @@
   "env": {
     "NODE_ENV": "production",
     "GMAIL_USER": "abdallahelshamy82@gmail.com",
-    "GMAIL_PASS": "vghaqgxakhyiazwi"
+    "GMAIL_PASS": "vghaqgxakhyiazwi",
+    "DATABASE_URL": "postgresql://neondb_owner:npg_xu2Y9rIbNSlC@ep-lively-voice-avevl3vg-pooler.c-11.us-east-1.aws.neon.tech/neondb?sslmode=require",
+    "JWT_SECRET": "apex_sec_8f94d1b7a60249e8b39c0f6718d531a7c29e48b1d9603f7e5b2a4c8d1e3f7a9b"
   }
 }

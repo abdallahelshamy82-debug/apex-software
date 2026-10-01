@@ -278,8 +278,9 @@ export default function LoginScreen() {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (!otpCode || otpCode.length < 6) {
+  const handleVerifyOtp = async (codeToVerify?: string) => {
+    const code = (typeof codeToVerify === 'string' ? codeToVerify : otpCode || '').trim();
+    if (!code || code.length < 6) {
       setOtpError(true);
       await haptics.warning();
       Alert.alert(isRTL ? 'تنبيه' : 'Alert', isRTL ? 'يرجى إدخال كود التحقق المكون من 6 أرقام كاملاً' : 'Please enter the full 6-digit code');
@@ -289,7 +290,7 @@ export default function LoginScreen() {
     setVerifyingLoading(true);
     setOtpError(false);
     const cleanEmail = email.trim().toLowerCase();
-    const res = await api.registerVerifyOtp(cleanEmail, otpCode);
+    const res = await api.registerVerifyOtp(cleanEmail, code);
     setVerifyingLoading(false);
 
     if (res.success) {
@@ -600,10 +601,10 @@ export default function LoginScreen() {
                   <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 13 }}>{email.trim().toLowerCase()}</Text>
                 </View>
 
-                <Text style={{ color: theme.textMuted, fontSize: 11, textAlign: 'center', lineHeight: 16, marginBottom: 18, paddingHorizontal: 10 }}>
+                <Text style={{ color: theme.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 14, paddingHorizontal: 10 }}>
                   {isRTL 
-                    ? '💡 إذا لم تجد الرسالة في صندوق الوارد، يرجى فحص مجلد الرسائل غير المرغوب فيها (Spam / Junk) أو الترويجية.'
-                    : '💡 If not in inbox, please check your Spam / Junk or Promotions folder.'}
+                    ? '💡 يصلك الكود فورياً في البريد الوارد أو التحديثات / الرسائل الترويجية.'
+                    : '💡 Check your inbox or updates/promotions folder for your instant verification code.'}
                 </Text>
 
                 <OtpInput
@@ -613,6 +614,9 @@ export default function LoginScreen() {
                     setOtpCode(val);
                     if (otpError) setOtpError(false);
                   }}
+                  onComplete={(completedCode) => {
+                    handleVerifyOtp(completedCode);
+                  }}
                   hasError={otpError}
                   theme={theme}
                   isRTL={isRTL}
@@ -620,14 +624,14 @@ export default function LoginScreen() {
                 />
 
                 {otpError && (
-                  <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 10, textAlign: 'center', fontWeight: '500' }}>
+                  <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 8, textAlign: 'center', fontWeight: '500' }}>
                     {isRTL ? 'كود التحقق غير صحيح أو انتهت صلاحيته' : 'Invalid or expired verification code'}
                   </Text>
                 )}
 
                 <TouchableOpacity 
-                  style={[styles.submitBtn, { backgroundColor: theme.primary, marginTop: 24, opacity: verifyingLoading ? 0.7 : 1 }]}
-                  onPress={handleVerifyOtp}
+                  style={[styles.submitBtn, { backgroundColor: theme.primary, marginTop: 20, opacity: verifyingLoading ? 0.7 : 1 }]}
+                  onPress={() => handleVerifyOtp()}
                   disabled={verifyingLoading}
                 >
                   {verifyingLoading ? (
@@ -639,9 +643,28 @@ export default function LoginScreen() {
                   )}
                 </TouchableOpacity>
 
-                <View style={{ marginTop: 22, alignItems: 'center', gap: 14, width: '100%' }}>
+                <View style={{ marginTop: 20, alignItems: 'center', gap: 12, width: '100%' }}>
                   {canResend ? (
-                    <TouchableOpacity onPress={handleResendOtp} disabled={resendLoading}>
+                    <TouchableOpacity 
+                      onPress={handleResendOtp} 
+                      disabled={resendLoading}
+                      style={{
+                        paddingVertical: 10,
+                        paddingHorizontal: 18,
+                        borderRadius: 12,
+                        backgroundColor: `${theme.primary}18`,
+                        borderWidth: 1,
+                        borderColor: `${theme.primary}40`,
+                        flexDirection: isRTL ? 'row-reverse' : 'row',
+                        alignItems: 'center',
+                        gap: 8
+                      }}
+                    >
+                      {resendLoading ? (
+                        <ActivityIndicator size="small" color={theme.primary} />
+                      ) : (
+                        <Ionicons name="refresh" size={16} color={theme.primary} />
+                      )}
                       <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '700' }}>
                         {resendLoading 
                           ? (isRTL ? 'جاري الإرسال...' : 'Sending...') 
@@ -649,14 +672,27 @@ export default function LoginScreen() {
                       </Text>
                     </TouchableOpacity>
                   ) : (
-                    <Text style={{ color: theme.textMuted, fontSize: 12 }}>
-                      {isRTL 
-                        ? `إعادة إرسال الكود خلال (${resendTimer} ثانية)` 
-                        : `Resend code in (${resendTimer}s)`}
-                    </Text>
+                    <View style={{
+                      paddingVertical: 7,
+                      paddingHorizontal: 14,
+                      borderRadius: 10,
+                      backgroundColor: `${theme.btnBg}`,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      flexDirection: isRTL ? 'row-reverse' : 'row',
+                      alignItems: 'center',
+                      gap: 6
+                    }}>
+                      <Ionicons name="time-outline" size={14} color={theme.textMuted} />
+                      <Text style={{ color: theme.textMuted, fontSize: 12, fontWeight: '600' }}>
+                        {isRTL 
+                          ? `إعادة إرسال الكود خلال (${resendTimer} ثانية)` 
+                          : `Resend code in (${resendTimer}s)`}
+                      </Text>
+                    </View>
                   )}
 
-                  <TouchableOpacity onPress={() => setIsVerifyingOtp(false)} style={{ marginTop: 2 }}>
+                  <TouchableOpacity onPress={() => setIsVerifyingOtp(false)} style={{ marginTop: 4 }}>
                     <Text style={{ color: theme.textMuted, fontSize: 12, textDecorationLine: 'underline' }}>
                       {isRTL ? '← تعديل البيانات أو البريد الإلكتروني' : '← Edit details or email'}
                     </Text>

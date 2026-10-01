@@ -1,8 +1,28 @@
 const fs = require('fs');
 const path = require('path');
 
+// Auto-load .env from current directory if present
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  try {
+    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) return;
+      const idx = trimmed.indexOf('=');
+      if (idx > 0) {
+        const k = trimmed.substring(0, idx).trim();
+        const v = trimmed.substring(idx + 1).trim().replace(/^["']|["']$/g, '');
+        if (!process.env[k]) process.env[k] = v;
+      }
+    });
+  } catch (e) {}
+}
+
+const DEFAULT_PG_URL = 'postgresql://neondb_owner:npg_xu2Y9rIbNSlC@ep-lively-voice-avevl3vg-pooler.c-11.us-east-1.aws.neon.tech/neondb?sslmode=require';
+
 // Check if valid postgres connection string exists
-const rawConnStr = (process.env.DATABASE_URL || '').trim().replace(/^["']|["']$/g, '');
+const rawConnStr = (process.env.DATABASE_URL || DEFAULT_PG_URL).trim().replace(/^["']|["']$/g, '');
 const hasValidPg = rawConnStr && !rawConnStr.includes('[YOUR-PASSWORD]') && rawConnStr.startsWith('postgres');
 
 let pool = null;
@@ -132,14 +152,19 @@ module.exports = {
       let pgSql = convertSql(sql);
       const isInsert = /^\s*INSERT/i.test(pgSql);
       if (isInsert && !/RETURNING/i.test(pgSql)) {
-        pgSql += ' RETURNING id';
+        if (/INTO\s+email_verifications/i.test(pgSql)) {
+          pgSql += ' RETURNING email';
+        } else {
+          pgSql += ' RETURNING id';
+        }
       }
 
       pool.query(pgSql, params, (err, res) => {
         if (!err) {
           if (cb) {
+            const firstRow = (isInsert && res.rows && res.rows.length) ? res.rows[0] : null;
             const context = {
-              lastID: (isInsert && res.rows && res.rows.length) ? res.rows[0].id : null,
+              lastID: firstRow ? (firstRow.id || firstRow.email) : null,
               changes: res.rowCount || 0
             };
             return cb.call(context, null);

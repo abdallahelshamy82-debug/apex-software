@@ -131,7 +131,7 @@ const getHtmlTemplate = (title, contentHtml) => `
 `;
 
 // Helper to send or log
-async function sendMail({ to, subject, html }) {
+async function sendMail({ to, subject, html, customText }) {
   const emailRecord = {
     id: Date.now() + Math.random().toString(36).substring(2, 6),
     to,
@@ -147,17 +147,24 @@ async function sendMail({ to, subject, html }) {
 
   if (transporter) {
     try {
-      const plainText = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      const plainText = customText || html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
                             .replace(/<[^>]+>/g, ' ')
                             .replace(/\s+/g, ' ')
                             .trim();
 
       const info = await transporter.sendMail({
         from: `"Apex Software" <${GMAIL_USER}>`,
+        replyTo: `"Apex Support" <${GMAIL_USER}>`,
         to,
         subject,
         text: plainText,
-        html
+        html,
+        priority: 'high',
+        headers: {
+          'X-Entity-Ref-ID': `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          'X-Auto-Response-Suppress': 'OOF, AutoReply',
+          'Importance': 'high'
+        }
       });
       console.log(`✅ [Gmail] Real email delivered to ${to} (ID: ${info.messageId})`);
       emailRecord.status = 'delivered';
@@ -309,39 +316,40 @@ function getProjectUpdateHtml(projectName = 'تطبيق المتجر الإلك�
 }
 
 async function sendPasswordResetEmail({ to, fullName, code }) {
-  const title = '🔐 كود استعادة كلمة المرور - Apex Software';
+  const title = 'رمز استعادة كلمة المرور - Apex Software';
   const contentHtml = `
-    <p>مرحباً ${fullName}،</p>
+    <p>مرحباً ${fullName || 'عميلنا العزيز'}،</p>
     <p>لقد استلمنا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك على منصة <strong>Apex Software</strong>.</p>
     <div class="card-box" style="text-align: center; padding: 25px;">
-      <p style="margin: 0 0 10px; color: #64748b; font-size: 14px;">كود التحقق السري الخاص بك (صالح لمدة 15 دقيقة):</p>
+      <p style="margin: 0 0 10px; color: #64748b; font-size: 14px;">رمز التحقق السري (صالح لمدة 15 دقيقة):</p>
       <div style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #0284c7; background: #e0f2fe; padding: 12px 20px; border-radius: 12px; display: inline-block;">
         ${code}
       </div>
     </div>
-    <p style="color: #ef4444; font-size: 13px;">⚠️ إذا لم تطلب استعادة كلمة المرور، يرجى تجاهل هذا البريد وعدم مشاركة هذا الرمز مع أي شخص.</p>
+    <p style="color: #64748b; font-size: 12px;">إذا لم تكن أنت صاحب هذا الطلب، يرجى تجاهل هذا البريد وعدم مشاركة هذا الرمز مع أي شخص.</p>
   `;
   const html = getHtmlTemplate(title, contentHtml);
-  return await sendMail({ to, subject: `[Apex Security] كود استعادة كلمة المرور: ${code}`, html });
+  const plainText = `مرحباً ${fullName || 'عميلنا العزيز'}\n\nرمز استعادة كلمة المرور الخاص بك في منصة Apex Software هو: ${code}\nالرمز صالح لمدة 15 دقيقة.\n\nإذا لم تطلب استعادة كلمة المرور، يرجى تجاهل هذه الرسالة.\nفريق عمل Apex Software`;
+  return await sendMail({ to, subject: `رمز استعادة كلمة المرور: ${code}`, html, customText: plainText });
 }
 
 async function sendVerificationEmail({ to, fullName, code }) {
-  const title = '✨ رمز تفعيل حسابك - Apex Software';
+  const title = 'رمز تأكيد حسابك - Apex Software';
   const contentHtml = `
     <p>مرحباً ${fullName || 'عميلنا العزيز'}،</p>
-    <p>شكراً لإنشاء حسابك في منصة <strong>Apex Software</strong> للأنظمة والتطبيقات السحابية.</p>
-    <p>لتأكيد ملكية بريدك الإلكتروني وتفعيل حسابك بأمان، يرجى إدخال رمز التحقق التالي في التطبيق:</p>
+    <p>يسعدنا انضمامك إلى منصة <strong>Apex Software</strong> لتطوير الحلول الرقمية والسحابية.</p>
+    <p>لتأكيد ملكية بريدك الإلكتروني وتفعيل حسابك، يرجى إدخال رمز التحقق التالي:</p>
     <div class="card-box" style="text-align: center; padding: 25px;">
-      <p style="margin: 0 0 10px; color: #64748b; font-size: 14px;">كود التفعيل (صالح لمدة 15 دقيقة):</p>
+      <p style="margin: 0 0 10px; color: #64748b; font-size: 14px;">رمز التفعيل السري (صالح لمدة 15 دقيقة):</p>
       <div style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #0284c7; background: #e0f2fe; padding: 12px 20px; border-radius: 12px; display: inline-block;">
         ${code}
       </div>
     </div>
-    <p style="color: #64748b; font-size: 13px;">💡 إذا لم تجد الرسالة في صندوق الوارد، يرجى فحص مجلد الرسائل غير المرغوب فيها (Spam / Junk) أو الترويجية.</p>
-    <p style="color: #94a3b8; font-size: 12px;">إذا لم تقم بإنشاء حساب على Apex Software، يرجى تجاهل هذه الرسالة بأمان.</p>
+    <p style="color: #64748b; font-size: 12px;">يرجى عدم مشاركة هذا الرمز مع أي شخص. ينتهي مفعول هذا الرمز تلقائياً بعد 15 دقيقة.</p>
   `;
   const html = getHtmlTemplate(title, contentHtml);
-  return await sendMail({ to, subject: `[Apex Security] كود تفعيل حسابك: ${code}`, html });
+  const plainText = `مرحباً ${fullName || 'عميلنا العزيز'}\n\nرمز تأكيد بريدك الإلكتروني وتفعيل حسابك في Apex Software هو: ${code}\nالرمز صالح لمدة 15 دقيقة.\n\nإذا لم تقم بإنشاء هذا الحساب، يرجى تجاهل هذه الرسالة.\nفريق عمل Apex Software`;
+  return await sendMail({ to, subject: `رمز تأكيد حسابك في Apex: ${code}`, html, customText: plainText });
 }
 
 async function sendNewInvoiceEmail({ to, fullName, invoiceNumber, amount, title: invoiceTitle }) {
