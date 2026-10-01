@@ -94,6 +94,30 @@ export default function EstimatorScreen() {
       );
       return;
     }
+
+    const isNameIncomplete = !currentUser?.fullName || 
+      currentUser.fullName.trim() === '' || 
+      currentUser.fullName === currentUser.email?.split('@')[0] ||
+      currentUser.fullName.toLowerCase() === 'client' ||
+      currentUser.fullName === 'عميل';
+
+    if (isNameIncomplete) {
+      Alert.alert(
+        isRTL ? 'استكمال الاسم والشركة أولاً' : 'Name Required',
+        isRTL 
+          ? 'لتسجيل طلب مشروعك وإصدار عرض السعر باسمك الرسمي، يرجى كتابة اسمك الكريم واسم شركتك في الملف الشخصي.' 
+          : 'Please enter your full name and company in your profile to register this project under your name.',
+        [
+          { text: isRTL ? 'إلغاء' : 'Cancel', style: 'cancel' },
+          { 
+            text: isRTL ? 'كتابة اسمي في البروفايل' : 'Go to Profile', 
+            onPress: () => router.push('/profile?from=project') 
+          }
+        ]
+      );
+      return;
+    }
+
     setLoading(true);
     const details = {
       platforms: selectedPlatforms,

@@ -906,6 +906,30 @@ export default function CopilotScreen() {
       return;
     }
 
+    const isNameIncomplete = !currentUser?.fullName || 
+      currentUser.fullName.trim() === '' || 
+      currentUser.fullName === currentUser.email?.split('@')[0] ||
+      currentUser.fullName.toLowerCase() === 'client' ||
+      currentUser.fullName === 'عميل';
+
+    if (isNameIncomplete) {
+      haptics.warning();
+      Alert.alert(
+        isRTL ? 'استكمال الاسم والشركة أولاً' : 'Name Required',
+        isRTL 
+          ? 'لتوثيق عقد المشروع وإصدار خطة العمل والفواتير باسمك الرسمي، يرجى كتابة اسمك الكريم واسم مؤسستك في الملف الشخصي.' 
+          : 'Please enter your full name and company in your profile to document the contract under your name.',
+        [
+          { text: isRTL ? 'إلغاء' : 'Cancel', style: 'cancel' },
+          { 
+            text: isRTL ? 'كتابة اسمي في البروفايل' : 'Go to Profile', 
+            onPress: () => router.push('/profile?from=project') 
+          }
+        ]
+      );
+      return;
+    }
+
     haptics.heavy();
     setConverting(true);
 

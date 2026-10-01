@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { FloatingInput } from '../components/FloatingInput';
@@ -13,6 +13,8 @@ import { useResponsive } from '../hooks/useResponsive';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ from?: string }>();
+  const fromReason = params.from; // 'payment' | 'project'
   const responsive = useResponsive();
   const { theme, isRTL, currentUser, setCurrentUser, activeTheme } = useSettings();
 
@@ -22,6 +24,15 @@ export default function ProfileScreen() {
   const [phone, setPhone] = useState(currentUser?.phone || '');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(currentUser?.avatarUrl || null);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.fullName) setFullName(currentUser.fullName);
+      if (currentUser.company) setCompany(currentUser.company);
+      if (currentUser.phone) setPhone(currentUser.phone);
+      if (currentUser.avatarUrl) setAvatarUrl(currentUser.avatarUrl);
+    }
+  }, [currentUser]);
 
   // Password fields state
   const [showPasswordSection, setShowPasswordSection] = useState(false);
@@ -58,17 +69,45 @@ export default function ProfileScreen() {
   };
 
   const handleSaveProfile = async () => {
+    if (!fullName || fullName.trim() === '') {
+      Alert.alert(
+        isRTL ? 'تنبيه' : 'Notice',
+        isRTL ? 'يرجى إدخال اسمك الكريم ليتم توثيقه في فواتيرك وعقد مشروعك.' : 'Please enter your full name.'
+      );
+      return;
+    }
+
     setSavingProfile(true);
-    const res = await api.updateProfile({ fullName, company, phone, avatarUrl: avatarUrl || undefined });
+    const res = await api.updateProfile({ 
+      fullName: fullName.trim(), 
+      company: company ? company.trim() : '', 
+      phone: phone ? phone.trim() : '', 
+      avatarUrl: avatarUrl || undefined 
+    });
     setSavingProfile(false);
 
     if (res.success && res.user) {
       setCurrentUser(res.user);
       await AsyncStorage.setItem('userData', JSON.stringify(res.user));
-      Alert.alert(
-        isRTL ? 'تم التحديث بنجاح' : 'Updated Successfully',
-        isRTL ? 'تم حفظ بياناتك الشخصية.' : 'Your profile has been updated.'
-      );
+      
+      if (fromReason === 'payment') {
+        Alert.alert(
+          isRTL ? 'تم حفظ بياناتك بنجاح' : 'Profile Updated',
+          isRTL ? 'تم توثيق اسمك، يمكنك الآن متابعة سداد الفاتورة وإصدار الإيصال باسمك الرسمي.' : 'Profile updated, redirecting to invoices.',
+          [{ text: isRTL ? 'متابعة السداد الآن' : 'Continue to Payment', onPress: () => router.push('/invoices') }]
+        );
+      } else if (fromReason === 'project') {
+        Alert.alert(
+          isRTL ? 'تم حفظ بياناتك بنجاح' : 'Profile Updated',
+          isRTL ? 'تم توثيق اسمك وشركتك، جاري الانتقال لمتابعة مشروعك.' : 'Profile updated, returning to project.',
+          [{ text: isRTL ? 'متابعة المشروع' : 'Continue to Project', onPress: () => router.push('/dashboard') }]
+        );
+      } else {
+        Alert.alert(
+          isRTL ? 'تم التحديث بنجاح' : 'Updated Successfully',
+          isRTL ? 'تم حفظ بياناتك الشخصية.' : 'Your profile has been updated.'
+        );
+      }
     } else {
       Alert.alert('Error', res.message || 'Failed to update profile');
     }
@@ -142,6 +181,58 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         
+        {fromReason === 'payment' && (
+          <View style={{
+            backgroundColor: '#0284c715',
+            borderColor: '#0284c7',
+            borderWidth: 1.5,
+            borderRadius: 14,
+            padding: 14,
+            marginBottom: 16,
+            flexDirection: isRTL ? 'row-reverse' : 'row',
+            alignItems: 'center',
+            gap: 12
+          }}>
+            <Ionicons name="card-outline" size={26} color="#0284c7" />
+            <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
+              <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 14 }}>
+                {isRTL ? 'مطلوب استكمال الاسم قبل سداد الفاتورة' : 'Name required before invoice payment'}
+              </Text>
+              <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 2, textAlign: isRTL ? 'right' : 'left' }}>
+                {isRTL 
+                  ? 'يرجى كتابة اسمك الكريم واسم مؤسستك أو شركتك لتصدر الفاتورة وإيصال السداد باسمك الرسمي المعتمد، ثم اضغط "حفظ التغييرات".' 
+                  : 'Please enter your full name and company so the invoice & receipt are issued under your official name.'}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {fromReason === 'project' && (
+          <View style={{
+            backgroundColor: '#10b98115',
+            borderColor: '#10b981',
+            borderWidth: 1.5,
+            borderRadius: 14,
+            padding: 14,
+            marginBottom: 16,
+            flexDirection: isRTL ? 'row-reverse' : 'row',
+            alignItems: 'center',
+            gap: 12
+          }}>
+            <Ionicons name="rocket-outline" size={26} color="#10b981" />
+            <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
+              <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 14 }}>
+                {isRTL ? 'مطلوب استكمال الاسم والشركة لبدء المشروع' : 'Name required to start project'}
+              </Text>
+              <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 2, textAlign: isRTL ? 'right' : 'left' }}>
+                {isRTL 
+                  ? 'لتوثيق عقد البرمجة وتجهيز مراحل العمل باسمك الرسمي، يرجى كتابة اسمك واسم شركتك ثم اضغط "حفظ التغييرات".' 
+                  : 'Please enter your full name and company to document the project contract under your official name.'}
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Avatar Card */}
         <View style={[styles.card, styles.avatarCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.avatarWrapper}>

@@ -1737,19 +1737,21 @@ app.get('/invoice-print/:id', (req, res) => {
           </div>
 
           <div class="info-cards">
-            <div class="info-box">
-              <h4>👤 فاتورة إلى (العميل):</h4>
-              <p><strong>الاسم:</strong> ${inv.clientName || inv.clientname || 'عميل كريم'}</p>
-              <p><strong>البريد:</strong> ${inv.clientEmail || inv.clientemail || '-'}</p>
-              <p><strong>الشركة:</strong> ${inv.clientCompany || inv.clientcompany || 'مؤسسة مستقلة'}</p>
+            <div class="info-box" style="border-top: 3px solid #0284c7;">
+              <h4>👤 فاتورة إلى (بيانات العميل والمشروع):</h4>
+              <p><strong>اسم العميل:</strong> ${inv.clientName || inv.clientname || 'عميل كريم'}</p>
+              <p><strong>الشركة / المؤسسة:</strong> ${inv.clientCompany || inv.clientcompany || 'مؤسسة مستقلة'}</p>
+              <p><strong>اسم المشروع:</strong> ${inv.projectName || inv.projectname || 'مشروع برمجي مخصص'}</p>
+              <p><strong>البريد الإلكتروني:</strong> ${inv.clientEmail || inv.clientemail || '-'}</p>
               ${(inv.clientPhone || inv.clientphone) ? `<p><strong>الهاتف:</strong> ${inv.clientPhone || inv.clientphone}</p>` : ''}
             </div>
-            <div class="info-box">
-              <h4>🏢 الشركة المصدرة للفاتورة:</h4>
+            <div class="info-box" style="border-top: 3px solid #10b981;">
+              <h4>🏢 الشركة المنفذة والمصدرة للفاتورة:</h4>
               <p><strong>الاسم:</strong> ${companyName}</p>
-              <p><strong>النشاط:</strong> استشارات وتطوير برمجيات ومواقع وتطبيقات</p>
-              <p><strong>المشروع:</strong> ${inv.projectName || inv.projectname || 'تطوير مشروع تقني مخصص'}</p>
+              <p><strong>النشاط:</strong> استشارات وتطوير برمجيات وتطبيقات سحابية</p>
               <p><strong>الرقم الضريبي:</strong> ${taxId}</p>
+              <p><strong>البريد:</strong> ${companyEmail}</p>
+              <p><strong>الهاتف:</strong> ${companyPhone}</p>
             </div>
           </div>
 
@@ -1767,6 +1769,7 @@ app.get('/invoice-print/:id', (req, res) => {
                 <td>1</td>
                 <td>
                   <strong>${inv.title || 'دفعة تعاقدية لتطوير البرمجيات'}</strong>
+                  ${(inv.projectName || inv.projectname) ? `<div style="font-size: 13px; color: #0284c7; font-weight: bold; margin-top: 4px;">🚀 المشروع: ${inv.projectName || inv.projectname}</div>` : ''}
                   ${inv.notes ? `<div style="font-size: 12px; color: #64748b; margin-top: 4px;">${inv.notes}</div>` : ''}
                 </td>
                 <td style="text-align: center;">1</td>

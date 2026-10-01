@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Linking, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Linking, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
@@ -337,6 +337,28 @@ export default function DashboardScreen() {
               style={[styles.startProjectBtn, { backgroundColor: theme.primary, flexDirection: isRTL ? 'row-reverse' : 'row' }]}
               onPress={() => {
                 haptics.medium();
+                const isNameIncomplete = !currentUser?.fullName || 
+                  currentUser.fullName.trim() === '' || 
+                  currentUser.fullName === currentUser.email?.split('@')[0] ||
+                  currentUser.fullName.toLowerCase() === 'client' ||
+                  currentUser.fullName === 'عميل';
+
+                if (isNameIncomplete) {
+                  Alert.alert(
+                    isRTL ? 'استكمال الاسم والشركة' : 'Profile Name Required',
+                    isRTL 
+                      ? 'لبدء مشروعك وتوثيقه باسمك الرسمي، يرجى كتابة اسمك الكريم واسم شركتك في الملف الشخصي أولاً.' 
+                      : 'Please enter your full name and company in your profile to start your project.',
+                    [
+                      { text: isRTL ? 'إلغاء' : 'Cancel', style: 'cancel' },
+                      { 
+                        text: isRTL ? 'كتابة اسمي في البروفايل' : 'Go to Profile', 
+                        onPress: () => router.push('/profile?from=project') 
+                      }
+                    ]
+                  );
+                  return;
+                }
                 router.push('/estimator');
               }}
             >

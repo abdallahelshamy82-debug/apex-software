@@ -344,6 +344,29 @@ export default function InvoicesScreen() {
                       style={[styles.actionPayBtn, { backgroundColor: isReview ? '#F59E0B' : theme.primary }]}
                       onPress={() => {
                         haptics.selection();
+                        const isProfileIncomplete = !currentUser?.fullName || 
+                          currentUser.fullName.trim() === '' || 
+                          currentUser.fullName === currentUser.email?.split('@')[0] || 
+                          currentUser.fullName.toLowerCase() === 'client' || 
+                          currentUser.fullName === 'عميل';
+
+                        if (isProfileIncomplete) {
+                          Alert.alert(
+                            isRTL ? 'استكمال الاسم والبيانات مطلوب' : 'Full Name Required',
+                            isRTL 
+                              ? 'لسداد الفاتورة وإصدار الإيصال المعتمد باسمك واسم شركتك، يرجى كتابة اسمك الكريم في الملف الشخصي أولاً.' 
+                              : 'Please enter your official full name in your profile before paying the invoice.',
+                            [
+                              { text: isRTL ? 'إلغاء' : 'Cancel', style: 'cancel' },
+                              { 
+                                text: isRTL ? 'كتابة اسمي في البروفايل' : 'Go to Profile', 
+                                onPress: () => router.push('/profile?from=payment') 
+                              }
+                            ]
+                          );
+                          return;
+                        }
+
                         setSelectedInvoice(inv);
                       }}
                     >
@@ -383,6 +406,31 @@ export default function InvoicesScreen() {
                 style={styles.closeBtn}
               >
                 <Ionicons name="close" size={24} color={theme.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Client Profile Confirmation in Payment Modal */}
+            <View style={{
+              backgroundColor: `${theme.primary}12`,
+              borderWidth: 1,
+              borderColor: `${theme.primary}35`,
+              borderRadius: 10,
+              padding: 10,
+              marginBottom: 12,
+              flexDirection: isRTL ? 'row-reverse' : 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <Ionicons name="person-circle-outline" size={18} color={theme.primary} />
+                <Text style={{ color: theme.text, fontSize: 12 }}>
+                  {isRTL ? 'الفاتورة والإيصال باسم:' : 'Invoice issued to:'} <Text style={{ fontWeight: 'bold', color: theme.primary }}>{currentUser?.fullName || currentUser?.email}</Text>
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => { setSelectedInvoice(null); router.push('/profile?from=payment'); }}>
+                <Text style={{ color: theme.primary, fontSize: 11, fontWeight: 'bold' }}>
+                  {isRTL ? 'تعديل الاسم' : 'Edit Name'}
+                </Text>
               </TouchableOpacity>
             </View>
 
