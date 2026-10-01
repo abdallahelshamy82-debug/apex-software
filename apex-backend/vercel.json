@@ -13,6 +13,8 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "GMAIL_USER": "abdallahelshamy82@gmail.com",
+    "GMAIL_PASS": "vghaqgxakhyiazwi"
   }
 }

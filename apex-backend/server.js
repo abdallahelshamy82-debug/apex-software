@@ -627,22 +627,39 @@ app.post('/api/auth/register-send-otp', (req, res) => {
         db.run(
           `INSERT INTO email_verifications (email, code, fullName, password, company, expires, deviceId) VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [normalizedEmail, code, safeName, hashedPassword, safeCompany, expires, deviceId || null],
-          (insertErr) => {
+          async (insertErr) => {
             if (insertErr) {
               console.warn('Warning: Could not save to email_verifications table:', insertErr.message);
             }
 
-            // Dispatch Verification Email
-            emailService.sendVerificationEmail({
-              to: normalizedEmail,
-              fullName: safeName,
-              code
-            }).catch(console.error);
+            // Dispatch Verification Email and AWAIT delivery confirmation
+            try {
+              const mailRes = await emailService.sendVerificationEmail({
+                to: normalizedEmail,
+                fullName: safeName,
+                code
+              });
 
-            return res.json({
-              success: true,
-              message: 'تم إرسال كود التحقق السري (6 أرقام) إلى بريدك الإلكتروني بنجاح.'
-            });
+              if (!mailRes.delivered && !mailRes.success) {
+                console.error(`❌ Verification email delivery failed for ${normalizedEmail}:`, mailRes.error);
+                return res.status(500).json({
+                  success: false,
+                  message: `تعذر إرسال كود التحقق إلى البريد (${normalizedEmail}). يرجى التحقق من صحة البريد والمحاولة مرة أخرى.`
+                });
+              }
+
+              console.log(`✅ Verification email successfully delivered to ${normalizedEmail} (code: ${code})`);
+              return res.json({
+                success: true,
+                message: 'تم إرسال كود التحقق السري (6 أرقام) إلى بريدك الإلكتروني بنجاح.'
+              });
+            } catch (mailErr) {
+              console.error('❌ Exception in sendVerificationEmail:', mailErr);
+              return res.status(500).json({
+                success: false,
+                message: 'حدث خطأ أثناء إرسال كود التحقق إلى بريدك. يرجى المحاولة بعد قليل.'
+              });
+            }
           }
         );
       });
@@ -760,14 +777,26 @@ app.post('/api/auth/register-resend-otp', (req, res) => {
     record.expires = expires;
     pendingRegistrations.set(normalizedEmail, record);
 
-    db.run(`UPDATE email_verifications SET code = ?, expires = ? WHERE LOWER(email) = LOWER(?)`, [code, expires, normalizedEmail], () => {
-      emailService.sendVerificationEmail({
-        to: normalizedEmail,
-        fullName: record.fullName,
-        code
-      }).catch(console.error);
+    db.run(`UPDATE email_verifications SET code = ?, expires = ? WHERE LOWER(email) = LOWER(?)`, [code, expires, normalizedEmail], async () => {
+      try {
+        const mailRes = await emailService.sendVerificationEmail({
+          to: normalizedEmail,
+          fullName: record.fullName,
+          code
+        });
 
-      res.json({ success: true, message: 'تم إرسال كود تحقق جديد بنجاح إلى بريدك الإلكتروني.' });
+        if (!mailRes.delivered && !mailRes.success) {
+          return res.status(500).json({
+            success: false,
+            message: 'تعذر إعادة إرسال كود التحقق حالياً. يرجى التأكد من البريد والمحاولة ثانية.'
+          });
+        }
+
+        res.json({ success: true, message: 'تم إرسال كود تحقق جديد بنجاح إلى بريدك الإلكتروني.' });
+      } catch (err) {
+        console.error('Resend error:', err);
+        res.status(500).json({ success: false, message: 'فشل إرسال كود التحقق الجديد.' });
+      }
     });
   };
 
@@ -1003,11 +1032,19 @@ app.post('/api/auth/forgot-password', (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = Date.now() + 15 * 60 * 1000; // 15 mins
 
-    db.run(`UPDATE users SET resetCode = ?, resetCodeExpires = ? WHERE id = ?`, [code, expires, user.id], (updErr) => {
+    db.run(`UPDATE users SET resetCode = ?, resetCodeExpires = ? WHERE id = ?`, [code, expires, user.id], async (updErr) => {
       if (updErr) return res.status(500).json({ success: false, message: 'Database error' });
 
-      emailService.sendPasswordResetEmail({ to: user.email, fullName: user.fullName, code }).catch(console.error);
-      res.json({ success: true, message: 'Password reset code sent to your email' });
+      try {
+        const mailRes = await emailService.sendPasswordResetEmail({ to: user.email, fullName: user.fullName, code });
+        if (!mailRes.delivered && !mailRes.success) {
+          return res.status(500).json({ success: false, message: 'تعذر إرسال كود استعادة كلمة المرور إلى بريدك حالياً.' });
+        }
+        res.json({ success: true, message: 'تم إرسال كود استعادة كلمة المرور إلى بريدك الإلكتروني بنجاح.' });
+      } catch (mailErr) {
+        console.error('Password reset mail error:', mailErr);
+        res.status(500).json({ success: false, message: 'فشل إرسال كود استعادة كلمة المرور.' });
+      }
     });
   });
 });

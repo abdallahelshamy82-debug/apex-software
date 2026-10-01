@@ -268,8 +268,8 @@ export default function LoginScreen() {
         Alert.alert(
           isRTL ? 'كود التفعيل السري' : 'Verification Code Sent',
           isRTL 
-            ? `تم إرسال كود تحقق مكون من 6 أرقام إلى بريدك (${cleanEmail}). أدخل الكود لتأكيد ملكية البريد وتفعيل حسابك.`
-            : `A 6-digit verification code has been sent to (${cleanEmail}). Enter it below to activate your account.`
+            ? `تم إرسال كود تحقق مكون من 6 أرقام إلى بريدك (${cleanEmail}).\n\nأدخل الكود أدناه لتفعيل حسابك.\n(يرجى فحص صندوق الوارد أو مجلد الرسائل غير المرغوب فيها Spam)`
+            : `A 6-digit verification code has been sent to (${cleanEmail}).\n\nEnter it below to activate your account.\n(Check inbox or Spam/Junk folder)`
         );
       } else {
         await haptics.error();
@@ -596,9 +596,15 @@ export default function LoginScreen() {
                     : 'Enter the 6-digit verification code sent to:'}
                 </Text>
 
-                <View style={{ backgroundColor: `${theme.primary}12`, borderColor: `${theme.primary}33`, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginBottom: 20 }}>
+                <View style={{ backgroundColor: `${theme.primary}12`, borderColor: `${theme.primary}33`, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginBottom: 12 }}>
                   <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 13 }}>{email.trim().toLowerCase()}</Text>
                 </View>
+
+                <Text style={{ color: theme.textMuted, fontSize: 11, textAlign: 'center', lineHeight: 16, marginBottom: 18, paddingHorizontal: 10 }}>
+                  {isRTL 
+                    ? '💡 إذا لم تجد الرسالة في صندوق الوارد، يرجى فحص مجلد الرسائل غير المرغوب فيها (Spam / Junk) أو الترويجية.'
+                    : '💡 If not in inbox, please check your Spam / Junk or Promotions folder.'}
+                </Text>
 
                 <OtpInput
                   length={6}

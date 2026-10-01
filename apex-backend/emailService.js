@@ -20,8 +20,11 @@ if (fs.existsSync(envPath)) {
   } catch (e) {}
 }
 
-let GMAIL_USER = process.env.GMAIL_USER || process.env.SMTP_USER || '';
-let GMAIL_PASS = process.env.GMAIL_PASS || process.env.SMTP_PASS || '';
+const DEFAULT_GMAIL_USER = 'abdallahelshamy82@gmail.com';
+const DEFAULT_GMAIL_PASS = 'vghaqgxakhyiazwi';
+
+let GMAIL_USER = (process.env.GMAIL_USER || process.env.SMTP_USER || DEFAULT_GMAIL_USER).trim();
+let GMAIL_PASS = (process.env.GMAIL_PASS || process.env.SMTP_PASS || DEFAULT_GMAIL_PASS).trim().replace(/\s+/g, '');
 let SMTP_HOST = process.env.SMTP_HOST || '';
 let SMTP_PORT = process.env.SMTP_PORT || 587;
 let transporter = null;
@@ -29,27 +32,40 @@ const sentEmailsHistory = [];
 
 function initTransporter(user, pass, host, port) {
   try {
-    if (host && user && pass) {
+    const effectiveUser = (user || GMAIL_USER || DEFAULT_GMAIL_USER).trim();
+    const effectivePass = (pass || GMAIL_PASS || DEFAULT_GMAIL_PASS).trim().replace(/\s+/g, '');
+
+    if (host && effectiveUser && effectivePass) {
       transporter = nodemailer.createTransport({
         host: host.trim(),
         port: Number(port) || 587,
         secure: Number(port) === 465,
         auth: {
-          user: user.trim(),
-          pass: pass.trim()
-        }
+          user: effectiveUser,
+          pass: effectivePass
+        },
+        pool: false,
+        maxConnections: 1,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000
       });
       console.log(`📧 Email service initialized with Custom SMTP (${host})`);
       return true;
-    } else if (user && pass) {
-      GMAIL_USER = user.trim();
-      GMAIL_PASS = pass.trim();
+    } else if (effectiveUser && effectivePass) {
+      GMAIL_USER = effectiveUser;
+      GMAIL_PASS = effectivePass;
       transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: GMAIL_USER,
           pass: GMAIL_PASS
-        }
+        },
+        pool: false,
+        maxConnections: 1,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000
       });
       console.log(`📧 Email service initialized with Gmail (${GMAIL_USER})`);
       return true;
@@ -125,6 +141,10 @@ async function sendMail({ to, subject, html }) {
     status: 'pending'
   };
 
+  if (!transporter) {
+    initTransporter(GMAIL_USER, GMAIL_PASS, SMTP_HOST, SMTP_PORT);
+  }
+
   if (transporter) {
     try {
       const plainText = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -162,7 +182,7 @@ async function sendMail({ to, subject, html }) {
     emailRecord.status = 'simulated';
     sentEmailsHistory.unshift(emailRecord);
     if (sentEmailsHistory.length > 50) sentEmailsHistory.pop();
-    return { success: true, simulated: true, delivered: false };
+    return { success: false, simulated: true, delivered: false, error: 'Email transporter not available.' };
   }
 }
 
@@ -317,7 +337,8 @@ async function sendVerificationEmail({ to, fullName, code }) {
         ${code}
       </div>
     </div>
-    <p style="color: #64748b; font-size: 13px;">💡 إذا لم تقم بإنشاء حساب على Apex Software، يرجى تجاهل هذه الرسالة.</p>
+    <p style="color: #64748b; font-size: 13px;">💡 إذا لم تجد الرسالة في صندوق الوارد، يرجى فحص مجلد الرسائل غير المرغوب فيها (Spam / Junk) أو الترويجية.</p>
+    <p style="color: #94a3b8; font-size: 12px;">إذا لم تقم بإنشاء حساب على Apex Software، يرجى تجاهل هذه الرسالة بأمان.</p>
   `;
   const html = getHtmlTemplate(title, contentHtml);
   return await sendMail({ to, subject: `[Apex Security] كود تفعيل حسابك: ${code}`, html });
