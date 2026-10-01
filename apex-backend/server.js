@@ -112,6 +112,9 @@ const authLimiter = rateLimit({
 });
 app.use('/api/login', authLimiter);
 app.use('/api/register', authLimiter);
+app.use('/api/auth/register-send-otp', authLimiter);
+app.use('/api/auth/register-verify-otp', authLimiter);
+app.use('/api/auth/register-resend-otp', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 app.use('/api/auth/reset-password', authLimiter);
 
@@ -360,6 +363,17 @@ const db = require('./database');
         projectProgress INTEGER DEFAULT 0
       )`);
 
+      db.run(`CREATE TABLE IF NOT EXISTS email_verifications (
+        email TEXT PRIMARY KEY,
+        code TEXT,
+        fullName TEXT,
+        password TEXT,
+        company TEXT,
+        expires BIGINT,
+        deviceId TEXT,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+
       db.run(`CREATE TABLE IF NOT EXISTS quotes (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         email TEXT, 
@@ -542,7 +556,232 @@ app.use('/api/admin', authenticateToken, requireAdmin);
 
 // ==================== AUTH & SECURITY ROUTES ====================
 
-// Register
+// In-memory cache for pending sign-ups (fast lookup & serverless resilience)
+const pendingRegistrations = new Map();
+
+// 1. Send OTP for Registration
+app.post('/api/auth/register-send-otp', (req, res) => {
+  const { fullName, email, password, company, deviceId } = req.body;
+  if (!email || !password || !fullName) {
+    return res.status(400).json({ success: false, message: 'يرجى ملء جميع الحقول المطلوبة (الاسم الكامل، البريد الإلكتروني، وكلمة المرور).' });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const clientPlatform = (req.headers['x-client-platform'] || req.body.platform || '').toLowerCase();
+  const isAdmin = getAdminEmails().includes(normalizedEmail);
+
+  if (password.length < 6) {
+    return res.status(400).json({ success: false, message: 'كلمة المرور يجب أن تتكون من 6 أحرف على الأقل.' });
+  }
+
+  // 🛡️ Check if account already exists with this email
+  db.get(`SELECT id, email FROM users WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (checkErr, existingUser) => {
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'هذا البريد الإلكتروني مسجل بالفعل على منصة Apex. يرجى تسجيل الدخول مباشرة بحسابك.'
+      });
+    }
+
+    // 🛡️ Device Binding: 1 Account per Mobile Device
+    if (deviceId && !isAdmin && clientPlatform !== 'web') {
+      db.get(
+        `SELECT email FROM users WHERE deviceId = ? AND LOWER(email) != LOWER(?) AND role != 'admin'`,
+        [deviceId, normalizedEmail],
+        (devErr, existingDevice) => {
+          if (existingDevice) {
+            return res.status(400).json({
+              success: false,
+              message: `هذا الجهاز مسجل به حساب بالفعل مسبقاً (${existingDevice.email}). للاستفادة من خدماتنا يرجى تسجيل الدخول بحسابك الأساسي.`
+            });
+          }
+          proceedWithSend();
+        }
+      );
+    } else {
+      proceedWithSend();
+    }
+
+    function proceedWithSend() {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expires = Date.now() + 15 * 60 * 1000; // 15 minutes
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      const safeCompany = company ? company.trim() : 'Apex Client';
+      const safeName = fullName.trim();
+
+      const regData = {
+        email: normalizedEmail,
+        code,
+        fullName: safeName,
+        password: hashedPassword,
+        company: safeCompany,
+        expires,
+        deviceId: deviceId || null
+      };
+
+      // Save in-memory
+      pendingRegistrations.set(normalizedEmail, regData);
+
+      // Save to database table email_verifications
+      db.run(`DELETE FROM email_verifications WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], () => {
+        db.run(
+          `INSERT INTO email_verifications (email, code, fullName, password, company, expires, deviceId) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [normalizedEmail, code, safeName, hashedPassword, safeCompany, expires, deviceId || null],
+          (insertErr) => {
+            if (insertErr) {
+              console.warn('Warning: Could not save to email_verifications table:', insertErr.message);
+            }
+
+            // Dispatch Verification Email
+            emailService.sendVerificationEmail({
+              to: normalizedEmail,
+              fullName: safeName,
+              code
+            }).catch(console.error);
+
+            return res.json({
+              success: true,
+              message: 'تم إرسال كود التحقق السري (6 أرقام) إلى بريدك الإلكتروني بنجاح.'
+            });
+          }
+        );
+      });
+    }
+  });
+});
+
+// 2. Verify OTP and Activate Account
+app.post('/api/auth/register-verify-otp', (req, res) => {
+  const { email, code, deviceId } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ success: false, message: 'البريد الإلكتروني وكود التحقق مطلوبان.' });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const cleanCode = code.toString().trim();
+
+  const handleActivation = (record) => {
+    if (!record) {
+      return res.status(400).json({ success: false, message: 'لم يتم العثور على طلب تسجيل معلق لهذا البريد أو انتهت صلاحيته. يرجى طلب كود جديد.' });
+    }
+
+    if (Date.now() > Number(record.expires)) {
+      pendingRegistrations.delete(normalizedEmail);
+      db.run(`DELETE FROM email_verifications WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], () => {});
+      return res.status(400).json({ success: false, message: 'انتهت صلاحية كود التحقق (15 دقيقة). يرجى طلب كود جديد.' });
+    }
+
+    if (record.code !== cleanCode) {
+      return res.status(400).json({ success: false, message: 'كود التحقق غير صحيح. يرجى التأكد من الرمز المرسل لبريدك الإلكتروني.' });
+    }
+
+    const isAdmin = getAdminEmails().includes(normalizedEmail);
+    const role = isAdmin ? 'admin' : 'client';
+    const effectiveDeviceId = deviceId || record.deviceId || null;
+
+    db.run(
+      `INSERT INTO users (fullName, email, company, password, role, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
+      [record.fullName, normalizedEmail, record.company || 'Apex Client', record.password, role, effectiveDeviceId],
+      function(insertErr) {
+        if (insertErr) {
+          // If already exists, update and proceed
+          db.run(
+            `UPDATE users SET password = ?, fullName = ?, company = ?, deviceId = COALESCE(?, deviceId) WHERE LOWER(email) = LOWER(?)`,
+            [record.password, record.fullName, record.company || 'Apex Client', effectiveDeviceId, normalizedEmail]
+          );
+        }
+
+        // Cleanup pending
+        pendingRegistrations.delete(normalizedEmail);
+        db.run(`DELETE FROM email_verifications WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], () => {});
+
+        db.get(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (getErr, row) => {
+          if (getErr || !row) return res.status(500).json({ success: false, message: 'حدث خطأ أثناء إعداد الحساب.' });
+
+          const user = {
+            id: row.id,
+            fullName: row.fullName,
+            email: row.email,
+            role: row.role,
+            company: row.company,
+            phone: row.phone,
+            avatarUrl: row.avatarUrl,
+            projectName: row.projectName,
+            projectPhase: row.projectPhase,
+            projectProgress: row.projectProgress || 0
+          };
+          const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+
+          // Send Welcome Email
+          emailService.sendWelcomeEmail({ to: normalizedEmail, fullName: user.fullName }).catch(console.error);
+
+          return res.json({
+            success: true,
+            user,
+            token,
+            message: 'تم تأكيد البريد الإلكتروني وتفعيل حسابك بنجاح! مرحباً بك في Apex.'
+          });
+        });
+      }
+    );
+  };
+
+  // Try memory first
+  const memRecord = pendingRegistrations.get(normalizedEmail);
+  if (memRecord) {
+    handleActivation(memRecord);
+  } else {
+    // Check database
+    db.get(`SELECT * FROM email_verifications WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (dbErr, dbRecord) => {
+      if (dbErr || !dbRecord) {
+        return res.status(400).json({ success: false, message: 'لم يتم العثور على طلب تسجيل معلق لهذا الحساب أو انتهت صلاحيته.' });
+      }
+      handleActivation(dbRecord);
+    });
+  }
+});
+
+// 3. Resend OTP for Registration
+app.post('/api/auth/register-resend-otp', (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ success: false, message: 'البريد الإلكتروني مطلوب.' });
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const handleResend = (record) => {
+    if (!record) {
+      return res.status(404).json({ success: false, message: 'لم يتم العثور على بيانات تسجيل معلقة لهذا البريد الإلكتروني. يرجى إنشاء حساب جديد.' });
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = Date.now() + 15 * 60 * 1000;
+
+    record.code = code;
+    record.expires = expires;
+    pendingRegistrations.set(normalizedEmail, record);
+
+    db.run(`UPDATE email_verifications SET code = ?, expires = ? WHERE LOWER(email) = LOWER(?)`, [code, expires, normalizedEmail], () => {
+      emailService.sendVerificationEmail({
+        to: normalizedEmail,
+        fullName: record.fullName,
+        code
+      }).catch(console.error);
+
+      res.json({ success: true, message: 'تم إرسال كود تحقق جديد بنجاح إلى بريدك الإلكتروني.' });
+    });
+  };
+
+  const memRecord = pendingRegistrations.get(normalizedEmail);
+  if (memRecord) {
+    handleResend(memRecord);
+  } else {
+    db.get(`SELECT * FROM email_verifications WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (err, row) => {
+      handleResend(row);
+    });
+  }
+});
+
+// Register (Legacy / Direct)
 app.post('/api/register', (req, res) => {
   const { fullName, email, password, company, deviceId } = req.body;
   if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password required' });

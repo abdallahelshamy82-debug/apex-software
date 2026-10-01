@@ -79,6 +79,50 @@ const readUriAsBase64 = async (uri: string): Promise<string> => {
 };
 
 export const api = {
+  async registerSendOtp(fullName: string, email: string, company: string, password: string) {
+    try {
+      const deviceId = await getDeviceId();
+      const response = await fetch(`${API_URL}/auth/register-send-otp`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Client-Platform': Platform.OS
+        },
+        body: JSON.stringify({ fullName, email, company, password, deviceId, platform: Platform.OS })
+      });
+      return await response.json();
+    } catch (e) { return { success: false, message: 'Network error.' }; }
+  },
+
+  async registerVerifyOtp(email: string, code: string) {
+    try {
+      const deviceId = await getDeviceId();
+      const response = await fetch(`${API_URL}/auth/register-verify-otp`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Client-Platform': Platform.OS
+        },
+        body: JSON.stringify({ email, code, deviceId, platform: Platform.OS })
+      });
+      return await response.json();
+    } catch (e) { return { success: false, message: 'Network error.' }; }
+  },
+
+  async registerResendOtp(email: string) {
+    try {
+      const response = await fetch(`${API_URL}/auth/register-resend-otp`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Client-Platform': Platform.OS
+        },
+        body: JSON.stringify({ email, platform: Platform.OS })
+      });
+      return await response.json();
+    } catch (e) { return { success: false, message: 'Network error.' }; }
+  },
+
   async register(fullName: string, email: string, company: string, password: string) {
     try {
       const deviceId = await getDeviceId();

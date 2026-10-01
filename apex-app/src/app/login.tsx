@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, Pressable, Image, ActivityIndicator } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { BlurView } from 'expo-blur';
@@ -10,6 +10,7 @@ import { useSettings } from '../context/SettingsContext';
 import { api } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { FloatingInput } from '../components/FloatingInput';
+import { OtpInput } from '../components/OtpInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveSecureToken, getSecureToken } from '../utils/secureTokenStorage';
 import { haptics } from '../utils/haptics';
@@ -30,7 +31,17 @@ export default function LoginScreen() {
   const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // OTP Verification State
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpError, setOtpError] = useState(false);
+  const [verifyingLoading, setVerifyingLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   // Biometrics & Native State
   const [biometricsAvailable, setBiometricsAvailable] = useState(false);
@@ -78,6 +89,22 @@ export default function LoginScreen() {
       checkBiometricsAndSession();
     }, [checkBiometricsAndSession])
   );
+
+  useEffect(() => {
+    let interval: any;
+    if (isVerifyingOtp && resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isVerifyingOtp, resendTimer]);
 
   const handleBiometricLogin = async () => {
     await haptics.light();
@@ -152,41 +179,131 @@ export default function LoginScreen() {
     }
   };
 
+  const handleToggleMode = (loginMode: boolean) => {
+    setIsLogin(loginMode);
+    setIsVerifyingOtp(false);
+    setOtpCode('');
+    setOtpError(false);
+    setConfirmPassword('');
+  };
+
   const handleSubmit = async () => {
     if (!email || !password) {
       await haptics.warning();
-      Alert.alert('Error', 'Please fill in all required fields');
+      Alert.alert(isRTL ? 'تنبيه' : 'Error', isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill in all required fields');
       return;
     }
 
-    await haptics.medium();
     const cleanEmail = email.trim().toLowerCase();
 
-    // 🛡️ Web restriction: Prevent client sign up or client login from Web
-    
-
-    setLoading(true);
-    let res;
-
     if (isLogin) {
-      res = await api.login(cleanEmail, password);
+      await haptics.medium();
+      setLoading(true);
+      const res = await api.login(cleanEmail, password);
+      setLoading(false);
+
+      if (res.success) {
+        await haptics.success();
+        setCurrentUser(res.user);
+        await saveSecureToken(res.token);
+        await AsyncStorage.setItem('userData', JSON.stringify(res.user));
+        
+        notifications.registerForPushNotifications().catch(() => {});
+
+        const pendingEstimateStr = await AsyncStorage.getItem('pendingEstimate');
+        if (pendingEstimateStr) {
+          try {
+            const pendingDetails = JSON.parse(pendingEstimateStr);
+            await api.submitQuote(pendingDetails);
+            await AsyncStorage.removeItem('pendingEstimate');
+          } catch (e) {
+            console.error('Failed to submit pending estimate:', e);
+          }
+        }
+
+        if (res.user.role === 'admin' || cleanEmail === 'abdallahelshamy82@gmail.com') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
+      } else {
+        await haptics.error();
+        Alert.alert(isRTL ? 'خطأ' : 'Error', res.message || 'بيانات الدخول غير صحيحة');
+      }
     } else {
-      res = await api.register(fullName, cleanEmail, company, password);
+      // 🛡️ Registration Validation
+      if (!fullName.trim()) {
+        await haptics.warning();
+        Alert.alert(isRTL ? 'تنبيه' : 'Alert', isRTL ? 'يرجى كتابة الاسم الكامل' : 'Please enter your full name');
+        return;
+      }
+
+      if (password.length < 6) {
+        await haptics.warning();
+        Alert.alert(isRTL ? 'تنبيه' : 'Alert', isRTL ? 'كلمة المرور يجب أن تتكون من 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        await haptics.warning();
+        Alert.alert(
+          isRTL ? 'تأكيد كلمة المرور' : 'Password Mismatch', 
+          isRTL ? 'كلمتا المرور غير متطابقتين. يرجى التأكد من كتابة نفس كلمة المرور في خانة التأكيد.' : 'Passwords do not match. Please verify your confirmation password.'
+        );
+        return;
+      }
+
+      await haptics.medium();
+      setLoading(true);
+      const res = await api.registerSendOtp(fullName.trim(), cleanEmail, company.trim(), password);
+      setLoading(false);
+
+      if (res.success) {
+        await haptics.success();
+        setIsVerifyingOtp(true);
+        setOtpCode('');
+        setOtpError(false);
+        setResendTimer(60);
+        setCanResend(false);
+        Alert.alert(
+          isRTL ? 'كود التفعيل السري' : 'Verification Code Sent',
+          isRTL 
+            ? `تم إرسال كود تحقق مكون من 6 أرقام إلى بريدك (${cleanEmail}). أدخل الكود لتأكيد ملكية البريد وتفعيل حسابك.`
+            : `A 6-digit verification code has been sent to (${cleanEmail}). Enter it below to activate your account.`
+        );
+      } else {
+        await haptics.error();
+        Alert.alert(isRTL ? 'تعذر إتمام التسجيل' : 'Registration Error', res.message || 'فشل إرسال كود التحقق');
+      }
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.length < 6) {
+      setOtpError(true);
+      await haptics.warning();
+      Alert.alert(isRTL ? 'تنبيه' : 'Alert', isRTL ? 'يرجى إدخال كود التحقق المكون من 6 أرقام كاملاً' : 'Please enter the full 6-digit code');
+      return;
     }
 
-    setLoading(false);
+    setVerifyingLoading(true);
+    setOtpError(false);
+    const cleanEmail = email.trim().toLowerCase();
+    const res = await api.registerVerifyOtp(cleanEmail, otpCode);
+    setVerifyingLoading(false);
 
     if (res.success) {
       await haptics.success();
-      // Save user and token securely
       setCurrentUser(res.user);
       await saveSecureToken(res.token);
       await AsyncStorage.setItem('userData', JSON.stringify(res.user));
       
-      // Register push token
+      notifications.sendLocalNotification(
+        isRTL ? 'تم تفعيل الحساب بنجاح 🚀' : 'Account Activated',
+        isRTL ? `أهلاً بك يا ${res.user.fullName} في Apex Software` : `Welcome to Apex Software, ${res.user.fullName}`
+      );
       notifications.registerForPushNotifications().catch(() => {});
 
-      // Check for pending project estimate
       const pendingEstimateStr = await AsyncStorage.getItem('pendingEstimate');
       if (pendingEstimateStr) {
         try {
@@ -198,15 +315,33 @@ export default function LoginScreen() {
         }
       }
 
-      // Role-based routing
       if (res.user.role === 'admin' || cleanEmail === 'abdallahelshamy82@gmail.com') {
         router.push('/admin');
       } else {
         router.push('/dashboard');
       }
     } else {
+      setOtpError(true);
       await haptics.error();
-      Alert.alert('Error', res.message || 'Authentication failed');
+      Alert.alert(isRTL ? 'خطأ في التفعيل' : 'Activation Failed', res.message || 'كود التحقق غير صحيح أو انتهت صلاحيته');
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend || resendLoading) return;
+    setResendLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
+    const res = await api.registerResendOtp(cleanEmail);
+    setResendLoading(false);
+    if (res.success) {
+      setCanResend(false);
+      setResendTimer(60);
+      setOtpError(false);
+      await haptics.success();
+      Alert.alert(isRTL ? 'تم الإرسال' : 'Code Resent', res.message || 'تم إرسال كود تحقق جديد إلى بريدك الإلكتروني.');
+    } else {
+      await haptics.error();
+      Alert.alert(isRTL ? 'خطأ' : 'Error', res.message || 'تعذر إعادة إرسال الكود');
     }
   };
 
@@ -382,7 +517,7 @@ export default function LoginScreen() {
 
   const getIconForKey = (key: string): keyof typeof Ionicons.glyphMap | undefined => {
     if (key === 'email') return 'mail-outline';
-    if (key === 'password') return 'lock-closed-outline';
+    if (key === 'password' || key === 'confirmPassword') return 'lock-closed-outline';
     if (key === 'fullName') return 'person-outline';
     if (key === 'companyName') return 'business-outline';
     return undefined;
@@ -399,7 +534,7 @@ export default function LoginScreen() {
       theme={theme}
       isRTL={isRTL}
       keyboardType={key === 'email' ? 'email-address' : 'default'}
-      autoCapitalize={key === 'email' || key === 'password' ? 'none' : 'words'}
+      autoCapitalize={key === 'email' || key === 'password' || key === 'confirmPassword' ? 'none' : 'words'}
     />
   );
 
@@ -444,153 +579,246 @@ export default function LoginScreen() {
 
           {/* Form Card */}
           <BlurView intensity={40} tint="dark" style={[styles.card, { backgroundColor: 'rgba(17, 17, 19, 0.4)', borderColor: theme.border, overflow: 'hidden' }]}>
-            <Text style={[styles.cardTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
-              {isLogin ? t('welcomeBack') : t('createAccount')}
-            </Text>
             
-            <View style={styles.tabToggle}>
-              <TouchableOpacity 
-                style={[styles.toggleBtn, isLogin && { backgroundColor: theme.primary }]}
-                onPress={() => setIsLogin(true)}
-              >
-                <Text style={[styles.toggleBtnText, { color: isLogin ? (theme.bg === '#F8FAFC' ? '#FFF' : '#000') : theme.textMuted }]}>
-                  {t('login')}
+            {isVerifyingOtp ? (
+              <View style={{ width: '100%', alignItems: 'center' }}>
+                <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: `${theme.primary}18`, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                  <Ionicons name="shield-checkmark" size={34} color={theme.primary} />
+                </View>
+
+                <Text style={[styles.cardTitle, { color: theme.text, textAlign: 'center', marginBottom: 6 }]}>
+                  {isRTL ? 'تأكيد البريد الإلكتروني' : 'Verify Your Email'}
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.toggleBtn, !isLogin && { backgroundColor: theme.primary }]}
-                onPress={() => {
-                  
-                  setIsLogin(false);
-                }}
-              >
-                <Text style={[styles.toggleBtnText, { color: !isLogin ? (theme.bg === '#F8FAFC' ? '#FFF' : '#000') : theme.textMuted }]}>
-                  {t('signupNow')}
+
+                <Text style={{ color: theme.textMuted, fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 8 }}>
+                  {isRTL 
+                    ? 'تم إرسال كود تفعيل سري مكون من 6 أرقام إلى بريدك الإلكتروني:' 
+                    : 'Enter the 6-digit verification code sent to:'}
                 </Text>
-              </TouchableOpacity>
-            </View>
 
-            <View style={styles.form}>
-              {!isLogin && renderInput('fullName', fullName, setFullName)}
-              {!isLogin && renderInput('companyName', company, setCompany)}
-              
+                <View style={{ backgroundColor: `${theme.primary}12`, borderColor: `${theme.primary}33`, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginBottom: 20 }}>
+                  <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 13 }}>{email.trim().toLowerCase()}</Text>
+                </View>
 
-              {renderInput('email', email, setEmail)}
-              {renderInput('password', password, setPassword, true)}
+                <OtpInput
+                  length={6}
+                  value={otpCode}
+                  onChange={(val) => {
+                    setOtpCode(val);
+                    if (otpError) setOtpError(false);
+                  }}
+                  hasError={otpError}
+                  theme={theme}
+                  isRTL={isRTL}
+                  onFocus={() => setOtpError(false)}
+                />
 
-              {isLogin && (
-                <TouchableOpacity 
-                  style={{ alignSelf: isRTL ? 'flex-start' : 'flex-end', marginBottom: 14, marginTop: -4 }}
-                  onPress={() => router.push('/forgot-password')}
-                >
-                  <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '600' }}>
-                    {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot Password?'}
+                {otpError && (
+                  <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 10, textAlign: 'center', fontWeight: '500' }}>
+                    {isRTL ? 'كود التحقق غير صحيح أو انتهت صلاحيته' : 'Invalid or expired verification code'}
                   </Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity 
-                style={[styles.submitBtn, { backgroundColor: theme.primary, opacity: loading ? 0.7 : 1 }]}
-                onPress={handleSubmit}
-                disabled={loading}
-              >
-                <Text style={[styles.submitBtnText, { color: theme.bg === '#F8FAFC' || theme.bg === '#F8FAFC' ? '#FFF' : '#000' }]}>
-                  {loading ? 'Processing...' : (isLogin ? t('loginBtn') : t('signupBtn'))}
-                </Text>
-              </TouchableOpacity>
-
-              <View style={styles.dividerRow}>
-                <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-                <Text style={[styles.dividerText, { color: theme.textMuted }]}>
-                  {isRTL ? 'أو المتابعة عبر' : 'Or continue with'}
-                </Text>
-                <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
-              </View>
-
-              {/* Modern Balanced Action Row (Option A) */}
-              <View style={[styles.actionRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                <TouchableOpacity 
-                  style={[
-                    styles.googleBtnFlex, 
-                    { 
-                      borderColor: theme.border, 
-                      backgroundColor: theme.btnBg, 
-                      opacity: googleLoading ? 0.7 : 1,
-                    }
-                  ]}
-                  onPress={handleGoogleSignIn}
-                  disabled={googleLoading}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="logo-google" size={20} color="#EA4335" style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} />
-                  <Text style={[styles.googleBtnText, { color: theme.text }]}>
-                    {googleLoading ? (isRTL ? 'جاري الاتصال...' : 'Connecting...') : (isRTL ? 'المتابعة باستخدام Google' : 'Continue with Google')}
-                  </Text>
-                </TouchableOpacity>
-
-                {isLogin && biometricsAvailable && (
-                  <AnimatedPressable
-                    onPressIn={() => {
-                      bioScale.value = withSpring(0.92, { damping: 15, stiffness: 300 });
-                    }}
-                    onPressOut={() => {
-                      bioScale.value = withSpring(1, { damping: 15, stiffness: 300 });
-                    }}
-                    onPress={handleBiometricLogin}
-                    style={[
-                      styles.biometricSquareBtn,
-                      {
-                        borderColor: `${theme.primary}40`,
-                        backgroundColor: `${theme.primary}12`,
-                      },
-                      animatedBioStyle,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={biometryType === 'FaceID' && Platform.OS === 'ios' ? 'Face ID Login' : 'Fingerprint Login'}
-                  >
-                    <Ionicons 
-                      name={biometryType === 'FaceID' && Platform.OS === 'ios' ? 'scan-outline' : 'finger-print-outline'} 
-                      size={24} 
-                      color={theme.primary} 
-                    />
-                  </AnimatedPressable>
                 )}
-              </View>
-
-              <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginTop: 10, width: '100%' }}>
-                <TouchableOpacity 
-                  style={[styles.socialSmallBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
-                  onPress={handleAppleSignIn}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="logo-apple" size={18} color={theme.text} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
-                  <Text style={[styles.socialSmallText, { color: theme.text }]}>Apple</Text>
-                </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={[styles.socialSmallBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
-                  onPress={handleGitHubSignIn}
-                  activeOpacity={0.8}
+                  style={[styles.submitBtn, { backgroundColor: theme.primary, marginTop: 24, opacity: verifyingLoading ? 0.7 : 1 }]}
+                  onPress={handleVerifyOtp}
+                  disabled={verifyingLoading}
                 >
-                  <Ionicons name="logo-github" size={18} color={theme.text} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
-                  <Text style={[styles.socialSmallText, { color: theme.text }]}>GitHub</Text>
+                  {verifyingLoading ? (
+                    <ActivityIndicator color={theme.bg === '#F8FAFC' ? '#FFF' : '#000'} size="small" />
+                  ) : (
+                    <Text style={[styles.submitBtnText, { color: theme.bg === '#F8FAFC' ? '#FFF' : '#000' }]}>
+                      {isRTL ? 'تفعيل الحساب والدخول 🚀' : 'Activate & Enter Dashboard'}
+                    </Text>
+                  )}
                 </TouchableOpacity>
-              </View>
-            </View>
 
-            <View style={[styles.switchModeContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-              <Text style={{ color: theme.textMuted }}>
-                {isLogin ? t('noAccount') : t('haveAccount')}
-              </Text>
-              <TouchableOpacity onPress={() => {
-                
-                setIsLogin(!isLogin);
-              }}>
-                <Text style={[styles.switchModeText, { color: theme.primary, marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
-                  {isLogin ? t('signupNow') : t('loginNow')}
+                <View style={{ marginTop: 22, alignItems: 'center', gap: 14, width: '100%' }}>
+                  {canResend ? (
+                    <TouchableOpacity onPress={handleResendOtp} disabled={resendLoading}>
+                      <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '700' }}>
+                        {resendLoading 
+                          ? (isRTL ? 'جاري الإرسال...' : 'Sending...') 
+                          : (isRTL ? 'إعادة إرسال كود التحقق 🔄' : 'Resend Verification Code 🔄')}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <Text style={{ color: theme.textMuted, fontSize: 12 }}>
+                      {isRTL 
+                        ? `إعادة إرسال الكود خلال (${resendTimer} ثانية)` 
+                        : `Resend code in (${resendTimer}s)`}
+                    </Text>
+                  )}
+
+                  <TouchableOpacity onPress={() => setIsVerifyingOtp(false)} style={{ marginTop: 2 }}>
+                    <Text style={{ color: theme.textMuted, fontSize: 12, textDecorationLine: 'underline' }}>
+                      {isRTL ? '← تعديل البيانات أو البريد الإلكتروني' : '← Edit details or email'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <>
+                <Text style={[styles.cardTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
+                  {isLogin ? t('welcomeBack') : t('createAccount')}
                 </Text>
-              </TouchableOpacity>
-            </View>
+                
+                <View style={styles.tabToggle}>
+                  <TouchableOpacity 
+                    style={[styles.toggleBtn, isLogin && { backgroundColor: theme.primary }]}
+                    onPress={() => handleToggleMode(true)}
+                  >
+                    <Text style={[styles.toggleBtnText, { color: isLogin ? (theme.bg === '#F8FAFC' ? '#FFF' : '#000') : theme.textMuted }]}>
+                      {t('login')}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.toggleBtn, !isLogin && { backgroundColor: theme.primary }]}
+                    onPress={() => handleToggleMode(false)}
+                  >
+                    <Text style={[styles.toggleBtnText, { color: !isLogin ? (theme.bg === '#F8FAFC' ? '#FFF' : '#000') : theme.textMuted }]}>
+                      {t('signupNow')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.form}>
+                  {!isLogin && renderInput('fullName', fullName, setFullName)}
+                  {!isLogin && renderInput('companyName', company, setCompany)}
+                  
+                  {renderInput('email', email, setEmail)}
+                  {renderInput('password', password, setPassword, true)}
+                  {!isLogin && renderInput('confirmPassword', confirmPassword, setConfirmPassword, true)}
+
+                  {!isLogin && confirmPassword.length > 0 && (
+                    <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginTop: -6, marginBottom: 8, paddingHorizontal: 4 }}>
+                      <Ionicons 
+                        name={password === confirmPassword ? 'checkmark-circle' : 'alert-circle'} 
+                        size={16} 
+                        color={password === confirmPassword ? '#10B981' : '#EF4444'} 
+                      />
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: password === confirmPassword ? '#10B981' : '#EF4444' }}>
+                        {password === confirmPassword 
+                          ? (isRTL ? 'كلمة المرور متطابقة ومؤكدة' : 'Passwords match')
+                          : (isRTL ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match')}
+                      </Text>
+                    </View>
+                  )}
+
+                  {isLogin && (
+                    <TouchableOpacity 
+                      style={{ alignSelf: isRTL ? 'flex-start' : 'flex-end', marginBottom: 14, marginTop: -4 }}
+                      onPress={() => router.push('/forgot-password')}
+                    >
+                      <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '600' }}>
+                        {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot Password?'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity 
+                    style={[styles.submitBtn, { backgroundColor: theme.primary, opacity: loading ? 0.7 : 1 }]}
+                    onPress={handleSubmit}
+                    disabled={loading}
+                  >
+                    <Text style={[styles.submitBtnText, { color: theme.bg === '#F8FAFC' || theme.bg === '#F8FAFC' ? '#FFF' : '#000' }]}>
+                      {loading 
+                        ? (isRTL ? 'جاري المعالجة...' : 'Processing...') 
+                        : (isLogin ? t('loginBtn') : (isRTL ? 'إنشاء الحساب وتأكيد البريد 🚀' : 'Create Account & Verify'))}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.dividerRow}>
+                    <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+                    <Text style={[styles.dividerText, { color: theme.textMuted }]}>
+                      {isRTL ? 'أو المتابعة عبر' : 'Or continue with'}
+                    </Text>
+                    <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+                  </View>
+
+                  {/* Modern Balanced Action Row */}
+                  <View style={[styles.actionRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                    <TouchableOpacity 
+                      style={[
+                        styles.googleBtnFlex, 
+                        { 
+                          borderColor: theme.border, 
+                          backgroundColor: theme.btnBg, 
+                          opacity: googleLoading ? 0.7 : 1,
+                        }
+                      ]}
+                      onPress={handleGoogleSignIn}
+                      disabled={googleLoading}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="logo-google" size={20} color="#EA4335" style={{ marginRight: isRTL ? 0 : 10, marginLeft: isRTL ? 10 : 0 }} />
+                      <Text style={[styles.googleBtnText, { color: theme.text }]}>
+                        {googleLoading ? (isRTL ? 'جاري الاتصال...' : 'Connecting...') : (isRTL ? 'المتابعة باستخدام Google' : 'Continue with Google')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {isLogin && biometricsAvailable && (
+                      <AnimatedPressable
+                        onPressIn={() => {
+                          bioScale.value = withSpring(0.92, { damping: 15, stiffness: 300 });
+                        }}
+                        onPressOut={() => {
+                          bioScale.value = withSpring(1, { damping: 15, stiffness: 300 });
+                        }}
+                        onPress={handleBiometricLogin}
+                        style={[
+                          styles.biometricSquareBtn,
+                          {
+                            borderColor: `${theme.primary}40`,
+                            backgroundColor: `${theme.primary}12`,
+                          },
+                          animatedBioStyle,
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={biometryType === 'FaceID' && Platform.OS === 'ios' ? 'Face ID Login' : 'Fingerprint Login'}
+                      >
+                        <Ionicons 
+                          name={biometryType === 'FaceID' && Platform.OS === 'ios' ? 'scan-outline' : 'finger-print-outline'} 
+                          size={24} 
+                          color={theme.primary} 
+                        />
+                      </AnimatedPressable>
+                    )}
+                  </View>
+
+                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginTop: 10, width: '100%' }}>
+                    <TouchableOpacity 
+                      style={[styles.socialSmallBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
+                      onPress={handleAppleSignIn}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="logo-apple" size={18} color={theme.text} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
+                      <Text style={[styles.socialSmallText, { color: theme.text }]}>Apple</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.socialSmallBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
+                      onPress={handleGitHubSignIn}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="logo-github" size={18} color={theme.text} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
+                      <Text style={[styles.socialSmallText, { color: theme.text }]}>GitHub</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={[styles.switchModeContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                  <Text style={{ color: theme.textMuted }}>
+                    {isLogin ? t('noAccount') : t('haveAccount')}
+                  </Text>
+                  <TouchableOpacity onPress={() => handleToggleMode(!isLogin)}>
+                    <Text style={[styles.switchModeText, { color: theme.primary, marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
+                      {isLogin ? t('signupNow') : t('loginNow')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
 
           </BlurView>
       </KeyboardAwareScrollView>
