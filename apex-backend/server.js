@@ -1739,16 +1739,16 @@ app.get('/invoice-print/:id', (req, res) => {
           <div class="info-cards">
             <div class="info-box">
               <h4>👤 فاتورة إلى (العميل):</h4>
-              <p><strong>الاسم:</strong> ${inv.clientName || 'عميل كريم'}</p>
-              <p><strong>البريد:</strong> ${inv.clientEmail || '-'}</p>
-              <p><strong>الشركة:</strong> ${inv.clientCompany || 'مؤسسة مستقلة'}</p>
-              ${inv.clientPhone ? `<p><strong>الهاتف:</strong> ${inv.clientPhone}</p>` : ''}
+              <p><strong>الاسم:</strong> ${inv.clientName || inv.clientname || 'عميل كريم'}</p>
+              <p><strong>البريد:</strong> ${inv.clientEmail || inv.clientemail || '-'}</p>
+              <p><strong>الشركة:</strong> ${inv.clientCompany || inv.clientcompany || 'مؤسسة مستقلة'}</p>
+              ${(inv.clientPhone || inv.clientphone) ? `<p><strong>الهاتف:</strong> ${inv.clientPhone || inv.clientphone}</p>` : ''}
             </div>
             <div class="info-box">
               <h4>🏢 الشركة المصدرة للفاتورة:</h4>
               <p><strong>الاسم:</strong> ${companyName}</p>
               <p><strong>النشاط:</strong> استشارات وتطوير برمجيات ومواقع وتطبيقات</p>
-              <p><strong>المشروع:</strong> ${inv.projectName || 'تطوير مشروع تقني مخصص'}</p>
+              <p><strong>المشروع:</strong> ${inv.projectName || inv.projectname || 'تطوير مشروع تقني مخصص'}</p>
               <p><strong>الرقم الضريبي:</strong> ${taxId}</p>
             </div>
           </div>

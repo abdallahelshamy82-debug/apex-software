@@ -698,7 +698,7 @@ export default function AdminDashboardScreen() {
                   <View style={{ flex: 1, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
                     <Text style={[styles.dataTitle, { color: theme.primary }]}>#{inv.invoiceNumber} • {inv.title}</Text>
                     <Text style={[styles.dataSubtitle, { color: theme.textMuted }]}>
-                      {isRTL ? 'العميل:' : 'Client:'} {inv.clientName || inv.clientEmail || `User #${inv.userId}`}
+                      {isRTL ? 'العميل:' : 'Client:'} {inv.clientName || inv.clientname || (users.find(u => u.id === (inv.userId || inv.userid))?.fullName) || inv.clientEmail || inv.clientemail || `User #${inv.userId || inv.userid}`}
                     </Text>
                     <Text style={[styles.dataSubtitle, { color: theme.textMuted }]}>
                       {isRTL ? 'التاريخ:' : 'Date:'} {inv.date}
@@ -1767,7 +1767,7 @@ export default function AdminDashboardScreen() {
                   </Text>
                   <Text style={{ color: theme.textMuted, fontSize: 11 }}>
                     {viewingReceipt?.invoiceNumber ? `#${viewingReceipt.invoiceNumber}` : ''} 
-                    {viewingReceipt?.clientName ? ` • ${viewingReceipt.clientName}` : ''}
+                    {(viewingReceipt?.clientName || viewingReceipt?.clientname || users.find(u => u.id === (viewingReceipt?.userId || viewingReceipt?.userid))?.fullName) ? ` • ${viewingReceipt?.clientName || viewingReceipt?.clientname || users.find(u => u.id === (viewingReceipt?.userId || viewingReceipt?.userid))?.fullName}` : ''}
                   </Text>
                 </View>
               </View>

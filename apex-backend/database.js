@@ -54,7 +54,57 @@ if (!hasValidPg) {
 }
 
 // Helper: Convert SQLite SQL to PostgreSQL SQL
-const camelMap = { fullname: "fullName", avatarurl: "avatarUrl", resetcode: "resetCode", resetcodeexpires: "resetCodeExpires", projectname: "projectName", projectphase: "projectPhase", projectprogress: "projectProgress", projecttasks: "projectTasks", projectdeliverables: "projectDeliverables", pushtoken: "pushToken", deviceid: "deviceId", createdat: "createdAt", userid: "userId", senderrole: "senderRole", attachmenturl: "attachmentUrl", clientmsgid: "clientMsgId", projecttype: "projectType", aianalysis: "aiAnalysis", companyname: "companyName", companyemail: "companyEmail", companyphone: "companyPhone", taxid: "taxId", bankname: "bankName", bankaccount: "bankAccount", bankiban: "bankIban", instapayhandle: "instapayHandle", vodafonecash: "vodafoneCash", quoteid: "quoteId", invoicenumber: "invoiceNumber", paymentmethod: "paymentMethod", duedate: "dueDate", receipturl: "receiptUrl", paidat: "paidAt" }; function mapKeys(row) { if (!row) return row; const newRow = {}; for (const k in row) { newRow[camelMap[k] || k] = row[k]; } return newRow; }
+const camelMap = { 
+  fullname: "fullName", 
+  avatarurl: "avatarUrl", 
+  resetcode: "resetCode", 
+  resetcodeexpires: "resetCodeExpires", 
+  projectname: "projectName", 
+  projectphase: "projectPhase", 
+  projectprogress: "projectProgress", 
+  projecttasks: "projectTasks", 
+  projectdeliverables: "projectDeliverables", 
+  pushtoken: "pushToken", 
+  deviceid: "deviceId", 
+  createdat: "createdAt", 
+  userid: "userId", 
+  senderrole: "senderRole", 
+  attachmenturl: "attachmentUrl", 
+  clientmsgid: "clientMsgId", 
+  projecttype: "projectType", 
+  aianalysis: "aiAnalysis", 
+  companyname: "companyName", 
+  companyemail: "companyEmail", 
+  companyphone: "companyPhone", 
+  taxid: "taxId", 
+  bankname: "bankName", 
+  bankaccount: "bankAccount", 
+  bankiban: "bankIban", 
+  instapayhandle: "instapayHandle", 
+  vodafonecash: "vodafoneCash", 
+  quoteid: "quoteId", 
+  invoicenumber: "invoiceNumber", 
+  paymentmethod: "paymentMethod", 
+  duedate: "dueDate", 
+  receipturl: "receiptUrl", 
+  paidat: "paidAt",
+  clientname: "clientName",
+  clientemail: "clientEmail",
+  clientcompany: "clientCompany",
+  clientphone: "clientPhone"
+}; 
+
+function mapKeys(row) { 
+  if (!row) return row; 
+  const newRow = { ...row }; 
+  for (const k in row) { 
+    const camel = camelMap[k];
+    if (camel) {
+      newRow[camel] = row[k];
+    }
+  } 
+  return newRow; 
+}
 function convertSql(sql) {
   let pgSql = sql;
   pgSql = pgSql.replace(/INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT/gi, 'SERIAL PRIMARY KEY');
