@@ -12,7 +12,20 @@
           "package_name": "com.apexsoftware.portal"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "230331278530-ip7sja9jgur5b6fuoe9oi6oc0bpi1inr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.apexsoftware.portal",
+            "certificate_hash": "3eb459b8119dacbd954d483be35ee99a547d6d54"
+          }
+        },
+        {
+          "client_id": "230331278530-eviu86gh9if07cr6fefemel9pbmbrto3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC5O01ewo8UQvh2DS83_jwn6BcXmxJE4-Y"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "230331278530-eviu86gh9if07cr6fefemel9pbmbrto3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

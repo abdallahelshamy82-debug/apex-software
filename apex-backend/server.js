@@ -315,8 +315,13 @@ io.use((socket, next) => {
 });
 
 // Google OAuth verification for Android/Web sign-in
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '596632301040-cpotn60a58rmi31ctcltiqkltutcqg4e.apps.googleusercontent.com';
-const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+const PRIMARY_GOOGLE_CLIENT_ID = '230331278530-eviu86gh9if07cr6fefemel9pbmbrto3.apps.googleusercontent.com';
+const GOOGLE_CLIENT_IDS = [
+  process.env.GOOGLE_CLIENT_ID,
+  PRIMARY_GOOGLE_CLIENT_ID,
+  '596632301040-cpotn60a58rmi31ctcltiqkltutcqg4e.apps.googleusercontent.com'
+].filter(Boolean);
+const googleClient = new OAuth2Client(PRIMARY_GOOGLE_CLIENT_ID);
 
 const getVerifiedGoogleUser = async ({ idToken }) => {
   if (!idToken) {
@@ -326,7 +331,7 @@ const getVerifiedGoogleUser = async ({ idToken }) => {
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken,
-      audience: [GOOGLE_CLIENT_ID]
+      audience: GOOGLE_CLIENT_IDS
     });
     const payload = ticket.getPayload();
     if (!payload || !payload.email) {

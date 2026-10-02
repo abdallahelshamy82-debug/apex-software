@@ -2,7 +2,7 @@
   "expo": {
     "name": "Apex Software",
     "slug": "apex-app",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "apexapp",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.apexsoftware.portal",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
