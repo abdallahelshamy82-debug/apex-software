@@ -216,6 +216,17 @@ export const api = {
     }
   },
 
+  async verifySession() {
+    try {
+      const response = await fetch(`${API_URL}/me`, { headers: await getAuthHeaders() });
+      if (!response.ok) return { success: false };
+      const data = await response.json();
+      return data?.success && data.user ? data : { success: false };
+    } catch (e) {
+      return { success: false };
+    }
+  },
+
   async forgotPassword(email: string) {
     try {
       const response = await fetch(`${API_URL}/auth/forgot-password`, {

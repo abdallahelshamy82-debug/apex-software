@@ -40,7 +40,7 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!hasAutoRedirectedOnLaunch && isAppReady && currentUser) {
       hasAutoRedirectedOnLaunch = true;
-      const target = (currentUser.role === 'admin' || currentUser.email === 'abdallahelshamy82@gmail.com')
+      const target = (currentUser.role === 'admin' || currentUser.isAdmin)
         ? '/admin'
         : '/dashboard';
       router.replace(target as any);
@@ -106,7 +106,7 @@ export default function HomeScreen() {
                <TouchableOpacity 
                  onPress={() => {
                    if (currentUser) {
-                     const target = (currentUser.role === 'admin' || currentUser.email === 'abdallahelshamy82@gmail.com')
+                     const target = (currentUser.role === 'admin' || currentUser.isAdmin)
                        ? '/admin'
                        : '/dashboard';
                      router.push(target as any);

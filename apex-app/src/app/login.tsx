@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FloatingInput } from '../components/FloatingInput';
 import { OtpInput } from '../components/OtpInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveSecureToken, getSecureToken } from '../utils/secureTokenStorage';
+import { saveSecureToken, getSecureToken, removeSecureToken } from '../utils/secureTokenStorage';
 import { haptics } from '../utils/haptics';
 import { biometrics } from '../utils/biometrics';
 import { notifications } from '../utils/notifications';
@@ -62,14 +62,15 @@ export default function LoginScreen() {
     const token = await getSecureToken();
     const userStr = await AsyncStorage.getItem('userData');
     if (token && userStr) {
-      setHasSavedSession(true);
-      try {
-        const userObj = JSON.parse(userStr);
-        if (!currentUser) setCurrentUser(userObj);
-        const target = (userObj.role === 'admin' || userObj.email === 'abdallahelshamy82@gmail.com') ? '/admin' : '/dashboard';
-        router.replace(target as any);
+      const session = await api.verifySession();
+      if (session.success && session.user) {
+        setHasSavedSession(true);
+        setCurrentUser(session.user);
+        await AsyncStorage.setItem('userData', JSON.stringify(session.user));
+        router.replace(session.user.role === 'admin' || session.user.isAdmin ? '/admin' : '/dashboard');
         return;
-      } catch (e) {}
+      }
+      await AsyncStorage.removeItem('userData');
     }
     const isConfigured = await biometrics.isBiometricsConfigured();
     if (isConfigured) {
@@ -137,16 +138,26 @@ export default function LoginScreen() {
     // On Web: Biometrics are a mobile hardware feature; provide an educational alert + 1-click login with bound user
     if (Platform.OS === 'web') {
       await haptics.success();
-      setCurrentUser(bound.user);
       await saveSecureToken(bound.token);
-      await AsyncStorage.setItem('userData', JSON.stringify(bound.user));
+      const session = await api.verifySession();
+      if (!session.success || !session.user) {
+        await removeSecureToken();
+        await AsyncStorage.removeItem('userData');
+        Alert.alert(
+          isRTL ? 'انتهت الجلسة' : 'Session Expired',
+          isRTL ? 'يرجى تسجيل الدخول مرة أخرى للتحقق من الحساب.' : 'Please sign in again to verify this account.'
+        );
+        return;
+      }
+      setCurrentUser(session.user);
+      await AsyncStorage.setItem('userData', JSON.stringify(session.user));
       Alert.alert(
         isRTL ? 'المستشعرات الحيوية (Web Preview)' : 'Biometric Web Preview',
         isRTL 
-          ? `تم الدخول بنجاح للحساب المربوط بالبصمة: ${bound.user.fullName}!\n\nملاحظة: حساسات البصمة والوجه المادية تعمل مباشرة عبر تطبيق الموبايل (Android / iOS).`
-          : `Logged in via bound biometric session as ${bound.user.fullName}!`
+          ? `تم الدخول بنجاح للحساب المربوط بالبصمة: ${session.user.fullName}!\n\nملاحظة: حساسات البصمة والوجه المادية تعمل مباشرة عبر تطبيق الموبايل (Android / iOS).`
+          : `Logged in via bound biometric session as ${session.user.fullName}!`
       );
-      if (bound.user.role === 'admin' || bound.user.email === 'abdallahelshamy82@gmail.com') router.push('/admin');
+      if (session.user.role === 'admin' || session.user.isAdmin) router.push('/admin');
       else router.push('/dashboard');
       return;
     }
@@ -165,7 +176,7 @@ export default function LoginScreen() {
         isRTL ? `تم تسجيل الدخول بالمستشعرات الحيوية بنجاح يا ${bound.user.fullName}` : `Logged in with biometrics as ${bound.user.fullName}`
       );
       notifications.registerForPushNotifications().catch(() => {});
-      if (bound.user.role === 'admin' || bound.user.email === 'abdallahelshamy82@gmail.com') {
+      if (bound.user.role === 'admin' || bound.user.isAdmin) {
         router.push('/admin');
       } else {
         router.push('/dashboard');
@@ -223,7 +234,7 @@ export default function LoginScreen() {
           }
         }
 
-        if (res.user.role === 'admin' || cleanEmail === 'abdallahelshamy82@gmail.com') {
+        if (res.user.role === 'admin' || res.user.isAdmin) {
           router.push('/admin');
         } else {
           router.push('/dashboard');
@@ -318,7 +329,7 @@ export default function LoginScreen() {
         }
       }
 
-      if (res.user.role === 'admin' || cleanEmail === 'abdallahelshamy82@gmail.com') {
+      if (res.user.role === 'admin' || res.user.isAdmin) {
         router.push('/admin');
       } else {
         router.push('/dashboard');

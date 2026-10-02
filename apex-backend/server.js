@@ -354,6 +354,7 @@ const db = require('./database');
         company TEXT, 
         password TEXT, 
         role TEXT DEFAULT 'client',
+        isAdmin INTEGER DEFAULT 0,
         phone TEXT,
         avatarUrl TEXT,
         resetCode TEXT,
@@ -433,7 +434,7 @@ const db = require('./database');
       });
 
       // Safe schema migrations for existing DB instances
-      const userCols = ['phone', 'avatarUrl', 'resetCode', 'resetCodeExpires', 'projectName', 'projectPhase', 'projectProgress', 'projectTasks', 'projectDeliverables', 'pushToken', 'deviceId'];
+      const userCols = ['isAdmin', 'phone', 'avatarUrl', 'resetCode', 'resetCodeExpires', 'projectName', 'projectPhase', 'projectProgress', 'projectTasks', 'projectDeliverables', 'pushToken', 'deviceId'];
       userCols.forEach(col => { db.run(`ALTER TABLE users ADD COLUMN ${col} TEXT`, () => {}); });
       const invCols = ['quoteId', 'title', 'receiptUrl', 'notes', 'createdAt'];
       invCols.forEach(col => { db.run(`ALTER TABLE invoices ADD COLUMN ${col} TEXT`, () => {}); });
@@ -503,24 +504,19 @@ io.on('connection', (socket) => {
   });
 });
 
-// Helper to get all configured admin emails (built-in + .env configured)
+// Admin identities are configured outside the codebase and can be changed without a deploy.
 const getAdminEmails = () => {
-  const envAdmins = process.env.ADMIN_EMAILS
+  return process.env.ADMIN_EMAILS
     ? process.env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
     : [];
-  const defaultAdmins = ['abdallahelshamy82@gmail.com'];
-  return Array.from(new Set([...defaultAdmins, ...envAdmins]));
 };
+
+const hasAdminFlag = (value) => value === true || Number(value) === 1;
 
 // Helper to check admin privileges
 const isAdminUser = (user) => {
   if (!user) return false;
-  if (user.role === 'admin') return true;
-  if (user.email) {
-    const e = user.email.toLowerCase().trim();
-    if (getAdminEmails().includes(e)) return true;
-  }
-  return false;
+  return user.role === 'admin' || user.isAdmin === true || Number(user.isAdmin) === 1;
 };
 
 // Middleware
@@ -531,9 +527,16 @@ const authenticateToken = (req, res, next) => {
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ success: false, message: 'Forbidden' });
     req.user = user;
-    if (isAdminUser(user)) {
-      req.user.isAdmin = true;
-    }
+    next();
+  });
+};
+
+const authenticateTokenOptional = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return next();
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (!err) req.user = user;
     next();
   });
 };
@@ -718,14 +721,14 @@ app.post('/api/auth/register-verify-otp', (req, res) => {
     const effectiveCompany = record.company || 'Apex Client';
 
     db.run(
-      `INSERT INTO users (fullName, email, company, password, role, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
-      [effectiveFullName, normalizedEmail, effectiveCompany, record.password, role, effectiveDeviceId],
+      `INSERT INTO users (fullName, email, company, password, role, isAdmin, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
+      [effectiveFullName, normalizedEmail, effectiveCompany, record.password, role, isAdmin ? 1 : 0, effectiveDeviceId],
       function(insertErr) {
         if (insertErr) {
           // If already exists, update and proceed
           db.run(
-            `UPDATE users SET password = ?, fullName = ?, company = ?, deviceId = COALESCE(?, deviceId) WHERE LOWER(email) = LOWER(?)`,
-            [record.password, effectiveFullName, effectiveCompany, effectiveDeviceId, normalizedEmail]
+            `UPDATE users SET password = ?, fullName = ?, company = ?, role = ?, isAdmin = ?, deviceId = COALESCE(?, deviceId) WHERE LOWER(email) = LOWER(?)`,
+            [record.password, effectiveFullName, effectiveCompany, role, isAdmin ? 1 : 0, effectiveDeviceId, normalizedEmail]
           );
         }
 
@@ -741,6 +744,7 @@ app.post('/api/auth/register-verify-otp', (req, res) => {
             fullName: row.fullName || row.fullname,
             email: row.email,
             role: row.role,
+            isAdmin: hasAdminFlag(row.isAdmin) || row.role === 'admin',
             company: row.company,
             phone: row.phone,
             avatarUrl: row.avatarUrl || row.avatarurl,
@@ -848,21 +852,21 @@ app.post('/api/register', (req, res) => {
     const role = isAdmin ? 'admin' : 'client';
 
     db.run(
-      `INSERT INTO users (fullName, email, company, password, role, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
-      [fullName || normalizedEmail.split('@')[0], normalizedEmail, company || 'Apex Client', hashedPassword, role, deviceId || null],
+      `INSERT INTO users (fullName, email, company, password, role, isAdmin, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
+      [fullName || normalizedEmail.split('@')[0], normalizedEmail, company || 'Apex Client', hashedPassword, role, isAdmin ? 1 : 0, deviceId || null],
       function(err) {
         if (err) {
           // If email already exists, update user password/info and login smoothly
           db.run(
-            `UPDATE users SET fullName = COALESCE(?, fullName), password = ?, company = COALESCE(?, company), role = ?, deviceId = COALESCE(?, deviceId) WHERE LOWER(email) = LOWER(?)`,
-            [fullName, hashedPassword, company, role, deviceId || null, normalizedEmail],
+            `UPDATE users SET fullName = COALESCE(?, fullName), password = ?, company = COALESCE(?, company), role = ?, isAdmin = ?, deviceId = COALESCE(?, deviceId) WHERE LOWER(email) = LOWER(?)`,
+            [fullName, hashedPassword, company, role, isAdmin ? 1 : 0, deviceId || null, normalizedEmail],
             (updErr) => {
               if (updErr) return res.status(400).json({ success: false, message: 'DB error' });
               db.get(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (gErr, row) => {
                 if (gErr || !row) return res.status(500).json({ success: false, message: 'User not found' });
                 const user = {
                   id: row.id, fullName: row.fullName, email: row.email, role: row.role, company: row.company,
-                  phone: row.phone, avatarUrl: row.avatarUrl,
+                  phone: row.phone, avatarUrl: row.avatarUrl, isAdmin: hasAdminFlag(row.isAdmin) || row.role === 'admin',
                   projectName: row.projectName, projectPhase: row.projectPhase, projectProgress: row.projectProgress || 0
                 };
                 const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
@@ -874,7 +878,7 @@ app.post('/api/register', (req, res) => {
         }
 
         const user = { 
-          id: this.lastID, fullName: fullName || normalizedEmail.split('@')[0], email: normalizedEmail, company: company || 'Apex Client', role, 
+          id: this.lastID, fullName: fullName || normalizedEmail.split('@')[0], email: normalizedEmail, company: company || 'Apex Client', role, isAdmin,
           phone: null, avatarUrl: null, projectName: null, projectPhase: null, projectProgress: 0 
         };
         const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
@@ -930,10 +934,10 @@ app.post('/api/login', (req, res) => {
 
     // Ensure admin emails have admin role if not already set
     let userRole = row.role;
-    const isAdmin = getAdminEmails().includes(normalizedEmail) || row.role === 'admin';
+    const isAdmin = getAdminEmails().includes(normalizedEmail) || row.role === 'admin' || Number(row.isAdmin) === 1;
     if (getAdminEmails().includes(normalizedEmail) && row.role !== 'admin') {
       userRole = 'admin';
-      db.run(`UPDATE users SET role = 'admin' WHERE id = ?`, [row.id]);
+      db.run(`UPDATE users SET role = 'admin', isAdmin = 1 WHERE id = ?`, [row.id]);
     }
 
     // Update deviceId on mobile if not set yet
@@ -943,7 +947,7 @@ app.post('/api/login', (req, res) => {
 
     const user = { 
       id: row.id, fullName: row.fullName, email: row.email, role: userRole, company: row.company,
-      phone: row.phone, avatarUrl: row.avatarUrl,
+      phone: row.phone, avatarUrl: row.avatarUrl, isAdmin,
       projectName: row.projectName, projectPhase: row.projectPhase, projectProgress: row.projectProgress || 0 
     };
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
@@ -966,9 +970,9 @@ app.post('/api/auth/google', async (req, res) => {
 
       if (existingUser) {
         let currentRole = existingUser.role;
-        if (getAdminEmails().includes(normalizedEmail) && existingUser.role !== 'admin') {
+        if (isAdmin && (existingUser.role !== 'admin' || Number(existingUser.isAdmin) !== 1)) {
           currentRole = 'admin';
-          db.run(`UPDATE users SET role = 'admin' WHERE id = ?`, [existingUser.id]);
+          db.run(`UPDATE users SET role = 'admin', isAdmin = 1 WHERE id = ?`, [existingUser.id]);
         }
 
         if (deviceId && !existingUser.deviceId) {
@@ -980,6 +984,7 @@ app.post('/api/auth/google', async (req, res) => {
           fullName: existingUser.fullName,
           email: existingUser.email,
           role: currentRole,
+          isAdmin: isAdmin || currentRole === 'admin' || hasAdminFlag(existingUser.isAdmin),
           company: existingUser.company,
           phone: existingUser.phone,
           avatarUrl: existingUser.avatarUrl || googleUser.picture,
@@ -994,8 +999,8 @@ app.post('/api/auth/google', async (req, res) => {
       const proceedWithGoogleCreate = () => {
         const defaultPassword = bcrypt.hashSync('google_oauth_' + Math.random().toString(36).substring(7), 10);
         db.run(
-          `INSERT INTO users (fullName, email, password, company, role, avatarUrl, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
-          [googleUser.fullName || normalizedEmail.split('@')[0], normalizedEmail, defaultPassword, 'Google Client', defaultRole, googleUser.picture || null, deviceId || null],
+          `INSERT INTO users (fullName, email, password, company, role, isAdmin, avatarUrl, projectName, projectPhase, projectProgress, deviceId) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?)`,
+          [googleUser.fullName || normalizedEmail.split('@')[0], normalizedEmail, defaultPassword, 'Google Client', defaultRole, isAdmin ? 1 : 0, googleUser.picture || null, deviceId || null],
           function(insertErr) {
             if (insertErr) return res.status(500).json({ success: false, message: 'Failed to create user' });
             
@@ -1004,6 +1009,7 @@ app.post('/api/auth/google', async (req, res) => {
               fullName: googleUser.fullName || normalizedEmail.split('@')[0],
               email: normalizedEmail,
               role: defaultRole,
+              isAdmin,
               company: 'Google Client',
               avatarUrl: googleUser.picture || null,
               phone: null,
@@ -1101,8 +1107,9 @@ app.post('/api/auth/reset-password', (req, res) => {
 
 // Get Current User Profile
 app.get('/api/me', authenticateToken, (req, res) => {
-  db.get(`SELECT id, fullName, email, company, role, phone, avatarUrl, projectName, projectPhase, projectProgress, projectTasks, projectDeliverables FROM users WHERE id = ?`, [req.user.id], (err, user) => {
+  db.get(`SELECT id, fullName, email, company, role, isAdmin, phone, avatarUrl, projectName, projectPhase, projectProgress, projectTasks, projectDeliverables FROM users WHERE id = ?`, [req.user.id], (err, user) => {
     if (err || !user) return res.status(404).json({ success: false, message: 'User not found' });
+    user.isAdmin = hasAdminFlag(user.isAdmin) || user.role === 'admin';
     res.json({ success: true, user });
   });
 });
@@ -1115,7 +1122,8 @@ app.put('/api/user/profile', authenticateToken, (req, res) => {
     [fullName, company, phone, avatarUrl, req.user.id],
     function(err) {
       if (err) return res.status(500).json({ success: false, message: 'Failed to update profile' });
-      db.get(`SELECT id, fullName, email, company, role, phone, avatarUrl, projectName, projectPhase, projectProgress, projectTasks, projectDeliverables FROM users WHERE id = ?`, [req.user.id], (uErr, updatedUser) => {
+      db.get(`SELECT id, fullName, email, company, role, isAdmin, phone, avatarUrl, projectName, projectPhase, projectProgress, projectTasks, projectDeliverables FROM users WHERE id = ?`, [req.user.id], (uErr, updatedUser) => {
+        if (updatedUser) updatedUser.isAdmin = hasAdminFlag(updatedUser.isAdmin) || updatedUser.role === 'admin';
         res.json({ success: true, user: updatedUser });
       });
     }
@@ -1583,27 +1591,18 @@ app.put('/api/admin/users/:id/deliverables', authenticateToken, (req, res) => {
   });
 });
 
-// Get Agency Settings (Public / Client / Admin)
-app.get('/api/agency-settings', (req, res) => {
+// Public clients receive only branding metadata; admins receive financial settings.
+app.get('/api/agency-settings', authenticateTokenOptional, (req, res) => {
   db.get(`SELECT * FROM agency_settings WHERE id = 1`, [], (err, row) => {
+    const publicSettings = {
+      companyName: row?.companyName || 'Apex Software Agency',
+      logo: row?.logo || null,
+      description: row?.description || null,
+    };
     if (err || !row) {
-      return res.json({
-        success: true,
-        settings: {
-          companyName: 'Apex Software Agency',
-          companyPhone: '+20 100 000 0000',
-          companyEmail: 'contact@apex.com',
-          taxId: 'TX-948201-EG',
-          vodafoneCash: '01000000000',
-          bankName: 'CIB (Commercial International Bank)',
-          bankAccount: '100029384729',
-          bankIban: 'EG1200000000100029384729',
-          instapayHandle: 'apex@instapay',
-          address: 'Cairo, Egypt'
-        }
-      });
+      return res.json({ success: true, settings: publicSettings });
     }
-    res.json({ success: true, settings: row });
+    res.json({ success: true, settings: isAdminUser(req.user) ? row : publicSettings });
   });
 });
 
@@ -1806,7 +1805,7 @@ app.delete('/api/admin/users/:id', authenticateToken, (req, res) => {
   if (!isAdminUser(req.user)) return res.status(403).json({ success: false, message: 'Admin only' });
   db.get(`SELECT id, email, role FROM users WHERE id = ?`, [req.params.id], (err, u) => {
     if (err || !u) return res.status(404).json({ success: false, message: 'User not found' });
-    if (u.role === 'admin' || u.email === 'abdallahelshamy82@gmail.com' || u.email === 'admin@apex.com') {
+    if (u.role === 'admin') {
       return res.status(400).json({ success: false, message: 'لا يمكن حذف حساب مدير' });
     }
     db.run(`DELETE FROM users WHERE id = ?`, [req.params.id], function(delErr) {

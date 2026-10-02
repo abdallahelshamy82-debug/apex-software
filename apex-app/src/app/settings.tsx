@@ -200,7 +200,7 @@ export default function SettingsScreen() {
       <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
         <TouchableOpacity 
           onPress={() => {
-            if (currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') {
+            if (currentUser?.role === 'admin' || currentUser?.isAdmin) {
               router.push('/admin');
             } else {
               router.push('/dashboard');

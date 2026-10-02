@@ -543,10 +543,8 @@ export default function CopilotScreen() {
         // Clean legacy un-scoped key if exists to prevent leaking old data to new accounts
         const legacyGlobalSessions = await AsyncStorage.getItem('@apex_copilot_sessions');
         if (legacyGlobalSessions) {
-          const adminEmails = ['abdallahelshamy82@gmail.com'];
-          const userEmail = (currentUser?.email || '').toLowerCase().trim();
-          // If the logged-in user is the primary admin who created those test sessions, migrate them
-          if (adminEmails.includes(userEmail)) {
+          // Only migrate legacy sessions for an authenticated admin account.
+          if (currentUser?.role === 'admin' || currentUser?.isAdmin) {
             const existingUserSessions = await AsyncStorage.getItem(userKey);
             if (!existingUserSessions) {
               await AsyncStorage.setItem(userKey, legacyGlobalSessions);

@@ -823,7 +823,7 @@ export default function ChatScreen() {
   };
 
   const handleGoBack = () => {
-    if (currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') {
+    if (currentUser?.role === 'admin' || currentUser?.isAdmin) {
       router.push('/admin');
     } else {
       router.push('/dashboard');
@@ -834,7 +834,7 @@ export default function ChatScreen() {
     const isMine = (
       msg.sender === currentUser?.role ||
       msg.senderRole === currentUser?.role ||
-      (currentUser?.role === 'admin' ? msg.sender === 'admin' : (msg.sender === 'client' || !msg.sender))
+      ((currentUser?.role === 'admin' || currentUser?.isAdmin) ? msg.sender === 'admin' : (msg.sender === 'client' || !msg.sender))
     );
     const attachmentUri = msg.attachment?.uri || msg.attachmentUrl || '';
     const attachmentName = msg.attachment?.name || msg.text || (isRTL ? 'ملف مرفق' : 'Attached File');

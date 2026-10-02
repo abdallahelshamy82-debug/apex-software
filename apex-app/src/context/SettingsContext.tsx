@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ApexLoader from '../components/ApexLoader';
+import { api } from '../services/api';
+import { getSecureToken, removeSecureToken } from '../utils/secureTokenStorage';
 
 const awwwardsBase = {
   bg: '#09090B',
@@ -99,7 +101,21 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem('appLang'),
           AsyncStorage.getItem('appAccent')
         ]);
-        if (userData) setCurrentUser(JSON.parse(userData));
+        if (userData) {
+          const token = await getSecureToken();
+          if (token) {
+            const session = await api.verifySession();
+            if (session.success && session.user) {
+              setCurrentUser(session.user);
+              await AsyncStorage.setItem('userData', JSON.stringify(session.user));
+            } else {
+              await removeSecureToken();
+              await AsyncStorage.removeItem('userData');
+            }
+          } else {
+            await AsyncStorage.removeItem('userData');
+          }
+        }
         if (savedLang) setLanguage(savedLang as any);
         if (savedAccent) setAccentKey(savedAccent as 'neonGreen' | 'cyberBlue');
       } catch (e) {

@@ -59,7 +59,7 @@ export default function AdminDashboardScreen() {
   const [gmailUser, setGmailUser] = useState('');
   const [gmailPass, setGmailPass] = useState('');
   const [savingEmailConfig, setSavingEmailConfig] = useState(false);
-  const [testEmailTarget, setTestEmailTarget] = useState('abdallahelshamy82@gmail.com');
+  const [testEmailTarget, setTestEmailTarget] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
   const [viewingHtmlEmail, setViewingHtmlEmail] = useState<any>(null);
 

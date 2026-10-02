@@ -141,7 +141,7 @@ export default function DashboardScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row', flexWrap: 'wrap', gap: 8 }]}>
         <View style={[styles.headerLeft, { flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }]}>
-          {(currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') ? (
+          {(currentUser?.role === 'admin' || currentUser?.isAdmin) ? (
             <TouchableOpacity 
               onPress={() => { 
                 haptics.light();
@@ -180,7 +180,7 @@ export default function DashboardScreen() {
             )}
           </TouchableOpacity>
 
-          {(currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') && (
+          {(currentUser?.role === 'admin' || currentUser?.isAdmin) && (
             <TouchableOpacity 
               onPress={() => {
                 haptics.light();

@@ -21,7 +21,7 @@ export default function FloatingGlassNav() {
   const pathname = usePathname();
   const { isRTL, theme, currentUser } = useSettings();
 
-  const isUserAdmin = currentUser?.role === 'admin' || currentUser?.email === 'abdallahelshamy82@gmail.com';
+  const isUserAdmin = currentUser?.role === 'admin' || currentUser?.isAdmin;
   const portalRoute = currentUser ? (isUserAdmin ? '/admin' : '/dashboard') : '/login';
   const portalName = currentUser ? (isRTL ? 'لوحتي' : 'Dashboard') : (isRTL ? 'حسابي' : 'Portal');
   const portalIcon: IconName = currentUser ? 'grid-outline' : 'person-outline';

@@ -185,7 +185,7 @@ export default function InvoicesScreen() {
 
   const handleGoBack = () => {
     haptics.light();
-    if (currentUser?.role === 'admin' || currentUser?.email?.toLowerCase() === 'abdallahelshamy82@gmail.com') {
+    if (currentUser?.role === 'admin' || currentUser?.isAdmin) {
       router.push('/admin');
     } else {
       router.push('/dashboard');
