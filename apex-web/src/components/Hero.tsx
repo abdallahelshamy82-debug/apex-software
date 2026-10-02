@@ -88,7 +88,7 @@ export default function Hero() {
 
               <Magnetic strength={0.2}>
                 <a 
-                  href="https://expo.dev/artifacts/eas/7kj4Ky5musA84fehzjaxqRmIF4FUWvgjUqMhfdThRvY.apk" 
+                  href="https://expo.dev/artifacts/eas/K4aLWHGdI9vKMr2gjViFhdBc4eRV1jKJ2B8Kk_yRd48.apk" 
                   className="px-8 py-4 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-lg hover:bg-white/10 transition-colors block cursor-none"
                 >
                   {t.common.downloadApp}
