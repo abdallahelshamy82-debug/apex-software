@@ -359,7 +359,9 @@ export default function LoginScreen() {
     }
   };
 
-  const GOOGLE_WEB_CLIENT_ID = '230331278530-eviu86gh9if07cr6fefemel9pbmbrto3.apps.googleusercontent.com';
+  const GOOGLE_WEB_CLIENT_ID = Platform.OS === 'web'
+    ? '596632301040-cpotn60a58rmi31ctcltiqkltutcqg4e.apps.googleusercontent.com'
+    : '230331278530-eviu86gh9if07cr6fefemel9pbmbrto3.apps.googleusercontent.com';
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
