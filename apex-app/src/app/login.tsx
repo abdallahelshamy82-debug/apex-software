@@ -511,6 +511,10 @@ export default function LoginScreen() {
           return;
         }
         console.error('Google Sign-in error:', error);
+        Alert.alert(
+          isRTL ? 'خطأ في تسجيل الدخول عبر Google' : 'Google Sign-In Error',
+          error?.message ? `${error.message} (Code: ${error.code ?? 'N/A'})` : `Error code: ${error.code ?? 'unknown'}`
+        );
       }
       return;
     }
