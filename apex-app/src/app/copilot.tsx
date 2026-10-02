@@ -26,7 +26,9 @@ import { haptics } from '../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useResponsive } from '../hooks/useResponsive';
 import { useToast } from '../components/ApexToast';
-import { Audio as AudioClass } from 'expo-av';
+
+// Native audio library removed to prevent UnsatisfiedLinkError crash in libexpo-av.so
+let SafeAudio: any = null;
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -825,34 +827,14 @@ export default function CopilotScreen() {
         });
       }
     } else {
-      // START recording on mobile!
-      try {
-        const permission = await AudioClass.requestPermissionsAsync();
-        if (!permission.granted) {
-          showToast({
-            type: 'warning',
-            title: isRTL ? 'إذن الميكروفون' : 'Permission Required',
-            message: isRTL ? 'يرجى إعطاء صلاحية الميكروفون للتحدث مع المستشار.' : 'Microphone permission is required.',
-          });
-          return;
-        }
-
-        await AudioClass.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true }); const { recording: newRec } = await AudioClass.Recording.createAsync(AudioClass.RecordingOptionsPresets.HIGH_QUALITY); setRecording(newRec);
-        setIsListening(true);
-
-        showToast({
-          type: 'info',
-          title: isRTL ? 'المستشار يستمع إليك...' : 'Listening...',
-          message: isRTL ? 'تحدث الآن بفكرتك... واضغط المايك مرة أخرى عند الانتهاء.' : 'Speak your idea now, tap mic when done.',
-        });
-      } catch (err: any) {
-        console.error('Failed to start recording:', err);
-        showToast({
-          type: 'error',
-          title: isRTL ? 'خطأ' : 'Error',
-          message: isRTL ? 'فشل بدء تسجيل الصوت. تأكد من إعطاء صلاحيات المايك.' : 'Failed to start recording.',
-        });
-      }
+      // Mobile flow: advise user to use keyboard speech dictation or type
+      showToast({
+        type: 'info',
+        title: isRTL ? 'المستشار الذكي' : 'AI Consultant',
+        message: isRTL 
+          ? 'يمكنك التحدث مباشرة عبر مايك لوحة المفاتيح الصوتية أو كتابة فكرة مشروعك وسيقوم المستشار بتحليلها فوراً.' 
+          : 'You can use your keyboard voice dictation or type your project idea.',
+      });
     }
   };
 

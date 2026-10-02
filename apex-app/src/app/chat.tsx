@@ -32,14 +32,8 @@ import {
   ChatMessage 
 } from '../utils/ticketStorage';
 
-// Safe loader for expo-av
+// Safe loader for expo-av (disabled for New Architecture stability)
 let SafeAudio: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  SafeAudio = require('expo-av');
-} catch (e) {
-  SafeAudio = null;
-}
 
 // Safe loaders for expo-sharing & expo-file-system
 let SafeSharing: any = null;

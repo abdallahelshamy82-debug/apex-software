@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.apexsoftware.portal",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
@@ -77,7 +77,6 @@
           }
         }
       ],
-      "expo-av",
       "@react-native-google-signin/google-signin"
     ],
     "experiments": {
