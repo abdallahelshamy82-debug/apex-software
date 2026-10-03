@@ -9,3 +9,6 @@ database.sqlite
 database.sqlite-shm
 database.sqlite-wal
 *.sqlite
+*.db
+.env.*
+!.env.example

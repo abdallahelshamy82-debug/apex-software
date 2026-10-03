@@ -20,8 +20,8 @@ if (fs.existsSync(envPath)) {
   } catch (e) {}
 }
 
-const DEFAULT_GMAIL_USER = 'abdallahelshamy82@gmail.com';
-const DEFAULT_GMAIL_PASS = 'vghaqgxakhyiazwi';
+const DEFAULT_GMAIL_USER = '';
+const DEFAULT_GMAIL_PASS = ''; // SECURITY: never hardcode credentials. Set GMAIL_PASS in the environment.
 
 let GMAIL_USER = (process.env.GMAIL_USER || process.env.SMTP_USER || DEFAULT_GMAIL_USER).trim();
 let GMAIL_PASS = (process.env.GMAIL_PASS || process.env.SMTP_PASS || DEFAULT_GMAIL_PASS).trim().replace(/\s+/g, '');

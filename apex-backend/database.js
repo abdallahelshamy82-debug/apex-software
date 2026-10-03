@@ -19,11 +19,14 @@ if (fs.existsSync(envPath)) {
   } catch (e) {}
 }
 
-const DEFAULT_PG_URL = 'postgresql://neondb_owner:npg_xu2Y9rIbNSlC@ep-lively-voice-avevl3vg-pooler.c-11.us-east-1.aws.neon.tech/neondb?sslmode=require';
-
-// Check if valid postgres connection string exists
-const rawConnStr = (process.env.DATABASE_URL || DEFAULT_PG_URL).trim().replace(/^["']|["']$/g, '');
+// SECURITY: no credentials are allowed in source code. DATABASE_URL must be provided
+// through the environment (Vercel Project Settings or a local .env file).
+const rawConnStr = (process.env.DATABASE_URL || '').trim().replace(/^["']|["']$/g, '');
 const hasValidPg = rawConnStr && !rawConnStr.includes('[YOUR-PASSWORD]') && rawConnStr.startsWith('postgres');
+
+if (!hasValidPg && (process.env.VERCEL || process.env.NODE_ENV === 'production')) {
+  throw new Error('FATAL: DATABASE_URL must be set in production. Refusing to start.');
+}
 
 let pool = null;
 if (hasValidPg) {
@@ -31,8 +34,14 @@ if (hasValidPg) {
     const { Pool } = require('pg');
     pool = new Pool({
       connectionString: rawConnStr,
-      ssl: { rejectUnauthorized: false }
+      ssl: { rejectUnauthorized: false },
+      // Serverless-friendly settings: few connections per instance, fail fast.
+      max: process.env.VERCEL ? 3 : 10,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 8000, // Neon may need a few seconds to wake from idle suspend
+      allowExitOnIdle: true
     });
+    pool.on('error', (e) => console.warn('PG pool idle client error:', e.message));
     console.log(' PostgreSQL connection pool initialized.');
   } catch (e) {
     console.error('Failed to initialize PG pool:', e);

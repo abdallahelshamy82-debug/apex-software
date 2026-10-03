@@ -41,6 +41,17 @@ if (!JWT_SECRET) {
   );
 }
 
+// Password verification: bcrypt for hashed rows; plaintext comparison is ONLY tolerated for
+// legacy rows that are not bcrypt hashes (they are upgraded on login / by npm run migrate).
+const verifyPassword = async (plain, stored) => {
+  if (!plain || !stored) return false;
+  const s = String(stored);
+  if (s.startsWith('$2')) {
+    try { return await bcrypt.compare(String(plain), s); } catch (e) { return false; }
+  }
+  return String(plain) === s;
+};
+
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://apex-web-blond.vercel.app',
   'https://apex-admin-seven.vercel.app',
@@ -151,7 +162,16 @@ app.use('/uploads', express.static(uploadsDir, {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, status: 'ok', server: 'Apex Backend', timestamp: new Date().toISOString() });
+  res.json({ success: true, status: 'ok', server: 'Magixa Backend', timestamp: new Date().toISOString() });
+});
+
+// Deep health check: touches the database (also wakes a suspended Neon compute). Used by keep-warm pings.
+app.get('/api/health/db', (req, res) => {
+  const started = Date.now();
+  require('./database').get('SELECT 1 AS ok', [], (err) => {
+    if (err) return res.status(503).json({ success: false, status: 'db-unavailable', ms: Date.now() - started });
+    res.json({ success: true, status: 'ok', db: true, ms: Date.now() - started });
+  });
 });
 
 // Root landing page for browser visits on port 3000
@@ -351,105 +371,12 @@ const getVerifiedGoogleUser = async ({ idToken }) => {
 
 // Database Config
 const db = require('./database');
-    db.serialize(() => {
-      db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        fullName TEXT, 
-        email TEXT UNIQUE, 
-        company TEXT, 
-        password TEXT, 
-        role TEXT DEFAULT 'client',
-        isAdmin INTEGER DEFAULT 0,
-        phone TEXT,
-        avatarUrl TEXT,
-        resetCode TEXT,
-        resetCodeExpires INTEGER,
-        projectName TEXT,
-        projectPhase TEXT,
-        projectProgress INTEGER DEFAULT 0
-      )`);
-
-      db.run(`CREATE TABLE IF NOT EXISTS email_verifications (
-        email TEXT PRIMARY KEY,
-        code TEXT,
-        fullName TEXT,
-        password TEXT,
-        company TEXT,
-        expires BIGINT,
-        deviceId TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`);
-
-      db.run(`CREATE TABLE IF NOT EXISTS quotes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        email TEXT, 
-        platform TEXT, 
-        features TEXT, 
-        totalCost INTEGER, 
-        status TEXT DEFAULT 'pending', 
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`);
-
-      db.run(`CREATE TABLE IF NOT EXISTS invoices (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        userId INTEGER, 
-        quoteId INTEGER, 
-        invoiceNumber TEXT, 
-        title TEXT,
-        amount INTEGER, 
-        date TEXT, 
-        status TEXT DEFAULT 'PENDING', 
-        receiptUrl TEXT, 
-        notes TEXT, 
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
-        FOREIGN KEY(userId) REFERENCES users(id)
-      )`);
-
-      db.run(`CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        userId INTEGER, 
-        senderRole TEXT, 
-        text TEXT, 
-        attachmentUrl TEXT, 
-        type TEXT DEFAULT 'text', 
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
-        FOREIGN KEY(userId) REFERENCES users(id)
-      )`);
-
-      db.run(`CREATE TABLE IF NOT EXISTS agency_settings (
-        id INTEGER PRIMARY KEY,
-        companyName TEXT,
-        companyPhone TEXT,
-        companyEmail TEXT,
-        taxId TEXT,
-        vodafoneCash TEXT,
-        bankName TEXT,
-        bankAccount TEXT,
-        bankIban TEXT,
-        instapayHandle TEXT,
-        address TEXT,
-        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`, () => {
-        db.get(`SELECT * FROM agency_settings WHERE id = 1`, [], (err, row) => {
-          if (!row) {
-            db.run(`INSERT INTO agency_settings (id, companyName, companyPhone, companyEmail, taxId, vodafoneCash, bankName, bankAccount, bankIban, instapayHandle, address)
-              VALUES (1, 'Apex Software Agency', '+20 100 000 0000', 'contact@apex.com', 'TX-948201-EG', '01000000000', 'CIB (Commercial International Bank)', '100029384729', 'EG1200000000100029384729', 'apex@instapay', 'Cairo, Egypt')`);
-          }
-        });
-      });
-
-      // Safe schema migrations for existing DB instances
-      const userCols = ['isAdmin', 'phone', 'avatarUrl', 'resetCode', 'resetCodeExpires', 'projectName', 'projectPhase', 'projectProgress', 'projectTasks', 'projectDeliverables', 'pushToken', 'deviceId'];
-      userCols.forEach(col => { db.run(`ALTER TABLE users ADD COLUMN ${col} TEXT`, () => {}); });
-      const invCols = ['quoteId', 'title', 'receiptUrl', 'notes', 'createdAt'];
-      invCols.forEach(col => { db.run(`ALTER TABLE invoices ADD COLUMN ${col} TEXT`, () => {}); });
-      const quoteCols = ['source', 'aiAnalysis'];
-      quoteCols.forEach(col => { db.run(`ALTER TABLE quotes ADD COLUMN ${col} TEXT`, () => {}); });
-      const msgCols = ['attachment', 'sender', 'timestamp', 'clientMsgId'];
-      msgCols.forEach(col => { db.run(`ALTER TABLE messages ADD COLUMN ${col} TEXT`, () => {}); });
-      // Clean up existing duplicates in database
-      db.run(`DELETE FROM messages WHERE id NOT IN (SELECT MIN(id) FROM messages GROUP BY userId, senderRole, text, IFNULL(attachmentUrl, ''), IFNULL(clientMsgId, ''))`, () => {});
-    });
+// Schema creation / migrations are NOT executed on production cold starts anymore (they caused
+// 7-10s responses on Vercel Hobby). Run them with: npm run migrate
+// They still run automatically for local development, or when RUN_MIGRATIONS_ON_START=true.
+if (!isProduction || process.env.RUN_MIGRATIONS_ON_START === 'true') {
+  require('./migrations').runMigrations(db).catch((e) => console.error('Migration error:', e.message));
+}
 
 // Realtime Chat (Socket.io)
 io.on('connection', (socket) => {
@@ -924,16 +851,16 @@ app.post('/api/login', (req, res) => {
   const normalizedEmail = email.trim().toLowerCase();
   const clientPlatform = (req.headers['x-client-platform'] || req.body.platform || '').toLowerCase();
 
-  db.get(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], (err, row) => {
+  db.get(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`, [normalizedEmail], async (err, row) => {
     if (err || !row) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
-    // Compare with bcrypt hash or fallback to legacy plaintext
-    const isMatch = bcrypt.compareSync(password, row.password) || password === row.password;
+    // bcrypt compare (plaintext is only tolerated for legacy non-hash rows, upgraded right below)
+    const isMatch = await verifyPassword(password, row.password);
     if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     // Upgrade legacy plain password to bcrypt in background
-    if (password === row.password && !row.password.startsWith('$2')) {
-      const hashed = bcrypt.hashSync(password, 10);
+    if (row.password && !String(row.password).startsWith('$2')) {
+      const hashed = await bcrypt.hash(password, 10);
       db.run(`UPDATE users SET password = ? WHERE id = ?`, [hashed, row.id]);
     }
 
@@ -1142,13 +1069,13 @@ app.put('/api/user/change-password', authenticateToken, (req, res) => {
     return res.status(400).json({ success: false, message: 'Current and new password are required' });
   }
 
-  db.get(`SELECT password FROM users WHERE id = ?`, [req.user.id], (err, user) => {
+  db.get(`SELECT password FROM users WHERE id = ?`, [req.user.id], async (err, user) => {
     if (err || !user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    const isMatch = bcrypt.compareSync(currentPassword, user.password) || currentPassword === user.password;
+    const isMatch = await verifyPassword(currentPassword, user.password);
     if (!isMatch) return res.status(400).json({ success: false, message: 'Current password is incorrect' });
 
-    const hashed = bcrypt.hashSync(newPassword, 10);
+    const hashed = await bcrypt.hash(newPassword, 10);
     db.run(`UPDATE users SET password = ? WHERE id = ?`, [hashed, req.user.id], (updErr) => {
       if (updErr) return res.status(500).json({ success: false, message: 'Failed to change password' });
       res.json({ success: true, message: 'Password changed successfully' });
