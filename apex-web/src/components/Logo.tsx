@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 export default function Logo({ className = "" }: { className?: string }) {
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-3 ${className}`} dir="ltr">
       <Image
         src="/apex-app-icon.png"
         alt="Magixa app logo"

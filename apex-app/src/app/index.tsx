@@ -85,7 +85,7 @@ export default function HomeScreen() {
                    <TouchableOpacity onPress={() => router.push('/copilot')} style={styles.navLink}>
                      <Text style={styles.navLinkText}>{isRTL ? 'المساعد الذكي' : 'Copilot'}</Text>
                    </TouchableOpacity>
-                   <TouchableOpacity onPress={() => Linking.openURL('https://apex-web-blond.vercel.app')} style={styles.navLink}>
+                   <TouchableOpacity onPress={() => Linking.openURL('https://magixa.tech')} style={styles.navLink}>
                      <Text style={styles.navLinkText}>{isRTL ? 'أعمالنا' : 'Portfolio'}</Text>
                    </TouchableOpacity>
                  </>
@@ -180,7 +180,7 @@ export default function HomeScreen() {
                
                <TouchableOpacity 
                  style={styles.secondaryActionBtn}
-                 onPress={() => Linking.openURL('https://apex-web-blond.vercel.app')}
+                 onPress={() => Linking.openURL('https://magixa.tech')}
                >
                  <Text style={styles.secondaryActionText}>{isRTL ? 'استكشف أعمالنا' : 'Explore Portfolio'}</Text>
                </TouchableOpacity>
@@ -228,7 +228,7 @@ export default function HomeScreen() {
                  </Text>
                </InteractiveCard>
                
-               <InteractiveCard style={styles.glassCard} onPress={() => Linking.openURL('https://apex-web-blond.vercel.app')}>
+               <InteractiveCard style={styles.glassCard} onPress={() => Linking.openURL('https://magixa.tech')}>
                  <Ionicons name="sparkles-outline" size={32} color="#A78BFA" style={{ marginBottom: 12 }} />
                  <Text style={[styles.glassCardTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
                    {isRTL ? 'أعمالنا ومشاريعنا' : 'Portfolio & Case Studies'}

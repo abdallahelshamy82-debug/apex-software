@@ -72,9 +72,10 @@ export default function ApexLoader({
         <Ionicons name="flash" size={32} color={theme.primary} />
       </Animated.View>
 
-      <View style={[styles.brandRow, { flexDirection: 'row' }]}>
-        <Text style={[styles.brandTitle, { color: theme.text }]}>MAGI</Text>
-        <Text style={[styles.brandAccent, { color: theme.primary }]}>XA</Text>
+      <View style={[styles.brandRow, { flexDirection: 'row', direction: 'ltr' }]}>
+        <Text style={[styles.brandTitle, { color: theme.text, textAlign: 'center', writingDirection: 'ltr' }]}>
+          MAGI<Text style={[styles.brandAccent, { color: theme.primary }]}>XA</Text>
+        </Text>
       </View>
 
       <ActivityIndicator size="small" color={theme.primary} style={{ marginTop: 22, marginBottom: 12 }} />

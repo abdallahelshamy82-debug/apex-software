@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const WEBSITE_URL = 'https://apex-web-blond.vercel.app';
+const WEBSITE_URL = 'https://magixa.tech';
 
 export default function IdentityPortfolioScreen() {
   const router = useRouter();

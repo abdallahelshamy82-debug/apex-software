@@ -498,7 +498,7 @@ export default function SettingsScreen() {
             style={[styles.linkRow, { flexDirection: isRTL ? 'row-reverse' : 'row', borderBottomColor: theme.border }]}
             onPress={() => {
               haptics.selection();
-              Linking.openURL('https://apex-web-blond.vercel.app');
+              Linking.openURL('https://magixa.tech');
             }}
           >
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 10 }}>
