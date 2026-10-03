@@ -1,4 +1,4 @@
 User-Agent: *
 Allow: /
 
-Sitemap: https://apexsoftware.com/sitemap.xml
+Sitemap: https://magixa.tech/sitemap.xml

@@ -18,19 +18,19 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Apex Software | نبتكر مستقبلك",
-  description: "وكالة برمجيات رائدة في صياغة التجارب الرقمية العالمية.",
+  title: "Magixa | نبتكر ونقود مستقبلك البرمجي",
+  description: "وكالة برمجيات رائدة في صياغة التجارب الرقمية والأنظمة السحابية وتطبيقات الجوال.",
   openGraph: {
-    title: "Apex Software | نبتكر مستقبلك",
-    description: "نسد الفجوة بين التصميم المذهل والهندسة القوية.",
-    url: "https://apexsoftware.com",
-    siteName: "Apex Software",
+    title: "Magixa | نبتكر ونقود مستقبلك البرمجي",
+    description: "نسد الفجوة بين التصميم المذهل والهندسة البرمجية المتطورة.",
+    url: "https://magixa.tech",
+    siteName: "Magixa",
     images: [
       {
         url: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop",
         width: 1200,
         height: 630,
-        alt: "Apex Software",
+        alt: "Magixa",
       }
     ],
     locale: "ar_AR",
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Apex Software | نبتكر مستقبلك",
-    description: "نسد الفجوة بين التصميم المذهل والهندسة القوية.",
+    title: "Magixa | نبتكر ونقود مستقبلك البرمجي",
+    description: "نسد الفجوة بين التصميم المذهل والهندسة البرمجية المتطورة.",
     images: ["https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop"],
   },
 };

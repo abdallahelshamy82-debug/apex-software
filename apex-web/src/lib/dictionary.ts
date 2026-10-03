@@ -35,7 +35,7 @@ export const dict = {
       title: "رحلتنا",
       titleHighlight: "المهنية",
       list: [
-        { year: '2023 - الحاضر', role: 'كبير مهندسي الواجهات', company: 'Apex Software', desc: 'قيادة فرق الواجهات الأمامية، وتصميم معمارية الـ Micro-frontends، وإرساء معايير وتجربة مستخدم عالمية.' },
+        { year: '2023 - الحاضر', role: 'كبير مهندسي الواجهات', company: 'Magixa', desc: 'قيادة فرق الواجهات الأمامية، وتصميم معمارية الـ Micro-frontends، وإرساء معايير وتجربة مستخدم عالمية.' },
         { year: '2021 - 2023', role: 'مهندس نظم متكاملة', company: 'TechCorp', desc: 'توسيع البنية التحتية السحابية وبناء تطبيقات ويب عالية الأداء تخدم ملايين المستخدمين عالمياً.' },
         { year: '2019 - 2021', role: 'مطور واجهات وتجربة مستخدم', company: 'Creative Agency', desc: 'سد الفجوة بين التصميم الحائز على الجوائز والهندسة القوية، لإنشاء تجارب رقمية غامرة.' }
       ]
@@ -60,7 +60,7 @@ export const dict = {
       submit: "إرسال الرسالة",
     },
     footer: {
-      rights: "© 2026 Apex Software. جميع الحقوق محفوظة."
+      rights: "© 2026 Magixa. جميع الحقوق محفوظة."
     }
   },
   en: {
@@ -99,7 +99,7 @@ export const dict = {
       title: "Professional",
       titleHighlight: "Journey",
       list: [
-        { year: '2023 - PRESENT', role: 'Senior Frontend Architect', company: 'Apex Software', desc: 'Leading frontend teams, architecting scalable micro-frontends, and establishing global UI/UX standards.' },
+        { year: '2023 - PRESENT', role: 'Senior Frontend Architect', company: 'Magixa', desc: 'Leading frontend teams, architecting scalable micro-frontends, and establishing global UI/UX standards.' },
         { year: '2021 - 2023', role: 'Lead Full-Stack Engineer', company: 'TechCorp', desc: 'Scaled cloud infrastructure and built high-performance web applications serving millions of users globally.' },
         { year: '2019 - 2021', role: 'UI/UX Developer', company: 'Creative Agency', desc: 'Bridged the gap between award-winning design and robust engineering, creating immersive digital experiences.' }
       ]
@@ -124,7 +124,7 @@ export const dict = {
       submit: "Send Message",
     },
     footer: {
-      rights: "© 2026 Apex Software. All rights reserved."
+      rights: "© 2026 Magixa. All rights reserved."
     }
   }
 };
