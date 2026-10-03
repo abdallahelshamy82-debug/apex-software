@@ -35,7 +35,7 @@ export default function PrivacyScreen() {
           <Ionicons name="shield-checkmark" size={28} color={theme.primary} />
           <View style={{ flex: 1 }}>
             <Text style={[styles.badgeTitle, { color: theme.primary, textAlign: isRTL ? 'right' : 'left' }]}>
-              {isRTL ? 'التزام Apex بأمان وخصوصية بياناتك' : 'Apex Data Security & Privacy Commitment'}
+              {isRTL ? 'التزام Magixa بأمان وخصوصية بياناتك' : 'Magixa Data Security & Privacy Commitment'}
             </Text>
             <Text style={[styles.badgeSub, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>
               {isRTL ? 'تاريخ آخر تحديث: سبتمبر 2026' : 'Last Updated: September 2026'}
@@ -50,8 +50,8 @@ export default function PrivacyScreen() {
           </Text>
           <Text style={[styles.bodyText, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
             {isRTL
-              ? 'تلتزم شركة Apex Software بحماية خصوصية مستخدمي تطبيقاتها ومنصاتها الرقمية. توضح هذه السياسة كيفية جمع واستخدام وحماية المعلومات الشخصية وبيانات المشاريع التي تشاركها معنا عند استخدام بوابتنا وتطبيقاتنا.'
-              : 'Apex Software is committed to safeguarding your privacy. This policy outlines how we collect, use, and protect personal and project data shared through our applications and client portals.'}
+              ? 'تلتزم شركة Magixa بحماية خصوصية مستخدمي تطبيقاتها ومنصاتها الرقمية. توضح هذه السياسة كيفية جمع واستخدام وحماية المعلومات الشخصية وبيانات المشاريع التي تشاركها معنا عند استخدام بوابتنا وتطبيقاتنا.'
+              : 'Magixa is committed to safeguarding your privacy. This policy outlines how we collect, use, and protect personal and project data shared through our applications and client portals.'}
           </Text>
         </View>
 
@@ -106,7 +106,7 @@ export default function PrivacyScreen() {
               },
               {
                 perm: isRTL ? 'الميكروفون \u2066(Microphone)\u2069' : 'Microphone (Audio)',
-                why: isRTL ? 'يُستخدم فقط عند تشغيل التحدث الصوتي مع مستشار Apex الذكي أو إرسال ملاحظات صوتية.' : 'Used solely when recording voice prompts for AI Copilot or sending voice notes.',
+                why: isRTL ? 'يُستخدم فقط عند تشغيل التحدث الصوتي مع مستشار Magixa الذكي أو إرسال ملاحظات صوتية.' : 'Used solely when recording voice prompts for AI Copilot or sending voice notes.',
               },
               {
                 perm: isRTL ? 'الصور والمستندات (Photo Library)' : 'Storage / Photos',
@@ -131,7 +131,7 @@ export default function PrivacyScreen() {
           </Text>
           <Text style={[styles.bodyText, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
             {isRTL
-              ? 'نحن لا نبيع أو نؤجر بياناتك الشخصية لأي جهة إعلانية أو طرف ثالث. نصوص الأفكار المدخلة في مستشار Apex الذكي تُعالج لأغراض التحليل الفني وتقديم العروض، وتخضع لسياسات الأمان والتشفير الصارمة وفق معايير Google Cloud و OpenAI Enterprise.'
+              ? 'نحن لا نبيع أو نؤجر بياناتك الشخصية لأي جهة إعلانية أو طرف ثالث. نصوص الأفكار المدخلة في مستشار Magixa الذكي تُعالج لأغراض التحليل الفني وتقديم العروض، وتخضع لسياسات الأمان والتشفير الصارمة وفق معايير Google Cloud و OpenAI Enterprise.'
               : 'We do not sell or rent your personal data to advertisers. Prompts submitted to AI Copilot are processed securely for project scoping under enterprise privacy agreements.'}
           </Text>
         </View>
@@ -150,13 +150,13 @@ export default function PrivacyScreen() {
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
               <Ionicons name="mail" size={15} color={theme.primary} />
               <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 13 }}>
-                privacy@apexsoftware.com
+                privacy@magixa.com
               </Text>
             </View>
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
               <Ionicons name="globe-outline" size={15} color={theme.textMuted} />
               <Text style={{ color: theme.textMuted, fontSize: 12 }}>
-                https://apexsoftware.com/privacy
+                https://magixa.com/privacy
               </Text>
             </View>
           </View>

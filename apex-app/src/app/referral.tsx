@@ -13,11 +13,11 @@ export default function ReferralScreen() {
   const userSlug = currentUser?.fullName
     ? currentUser.fullName.replace(/[^\w]/g, '').toUpperCase().slice(0, 6) || 'CLIENT'
     : 'VIP';
-  const referralCode = `APEX-${userSlug}-${currentUser?.id || '2026'}`;
+  const referralCode = `MAGIXA-${userSlug}-${currentUser?.id || '2026'}`;
 
   const shareText = isRTL 
-    ? `استخدم كود الدعوة الخاص بي (${referralCode}) عند طلب مشروعك البرمجي من Apex Software واحصل على خصم 10% فوري على فاتورتك الأولى!` 
-    : `Use my invite code (${referralCode}) when ordering your software project with Apex Software to get 10% off your first invoice!`;
+    ? `استخدم كود الدعوة الخاص بي (${referralCode}) عند طلب مشروعك البرمجي من Magixa واحصل على خصم 10% فوري على فاتورتك الأولى!` 
+    : `Use my invite code (${referralCode}) when ordering your software project with Magixa to get 10% off your first invoice!`;
 
   const handleCopyCode = () => {
     if (Platform.OS === 'web' && typeof navigator !== 'undefined') {
@@ -38,7 +38,7 @@ export default function ReferralScreen() {
       if (Platform.OS === 'web') {
         if (typeof navigator !== 'undefined' && navigator.share) {
           await navigator.share({
-            title: 'Apex Software Promo',
+            title: 'Magixa Promo',
             text: shareText,
           });
         } else {
@@ -78,8 +78,8 @@ export default function ReferralScreen() {
           </Text>
           <Text style={[styles.subtitle, { color: theme.textMuted }]}>
             {isRTL 
-              ? 'شارك كود الدعوة الحصري الخاص بك مع رواد الأعمال والشركات. عند بدئهم أي مشروع برمجي معنا في Apex، سيحصل كلاكما على خصم فوري 10% على الفاتورة القادمة!'
-              : 'Share your unique referral code with partners and business owners. When they initiate a project with Apex Software, both of you receive 10% discount on the next invoice!'}
+              ? 'شارك كود الدعوة الحصري الخاص بك مع رواد الأعمال والشركات. عند بدئهم أي مشروع برمجي معنا في Magixa، سيحصل كلاكما على خصم فوري 10% على الفاتورة القادمة!'
+              : 'Share your unique referral code with partners and business owners. When they initiate a project with Magixa, both of you receive 10% discount on the next invoice!'}
           </Text>
 
           {/* Code Box */}

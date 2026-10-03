@@ -23,6 +23,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import ApexLoader from '../components/ApexLoader';
+import KeyboardSafeView from '../components/KeyboardSafeView';
 import { useToast } from '../components/ApexToast';
 import { 
   getStoredMessages, 
@@ -1009,11 +1010,7 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
-        style={{ flex: 1 }}
-      >
+      <KeyboardSafeView style={{ flex: 1 }}>
         {/* Header - Modern Dark Theme */}
         <View
           style={[
@@ -1241,7 +1238,7 @@ export default function ChatScreen() {
             </View>
           </View>
         )}
-      </KeyboardAvoidingView>
+      </KeyboardSafeView>
 
       {/* ========================================================================= */}
       {/* Interactive Image Lightbox & Zoom & Download Modal                        */}

@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { getSecureToken } from '../utils/secureTokenStorage';
 import { offlineCache } from '../utils/cache';
 import { getDeviceId } from '../utils/deviceBinding';
+import NetInfo from '@react-native-community/netinfo';
 
 export const BASE_URL = 'https://apex-backend-ten.vercel.app';
 export const API_URL = `${BASE_URL}/api`;
@@ -14,6 +15,67 @@ const getAuthHeaders = async () => {
     'X-Client-Platform': Platform.OS,
     'Authorization': token ? `Bearer ${token}` : ''
   };
+};
+
+const REQUEST_TIMEOUT_MS = 25000;
+
+export type RequestOutcome =
+  | { kind: 'ok'; status: number; data: any }
+  | { kind: 'unauthorized'; status: number; data: any }
+  | { kind: 'server-error'; status: number; data: any }
+  | { kind: 'network' };
+
+/** True only when the operating system reports that the device has no usable connection. */
+export const isDeviceOffline = async (): Promise<boolean> => {
+  try {
+    const state = await NetInfo.fetch();
+    return state.isConnected === false || state.isInternetReachable === false;
+  } catch (e) {
+    return false;
+  }
+};
+
+/** fetch() with a hard timeout. */
+const fetchWithTimeout = async (url: string, init: RequestInit = {}, timeoutMs = REQUEST_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+/**
+ * Performs a request and classifies the result. Never throws.
+ *  - ok:            2xx with a JSON body
+ *  - unauthorized:  401 / 403
+ *  - server-error:  5xx / non-JSON body (e.g. a gateway timeout page)  -> server problem, NOT offline
+ *  - network:       the request could not be completed at all (no connection / timeout)
+ * Idempotent reads are retried once automatically.
+ */
+export const requestJson = async (url: string, init: RequestInit = {}, retries = 1): Promise<RequestOutcome> => {
+  try {
+    const res = await fetchWithTimeout(url, init);
+    const text = await res.text();
+    let data: any = null;
+    try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+    if (res.status === 401 || res.status === 403) return { kind: 'unauthorized', status: res.status, data };
+    if (res.status >= 500 || data === null) {
+      if (retries > 0) return requestJson(url, init, retries - 1);
+      return { kind: 'server-error', status: res.status, data };
+    }
+    return { kind: 'ok', status: res.status, data };
+  } catch (e) {
+    if (retries > 0) return requestJson(url, init, retries - 1);
+    return { kind: 'network' };
+  }
+};
+
+/** Builds the metadata that tells the UI why cached data is being shown. */
+const staleInfo = async (outcome: RequestOutcome) => {
+  const offline = outcome.kind === 'network' ? await isDeviceOffline() : false;
+  return { isStale: true, isOffline: offline, serverSlow: !offline };
 };
 
 const readUriAsBase64 = async (uri: string): Promise<string> => {
@@ -187,33 +249,31 @@ export const api = {
   },
 
   async getMyQuotes() {
-    try {
-      const response = await fetch(`${API_URL}/my-quotes`, { headers: await getAuthHeaders() });
-      const data = await response.json();
-      if (data.success && data.quotes) {
-        offlineCache.set(offlineCache.keys.QUOTES, data.quotes);
-      }
+    const outcome = await requestJson(`${API_URL}/my-quotes`, { headers: await getAuthHeaders() });
+    if (outcome.kind === 'unauthorized') return { success: false, quotes: [], unauthorized: true };
+    if (outcome.kind === 'ok') {
+      const data = outcome.data;
+      if (data.success && data.quotes) offlineCache.set(offlineCache.keys.QUOTES, data.quotes);
       return data;
-    } catch (e) {
-      const cached = await offlineCache.get<any[]>(offlineCache.keys.QUOTES);
-      if (cached) return { success: true, quotes: cached, isOffline: true };
-      return { success: false, quotes: [] };
     }
+    const cached = await offlineCache.get<any[]>(offlineCache.keys.QUOTES);
+    const info = await staleInfo(outcome);
+    if (cached) return { success: true, quotes: cached, ...info };
+    return { success: false, quotes: [], ...info };
   },
 
   async getMe() {
-    try {
-      const response = await fetch(`${API_URL}/me`, { headers: await getAuthHeaders() });
-      const data = await response.json();
-      if (data.success && data.user) {
-        offlineCache.set(offlineCache.keys.USER, data.user);
-      }
+    const outcome = await requestJson(`${API_URL}/me`, { headers: await getAuthHeaders() });
+    if (outcome.kind === 'unauthorized') return { success: false, message: 'Unauthorized', unauthorized: true };
+    if (outcome.kind === 'ok') {
+      const data = outcome.data;
+      if (data.success && data.user) offlineCache.set(offlineCache.keys.USER, data.user);
       return data;
-    } catch (e) {
-      const cached = await offlineCache.get<any>(offlineCache.keys.USER);
-      if (cached) return { success: true, user: cached, isOffline: true };
-      return { success: false };
     }
+    const cached = await offlineCache.get<any>(offlineCache.keys.USER);
+    const info = await staleInfo(outcome);
+    if (cached) return { success: true, user: cached, ...info };
+    return { success: false, ...info };
   },
 
   async verifySession() {
@@ -272,18 +332,17 @@ export const api = {
   },
 
   async getInvoices() {
-    try {
-      const response = await fetch(`${API_URL}/invoices`, { headers: await getAuthHeaders() });
-      const data = await response.json();
-      if (data.success && data.invoices) {
-        offlineCache.set(offlineCache.keys.INVOICES, data.invoices);
-      }
+    const outcome = await requestJson(`${API_URL}/invoices`, { headers: await getAuthHeaders() });
+    if (outcome.kind === 'unauthorized') return { success: false, invoices: [], unauthorized: true };
+    if (outcome.kind === 'ok') {
+      const data = outcome.data;
+      if (data.success && data.invoices) offlineCache.set(offlineCache.keys.INVOICES, data.invoices);
       return data;
-    } catch (e) {
-      const cached = await offlineCache.get<any[]>(offlineCache.keys.INVOICES);
-      if (cached) return { success: true, invoices: cached, isOffline: true };
-      return { success: false, invoices: [] };
     }
+    const cached = await offlineCache.get<any[]>(offlineCache.keys.INVOICES);
+    const info = await staleInfo(outcome);
+    if (cached) return { success: true, invoices: cached, ...info };
+    return { success: false, invoices: [], loadFailed: true, ...info };
   },
 
   async createInvoice(data: { userId: number; quoteId?: number; title: string; amount: number; notes?: string; date?: string }) {
@@ -360,10 +419,11 @@ export const api = {
   },
 
   async getMessages(userId: number) {
-    try {
-      const response = await fetch(`${API_URL}/messages/${userId}`, { headers: await getAuthHeaders() });
-      return await response.json();
-    } catch (e) { return { success: false, messages: [] }; }
+    const outcome = await requestJson(`${API_URL}/messages/${userId}`, { headers: await getAuthHeaders() });
+    if (outcome.kind === 'unauthorized') return { success: false, messages: [], unauthorized: true };
+    if (outcome.kind === 'ok') return outcome.data;
+    const info = await staleInfo(outcome);
+    return { success: false, messages: [], loadFailed: true, ...info };
   },
 
   async sendMessage(msgData: any) {
@@ -558,18 +618,18 @@ export const api = {
   },
 
   async getAgencySettings() {
-    try {
-      const response = await fetch(`${API_URL}/agency-settings`);
-      const data = await response.json();
+    const outcome = await requestJson(`${API_URL}/agency-settings`);
+    if (outcome.kind === 'ok') {
+      const data = outcome.data;
       if (data.success && data.settings) {
         offlineCache.set(offlineCache.keys.SETTINGS, data.settings);
       }
       return data;
-    } catch (e) {
-      const cached = await offlineCache.get<any>(offlineCache.keys.SETTINGS);
-      if (cached) return { success: true, settings: cached, isOffline: true };
-      return { success: false };
     }
+    const cached = await offlineCache.get<any>(offlineCache.keys.SETTINGS);
+    const info = await staleInfo(outcome);
+    if (cached) return { success: true, settings: cached, ...info };
+    return { success: false, ...info };
   },
 
   async updateAgencySettings(data: any) {
@@ -604,20 +664,19 @@ export const api = {
   },
 
   async getNotifications() {
-    try {
-      const response = await fetch(`${API_URL}/notifications`, {
-        headers: await getAuthHeaders()
-      });
-      const data = await response.json();
+    const outcome = await requestJson(`${API_URL}/notifications`, { headers: await getAuthHeaders() });
+    if (outcome.kind === 'unauthorized') return { success: false, notifications: [], unauthorized: true };
+    if (outcome.kind === 'ok') {
+      const data = outcome.data;
       if (data.success && data.notifications) {
         offlineCache.set(offlineCache.keys.NOTIFICATIONS, data.notifications);
       }
       return data;
-    } catch (e) {
-      const cached = await offlineCache.get<any[]>(offlineCache.keys.NOTIFICATIONS);
-      if (cached) return { success: true, notifications: cached, isOffline: true };
-      return { success: false, notifications: [] };
     }
+    const cached = await offlineCache.get<any[]>(offlineCache.keys.NOTIFICATIONS);
+    const info = await staleInfo(outcome);
+    if (cached) return { success: true, notifications: cached, ...info };
+    return { success: false, notifications: [], ...info };
   },
 
   async registerPushToken(pushToken: string) {

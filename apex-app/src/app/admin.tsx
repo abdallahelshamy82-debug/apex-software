@@ -29,15 +29,15 @@ export default function AdminDashboardScreen() {
 
   // Agency Settings State
   const [agencySettings, setAgencySettings] = useState<any>({
-    companyName: 'Apex Software Agency',
+    companyName: 'Magixa Agency',
     companyPhone: '+20 100 000 0000',
-    companyEmail: 'contact@apex.com',
+    companyEmail: 'contact@magixa.com',
     taxId: 'TX-948201-EG',
     vodafoneCash: '01000000000',
     bankName: 'CIB (Commercial International Bank)',
     bankAccount: '100029384729',
     bankIban: 'EG1200000000100029384729',
-    instapayHandle: 'apex@instapay',
+    instapayHandle: 'magixa@instapay',
     address: 'Cairo, Egypt'
   });
   const [showAgencySettingsModal, setShowAgencySettingsModal] = useState(false);
@@ -269,9 +269,9 @@ export default function AdminDashboardScreen() {
       // 1. If admin opted to save accounts as default, update agency settings
       if (saveAccountsAsDefault) {
         await api.updateAgencySettings({
-          companyName: agencySettings?.companyName || 'Apex Software',
+          companyName: agencySettings?.companyName || 'Magixa',
           companyPhone: agencySettings?.companyPhone || '01012685763',
-          companyEmail: agencySettings?.companyEmail || 'contact@apex.com',
+          companyEmail: agencySettings?.companyEmail || 'contact@magixa.com',
           vodafoneCash: invVodafoneCash,
           instapayHandle: invInstapay,
           bankName: invBankName,
@@ -1232,9 +1232,9 @@ export default function AdminDashboardScreen() {
             </TouchableOpacity>
           )}
           <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: `${theme.primary}20`, alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
-            <Text style={{ color: theme.primary, fontSize: 26, fontWeight: "900" }}>A.</Text>
+            <Text style={{ color: theme.primary, fontSize: 26, fontWeight: "900" }}>M.</Text>
           </View>
-          <Text style={{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>Apex Admin</Text>
+          <Text style={{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>Magixa Admin</Text>
           <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Workspace</Text>
         </View>
 
@@ -2725,7 +2725,7 @@ function UserProjectCard({
               style={[styles.input, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border, fontSize: 12, paddingVertical: 6, marginBottom: 8 }]}
               value={newDeliverableUrl}
               onChangeText={setNewDeliverableUrl}
-              placeholder="https://preview.apex.com"
+              placeholder="https://preview.magixa.com"
               placeholderTextColor={theme.textMuted}
               textAlign="left"
             />

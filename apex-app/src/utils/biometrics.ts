@@ -53,7 +53,7 @@ export const biometrics = {
   },
 
   // Trigger biometric prompt
-  async authenticate(promptMessage = 'تسجيل الدخول إلى Apex Software'): Promise<{ success: boolean; error?: string }> {
+  async authenticate(promptMessage = 'تسجيل الدخول إلى Magixa'): Promise<{ success: boolean; error?: string }> {
     if (Platform.OS === 'web') {
       return { success: false, error: 'Biometrics not supported on Web' };
     }

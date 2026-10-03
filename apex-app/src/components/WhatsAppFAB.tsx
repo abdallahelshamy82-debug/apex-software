@@ -47,8 +47,8 @@ export default function WhatsAppFAB({
 
   const handleOpenWhatsApp = () => {
     const defaultMsg = isRTL 
-      ? 'مرحباً فريق Apex Devs، أود الاستفسار عن برمجة مشروع...'
-      : 'Hello Apex Devs team, I would like a consultation regarding my software project...';
+      ? 'مرحباً فريق Magixa، أود الاستفسار عن برمجة مشروع...'
+      : 'Hello Magixa team, I would like a consultation regarding my software project...';
 
     const msg = customMessage || defaultMsg;
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`;

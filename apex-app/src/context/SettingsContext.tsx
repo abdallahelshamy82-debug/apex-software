@@ -3,6 +3,7 @@ import { useColorScheme, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ApexLoader from '../components/ApexLoader';
 import { api } from '../services/api';
+import { offlineCache } from '../utils/cache';
 import { getSecureToken, removeSecureToken } from '../utils/secureTokenStorage';
 
 const awwwardsBase = {
@@ -21,7 +22,7 @@ const accentOptions = {
 
 const translations = {
   en: {
-    appName: 'APEX', appAccent: 'SOFTWARE', login: 'Client Login', chooseTheme: 'Choose Theme:', letsBuild: 'Let\'s Build Together',
+    appName: 'MAGIXA', appAccent: '', login: 'Client Login', chooseTheme: 'Choose Theme:', letsBuild: 'Let\'s Build Together',
     heroTitle1: 'Turning Ideas into', heroTitle2: 'Modern Apps', heroSub: 'We build websites, mobile apps, and digital solutions using modern technologies. From idea to deployment.',
     startProject: 'Start Your Project', costEstimator: 'Cost Estimator', coreOfferings: 'Our Core Offerings',
     webDev: 'Web Development', webDevDesc: 'Modern, responsive websites with clean code & best practices.',
@@ -31,18 +32,19 @@ const translations = {
     auth: 'Authentication', authDesc: 'Login, Signup, Social Auth', payment: 'Payment Gateway', paymentDesc: 'Stripe, PayPal integration',
     admin: 'Admin Dashboard', adminDesc: 'Manage users and content', ai: 'AI Integration', aiDesc: 'Custom AI models or ChatGPT',
     estCost: 'Estimated Cost:', reqQuote: 'Request Quote', web: 'WEB', mobile: 'MOBILE', both: 'BOTH',
-    email: 'Email Address', password: 'Password', confirmPassword: 'Confirm Password', loginBtn: 'Login to Portal', noAccount: 'New to Apex?', signupNow: 'Create an Account',
+    email: 'Email Address', password: 'Password', confirmPassword: 'Confirm Password', loginBtn: 'Login to Portal', noAccount: 'New to Magixa?', signupNow: 'Create an Account',
     fullName: 'Full Name', companyName: 'Company / Project Name', signupBtn: 'Sign Up', haveAccount: 'Already a client?',
-    loginNow: 'Login here', welcomeBack: 'Welcome Back!', createAccount: 'Join Apex Software', dashboard: 'Client Dashboard',
+    loginNow: 'Login here', welcomeBack: 'Welcome Back!', createAccount: 'Join Magixa', dashboard: 'Client Dashboard',
     welcomeClient: 'Welcome, Ahmed', activeProject: 'Active Project: E-Commerce App', projectProgress: 'Project Progress',
     currentPhase: 'Current Phase: UI/UX Design', recentUpdates: 'Recent Updates', chatTeam: 'Chat with Team', viewInvoice: 'View Invoices',
     shareReferral: 'Refer a Friend', update1: 'Wireframes approved by client', update2: 'Database schema designed',
     portfolio: 'Our Portfolio', portfolioDesc: 'Explore some of our recent digital products and platforms.',
     adminDashboard: 'Admin Control Panel', leads: 'Quote Requests (Leads)', clients: 'Registered Clients',
-    refresh: 'Refresh Data', quotePlatform: 'Platform', quoteFeatures: 'Features', quoteCost: 'Est. Cost', noData: 'No data available.'
+    refresh: 'Refresh Data', quotePlatform: 'Platform', quoteFeatures: 'Features', quoteCost: 'Est. Cost', noData: 'No data available.',
+    retry: 'Retry'
   },
   ar: {
-    appName: 'أبيكس', appAccent: 'للبرمجيات', login: 'دخول العملاء', chooseTheme: 'اختر المظهر:', letsBuild: 'لنبني المستقبل معاً',
+    appName: 'ماجيكسا', appAccent: '', login: 'دخول العملاء', chooseTheme: 'اختر المظهر:', letsBuild: 'لنبني المستقبل معاً',
     heroTitle1: 'نحول أفكارك إلى', heroTitle2: 'تطبيقات حديثة', heroSub: 'نبني مواقع الويب، تطبيقات الموبايل، والحلول الرقمية المتكاملة بأحدث التقنيات. من الفكرة للبرمجة.',
     startProject: 'ابدأ مشروعك', costEstimator: 'حاسبة التكلفة', coreOfferings: 'خدماتنا الأساسية',
     webDev: 'تطوير الويب', webDevDesc: 'مواقع حديثة وسريعة متوافقة مع جميع الشاشات.',
@@ -52,18 +54,19 @@ const translations = {
     auth: 'نظام تسجيل الدخول', authDesc: 'حسابات مستخدمين، تسجيل عبر جوجل', payment: 'بوابات الدفع الإلكتروني', paymentDesc: 'فيزا، ماستركارد، باي بال، مدى',
     admin: 'لوحة تحكم \u2066(Admin)\u2069', adminDesc: 'إدارة شاملة للمحتوى والمستخدمين', ai: 'دمج الذكاء الاصطناعي', aiDesc: 'ربط مع ChatGPT أو نماذج خاصة ببياناتك',
     estCost: 'التكلفة التقريبية:', reqQuote: 'اطلب تسعيرة رسمية', web: 'موقع ويب', mobile: 'تطبيق موبايل', both: 'المنصتين معاً',
-    email: 'البريد الإلكتروني', password: 'كلمة المرور', confirmPassword: 'تأكيد كلمة المرور', loginBtn: 'الدخول للبوابة', noAccount: 'عميل جديد؟', signupNow: 'أنشئ حساباً',
+    email: 'البريد الإلكتروني', password: 'كلمة المرور', confirmPassword: 'تأكيد كلمة المرور', loginBtn: 'الدخول للبوابة', noAccount: 'جديد في ماجيكسا؟', signupNow: 'أنشئ حساباً',
     fullName: 'الاسم الكامل', companyName: 'اسم الشركة / المشروع', signupBtn: 'إنشاء الحساب', haveAccount: 'لديك حساب بالفعل؟',
-    loginNow: 'سجل دخولك', welcomeBack: 'مرحباً بعودتك!', createAccount: 'انضم إلى أبيكس', dashboard: 'لوحة تحكم العميل',
+    loginNow: 'سجل دخولك', welcomeBack: 'مرحباً بعودتك!', createAccount: 'انضم إلى ماجيكسا', dashboard: 'لوحة تحكم العميل',
     welcomeClient: 'مرحباً، أحمد', activeProject: 'المشروع الحالي: تطبيق متجر إلكتروني', projectProgress: 'نسبة إنجاز المشروع',
     currentPhase: 'المرحلة الحالية: تصميم الواجهات (UI/UX)', recentUpdates: 'آخر التحديثات', chatTeam: 'تواصل مع الفريق', viewInvoice: 'الفواتير والدفعات',
     shareReferral: 'رشحنا لصديق', update1: 'تم اعتماد التخطيط المبدئي من العميل', update2: 'تم الانتهاء من تصميم قاعدة البيانات',
     portfolio: 'معرض أعمالنا', portfolioDesc: 'استكشف أحدث المنتجات والمنصات الرقمية التي قمنا ببنائها.',
     adminDashboard: 'لوحة تحكم الإدارة', leads: 'طلبات التسعير (العملاء المحتملين)', clients: 'العملاء المسجلين',
-    refresh: 'تحديث البيانات', quotePlatform: 'المنصة', quoteFeatures: 'الخواص', quoteCost: 'التكلفة', noData: 'لا توجد بيانات حتى الآن.'
+    refresh: 'تحديث البيانات', quotePlatform: 'المنصة', quoteFeatures: 'الخواص', quoteCost: 'التكلفة', noData: 'لا توجد بيانات حتى الآن.',
+    retry: 'إعادة المحاولة'
   },
   fr: {
-    appName: 'APEX', appAccent: 'LOGICIEL', login: 'Connexion Client', chooseTheme: 'Choisir le thème:', letsBuild: 'Construisons ensemble',
+    appName: 'MAGIXA', appAccent: '', login: 'Connexion Client', chooseTheme: 'Choisir le thème:', letsBuild: 'Construisons ensemble',
     heroTitle1: 'Transformer vos idées en', heroTitle2: 'Applications Modernes', heroSub: 'Nous créons des sites web, des applications mobiles et des solutions numériques avec les technologies modernes.',
     startProject: 'Démarrer le Projet', costEstimator: 'Estimateur de Coûts', coreOfferings: 'Nos Services',
     webDev: 'Développement Web', webDevDesc: 'Sites web modernes et réactifs avec un code propre.',
@@ -73,15 +76,16 @@ const translations = {
     auth: 'Authentification', authDesc: 'Connexion, Inscription, Réseaux Sociaux', payment: 'Passerelle de paiement', paymentDesc: 'Intégration Stripe, PayPal',
     admin: 'Tableau de bord', adminDesc: 'Gérer les utilisateurs et le contenu', ai: 'Intégration IA', aiDesc: 'Modèles IA personnalisés',
     estCost: 'Coût Estimé:', reqQuote: 'Demander un devis', web: 'WEB', mobile: 'MOBILE', both: 'LES DEUX',
-    email: 'Adresse Email', password: 'Mot de passe', confirmPassword: 'Confirmer le mot de passe', loginBtn: 'Se connecter au portail', noAccount: 'Nouveau chez Apex?', signupNow: 'Créer un compte',
+    email: 'Adresse Email', password: 'Mot de passe', confirmPassword: 'Confirmer le mot de passe', loginBtn: 'Se connecter au portail', noAccount: 'Nouveau chez Magixa?', signupNow: 'Créer un compte',
     fullName: 'Nom Complet', companyName: 'Nom de l\'entreprise', signupBtn: 'S\'inscrire', haveAccount: 'Déjà client?',
-    loginNow: 'Connectez-vous', welcomeBack: 'Bon retour!', createAccount: 'Rejoindre Apex', dashboard: 'Tableau de bord client',
+    loginNow: 'Connectez-vous', welcomeBack: 'Bon retour!', createAccount: 'Rejoindre Magixa', dashboard: 'Tableau de bord client',
     welcomeClient: 'Bienvenue', activeProject: 'Projet Actif', projectProgress: 'Avancement du Projet',
     currentPhase: 'Phase Actuelle: Design UI/UX', recentUpdates: 'Dernières Mises à Jour', chatTeam: 'Discuter avec l\'équipe', viewInvoice: 'Voir les factures',
     shareReferral: 'Parrainer un ami', update1: 'Maquettes approuvées', update2: 'Schéma de base de données conçu',
     portfolio: 'Notre Portfolio', portfolioDesc: 'Découvrez nos récents produits numériques.',
     adminDashboard: 'Panneau d\'Administration', leads: 'Demandes de Devis', clients: 'Clients Inscrits',
-    refresh: 'Actualiser', quotePlatform: 'Plateforme', quoteFeatures: 'Fonctionnalités', quoteCost: 'Coût Est.', noData: 'Aucune donnée.'
+    refresh: 'Actualiser', quotePlatform: 'Plateforme', quoteFeatures: 'Fonctionnalités', quoteCost: 'Coût Est.', noData: 'Aucune donnée.',
+    retry: 'Réessayer'
   }
 };
 
@@ -106,13 +110,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           if (token) {
             const session = await api.verifySession();
             if (session.success && session.user) {
+              offlineCache.setScope(session.user.id);
               setCurrentUser(session.user);
               await AsyncStorage.setItem('userData', JSON.stringify(session.user));
             } else {
+              offlineCache.setScope(null);
               await removeSecureToken();
               await AsyncStorage.removeItem('userData');
             }
           } else {
+            offlineCache.setScope(null);
             await AsyncStorage.removeItem('userData');
           }
         }
@@ -153,7 +160,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }}>
       <View style={{ flex: 1, direction: isRTL ? 'rtl' : 'ltr', backgroundColor: theme.bg }}>
         {!isAppReady ? (
-          <ApexLoader fullScreen theme={theme} isRTL={isRTL} message={isRTL ? 'جاري تشغيل منصة أبيكس...' : 'Initializing Apex Platform...'} />
+          <ApexLoader fullScreen theme={theme} isRTL={isRTL} message={isRTL ? 'جاري تشغيل منصة ماجيكسا...' : 'Initializing Magixa Platform...'} />
         ) : (
           children
         )}

@@ -52,7 +52,7 @@ export const notifications = {
 
       if (Platform.OS === 'android') {
         Notifications.setNotificationChannelAsync('default', {
-          name: 'Apex Notifications',
+          name: 'Magixa Notifications',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#06B6D4',

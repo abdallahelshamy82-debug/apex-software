@@ -10,6 +10,7 @@ import { useResponsive } from '../hooks/useResponsive';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { removeSecureToken, getSecureToken } from '../utils/secureTokenStorage';
+import { offlineCache } from '../utils/cache';
 import AppSwitch from '../components/ui/AppSwitch';
 import LtrText from '../components/ui/LtrText';
 import { useToast } from '../components/ApexToast';
@@ -528,10 +529,10 @@ export default function SettingsScreen() {
 
           <View style={{ marginTop: 14, alignItems: 'center' }}>
             <Text style={{ color: theme.textMuted, fontSize: 11 }}>
-              Apex Software Client Portal v1.0.0 (Build 1)
+              Magixa Client Portal v1.0.1 (Build 6)
             </Text>
             <Text style={{ color: theme.textMuted, fontSize: 10, marginTop: 2 }}>
-              © 2026 Apex Software Inc. All rights reserved.
+              © 2026 Magixa Inc. All rights reserved.
             </Text>
           </View>
         </View>
@@ -546,12 +547,14 @@ export default function SettingsScreen() {
                 const { GoogleSignin } = require('@react-native-google-signin/google-signin');
                 await GoogleSignin.signOut();
               } catch (e) {}
+              await offlineCache.clearAll();
               await removeSecureToken();
               await AsyncStorage.removeItem('userData');
+              await AsyncStorage.removeItem('userToken').catch(() => {});
               await AsyncStorage.removeItem('@apex_copilot_sessions_guest').catch(() => {});
               await AsyncStorage.removeItem('@apex_copilot_sessions').catch(() => {});
               setCurrentUser(null);
-              router.replace('/login');
+              router.replace({ pathname: '/login', params: { loggedOut: 'true' } });
             }}
             style={[styles.card, { backgroundColor: '#EF444415', borderColor: '#EF444466', marginTop: 10, padding: 16, alignItems: 'center', justifyContent: 'center' }]}
           >

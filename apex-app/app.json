@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Apex Software",
+    "name": "Magixa",
     "slug": "apex-app",
     "version": "1.0.1",
     "orientation": "portrait",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.apexsoftware.portal",
-      "versionCode": 4,
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",

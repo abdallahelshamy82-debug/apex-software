@@ -51,7 +51,7 @@ export default function NotificationModal({ visible, onClose, unreadCount, setUn
       },
       {
         id: '2',
-        title: isRTL ? 'رسالة ترحيبية من Apex Devs' : 'Welcome to Apex Devs',
+        title: isRTL ? 'رسالة ترحيبية من Magixa' : 'Welcome to Magixa',
         body: isRTL 
           ? 'أهلاً بك في بوابتك الرقمية! يمكنك التحدث مباشرة مع المهندسين عبر الشات وتتبع كل خطوة.'
           : 'Welcome to your portal! You can chat with our engineering team anytime.',

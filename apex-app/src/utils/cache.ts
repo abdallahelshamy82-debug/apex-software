@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const CACHE_PREFIX = 'apex_cache_';
+
 const CACHE_KEYS = {
   INVOICES: 'apex_cache_invoices',
   QUOTES: 'apex_cache_quotes',
@@ -10,15 +12,34 @@ const CACHE_KEYS = {
 };
 
 /**
+ * The cache is scoped to the signed-in user id. Every key is suffixed with the active scope, and
+ * when no scope is active reads return null and writes are ignored. This guarantees data from one
+ * account can never be displayed (or written) under another account.
+ */
+let activeScope: string | null = null;
+
+const scoped = (key: string): string | null => (activeScope ? `${key}__u${activeScope}` : null);
+
+/**
  * Apex Offline-First Storage & Cache Layer
  * Caches essential data locally so the app opens instantly
  * and remains fully functional even without internet connection.
  */
 export const offlineCache = {
+  /** Set (or clear, with null) the active user id. Safe and cheap to call on every render. */
+  setScope(userId: number | string | null | undefined) {
+    activeScope = userId === null || userId === undefined || userId === '' ? null : String(userId);
+  },
+
+  getScope(): string | null {
+    return activeScope;
+  },
+
   async set(key: string, data: any): Promise<void> {
     try {
-      if (!data) return;
-      await AsyncStorage.setItem(key, JSON.stringify({
+      const k = scoped(key);
+      if (!k || !data) return;
+      await AsyncStorage.setItem(k, JSON.stringify({
         data,
         timestamp: Date.now(),
       }));
@@ -27,7 +48,9 @@ export const offlineCache = {
 
   async get<T>(key: string): Promise<T | null> {
     try {
-      const raw = await AsyncStorage.getItem(key);
+      const k = scoped(key);
+      if (!k) return null;
+      const raw = await AsyncStorage.getItem(k);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       return parsed.data as T;
@@ -38,7 +61,17 @@ export const offlineCache = {
 
   async remove(key: string): Promise<void> {
     try {
-      await AsyncStorage.removeItem(key);
+      const k = scoped(key);
+      if (k) await AsyncStorage.removeItem(k);
+    } catch (e) {}
+  },
+
+  /** Removes every cached entry for every user (used on logout / account switch). */
+  async clearAll(): Promise<void> {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const mine = allKeys.filter((k) => k.startsWith(CACHE_PREFIX));
+      if (mine.length) await AsyncStorage.multiRemove(mine);
     } catch (e) {}
   },
 

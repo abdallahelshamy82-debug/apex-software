@@ -26,6 +26,7 @@ import { haptics } from '../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useResponsive } from '../hooks/useResponsive';
 import { useToast } from '../components/ApexToast';
+import KeyboardSafeView from '../components/KeyboardSafeView';
 
 // Native audio library removed to prevent UnsatisfiedLinkError crash in libexpo-av.so
 let SafeAudio: any = null;
@@ -122,13 +123,13 @@ function generatePdfHtml(
   <table class="header-table">
     <tr>
       <td>
-        <h1 class="logo-title">APEX SOFTWARE</h1>
+        <h1 class="logo-title">MAGIXA</h1>
         <p class="meta-text">${isAr ? 'وكالة الحلول البرمجية وتطوير الأنظمة السحابية المتقدمة' : 'Advanced Cloud & Software Engineering Agency'}</p>
       </td>
       <td style="text-align: ${isAr ? 'left' : 'right'};">
         <p class="meta-text"><strong>${isAr ? 'التاريخ:' : 'Date:'}</strong> ${now}</p>
-        <p class="meta-text"><strong>${isAr ? 'العميل:' : 'Client:'}</strong> ${clientName || (isAr ? 'شريك أعمال Apex' : 'Apex Business Partner')}</p>
-        <p class="meta-text"><strong>${isAr ? 'الرقم المرجعي:' : 'Ref ID:'}</strong> APX-${Date.now().toString(36).toUpperCase()}</p>
+        <p class="meta-text"><strong>${isAr ? 'العميل:' : 'Client:'}</strong> ${clientName || (isAr ? 'شريك أعمال Magixa' : 'Magixa Business Partner')}</p>
+        <p class="meta-text"><strong>${isAr ? 'الرقم المرجعي:' : 'Ref ID:'}</strong> MGX-${Date.now().toString(36).toUpperCase()}</p>
       </td>
     </tr>
   </table>
@@ -194,11 +195,11 @@ function generatePdfHtml(
 
   <div class="stamp-area">
     <div>
-      <p style="font-size: 11px; color: #64748B; margin: 0;"><strong>${isAr ? 'تنبيه استشاري:' : 'Advisory Note:'}</strong> ${isAr ? 'هذه الدراسة والعقد استرشاديان أوليان، ويتم اعتمادهما رسمياً مع مهندسي Apex.' : 'This blueprint is indicative and confirmed upon technical kickoff.'}</p>
-      <p style="font-size: 11px; color: #0891B2; margin: 4px 0 0;">www.apex-software.com | support@apex-software.com</p>
+      <p style="font-size: 11px; color: #64748B; margin: 0;"><strong>${isAr ? 'تنبيه استشاري:' : 'Advisory Note:'}</strong> ${isAr ? 'هذه الدراسة والعقد استرشاديان أوليان، ويتم اعتمادهما رسمياً مع مهندسي Magixa.' : 'This blueprint is indicative and confirmed upon technical kickoff.'}</p>
+      <p style="font-size: 11px; color: #0891B2; margin: 4px 0 0;">www.magixa.com | support@magixa.com</p>
     </div>
     <div class="stamp-box">
-      <div>APEX SOFTWARE</div>
+      <div>MAGIXA</div>
       <div style="font-size: 9px; opacity: 0.8;">OFFICIALLY CERTIFIED</div>
     </div>
   </div>
@@ -242,8 +243,8 @@ const getInitialMessages = (rtl: boolean): ChatMessage[] => [
     id: 'welcome',
     role: 'assistant',
     text: rtl
-      ? 'أهلاً بك! أنا المستشار البرمجي ورئيس المعماريين في Apex Software. ما هي فكرة تطبيقك أو مشروعك الرقمي؟ شاركني الفكرة وسأناقش معك أدق تفاصيلها الفنية والتجارية، ثم نستخرج خطة العمل الكاملة والـ 3 باقات.'
-      : 'Welcome! I am the Chief Software Architect at Apex Software. Tell me about your software idea, and I will consult with you on the architecture, business model, and generate your feasibility blueprint with 3 investment tiers.',
+      ? 'أهلاً بك! أنا المستشار البرمجي ورئيس المعماريين في Magixa. ما هي فكرة تطبيقك أو مشروعك الرقمي؟ شاركني الفكرة وسأناقش معك أدق تفاصيلها الفنية والتجارية، ثم نستخرج خطة العمل الكاملة والـ 3 باقات.'
+      : 'Welcome! I am the Chief Software Architect at Magixa. Tell me about your software idea, and I will consult with you on the architecture, business model, and generate your feasibility blueprint with 3 investment tiers.',
     suggestions: [
       'عندي فكرة تطبيق زي أوبر لتوصيل الأدوية من الصيدليات',
       'منصة مزادات سيارات حية مع بث فيديو لحظي ومزايدة بالثواني',
@@ -481,11 +482,12 @@ export default function CopilotScreen() {
 
     const showSub = Keyboard.addListener(showEvent, () => {
       setIsKeyboardOpen(true);
-      if (messages.length > 2) {
-        setTimeout(() => {
-          chatScrollRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      }
+      setTimeout(() => {
+        chatScrollRef.current?.scrollToEnd({ animated: true });
+      }, 60);
+      setTimeout(() => {
+        chatScrollRef.current?.scrollToEnd({ animated: true });
+      }, 260);
     });
 
     const hideSub = Keyboard.addListener(hideEvent, () => {
@@ -844,11 +846,11 @@ export default function CopilotScreen() {
     const pkgData = analysis?.packages?.[selectedPackage] || analysis?.packages?.pro;
     const defaultMsg = customMsg || (analysis 
       ? (isRTL 
-          ? `مرحباً فريق Apex Software، قمت باستخراج دراسة جدوى استرشادية لمشروعي "${analysis.projectName || 'مشروعي البرمجي'}" بالباقة (${pkgData?.title || 'المختارة'}) عبر المستشار الذكي، وأود مناقشة تفاصيل التنفيذ والتعاقد الفعلي مع المهندس المسؤول.`
-          : `Hello Apex Software team, I generated a feasibility study for my project "${analysis.projectName || 'My Project'}" (${pkgData?.title || 'Selected'}) and want to discuss actual implementation and contract with the lead engineer.`)
+          ? `مرحباً فريق Magixa، قمت باستخراج دراسة جدوى استرشادية لمشروعي "${analysis.projectName || 'مشروعي البرمجي'}" بالباقة (${pkgData?.title || 'المختارة'}) عبر المستشار الذكي، وأود مناقشة تفاصيل التنفيذ والتعاقد الفعلي مع المهندس المسؤول.`
+          : `Hello Magixa team, I generated a feasibility study for my project "${analysis.projectName || 'My Project'}" (${pkgData?.title || 'Selected'}) and want to discuss actual implementation and contract with the lead engineer.`)
       : (isRTL 
-          ? 'مرحباً فريق Apex Software، أود استشارة برمجية مباشرة بخصوص مشروعي وتثبيت المتطلبات والتكلفة والبدء...'
-          : 'Hello Apex Software team, I would like a consultation regarding my software project...'));
+          ? 'مرحباً فريق Magixa، أود استشارة برمجية مباشرة بخصوص مشروعي وتثبيت المتطلبات والتكلفة والبدء...'
+          : 'Hello Magixa team, I would like a consultation regarding my software project...'));
 
     const url = `https://wa.me/201027877209?text=${encodeURIComponent(defaultMsg)}`;
 
@@ -1377,7 +1379,7 @@ export default function CopilotScreen() {
           <View style={{ flex: 1, minWidth: 0, justifyContent: 'center' }}>
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6 }}>
               <Text style={[styles.headerTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={1}>
-                {isRTL ? 'مستشار Apex الذكي' : 'Apex AI Consultant'}
+                {isRTL ? 'مستشار Magixa الذكي' : 'Magixa AI Consultant'}
               </Text>
               <View style={styles.liveBadgeInline}>
                 <Animated.View style={[styles.liveDot, { transform: [{ scale: pulseAnim }] }]} />
@@ -1511,11 +1513,7 @@ export default function CopilotScreen() {
       {/* MODE 1: INTERACTIVE CONSULTANT CHAT                      */}
       {/* ========================================================= */}
       {activeMode === 'chat' && (
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-        >
+        <KeyboardSafeView style={{ flex: 1 }}>
           <View style={{ flex: 1 }}>
             {/* Chat Messages Stream */}
             <ScrollView
@@ -1524,15 +1522,14 @@ export default function CopilotScreen() {
               contentContainerStyle={{
                 paddingHorizontal: responsive.paddingHorizontal,
                 paddingVertical: 12,
+                paddingBottom: 28,
                 gap: 12,
               }}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="none"
               onContentSizeChange={() => {
-                if (messages.length > 2) {
-                  chatScrollRef.current?.scrollToEnd({ animated: true });
-                }
+                chatScrollRef.current?.scrollToEnd({ animated: true });
               }}
             >
               {/* Collapsible Project Blueprint Banner */}
@@ -1769,7 +1766,7 @@ export default function CopilotScreen() {
                         {!isUser && (
                           <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                             <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#06B6D4' }}>
-                              Apex Software Architect
+                              Magixa Software Architect
                             </Text>
                             {msg.timestamp && (
                               <Text style={{ fontSize: 10, color: theme.textMuted }}>{msg.timestamp}</Text>
@@ -1858,7 +1855,7 @@ export default function CopilotScreen() {
                     <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
                       <ActivityIndicator size="small" color="#06B6D4" />
                       <Text style={{ color: theme.textMuted, fontSize: 12 }}>
-                        {isRTL ? 'مستشار Apex يقوم بدراسة الرد وصياغة الاستشارة...' : 'Apex Architect is thinking...'}
+                        {isRTL ? 'مستشار Magixa يقوم بدراسة الرد وصياغة الاستشارة...' : 'Magixa Architect is thinking...'}
                       </Text>
                     </View>
                   </View>
@@ -1880,15 +1877,16 @@ export default function CopilotScreen() {
               onToggleVoice={toggleVoiceRecording}
               bottomInset={isKeyboardOpen ? 0 : insets.bottom}
               onFocus={() => {
-                if (messages.length > 2) {
-                  setTimeout(() => {
-                    chatScrollRef.current?.scrollToEnd({ animated: true });
-                  }, 120);
-                }
+                setTimeout(() => {
+                  chatScrollRef.current?.scrollToEnd({ animated: true });
+                }, 80);
+                setTimeout(() => {
+                  chatScrollRef.current?.scrollToEnd({ animated: true });
+                }, 280);
               }}
             />
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardSafeView>
       )}
 
       {/* ========================================================= */}
@@ -1951,7 +1949,7 @@ export default function CopilotScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <Ionicons name="ellipse" size={7} color={analysis.isLiveAI ? '#10B981' : '#38BDF8'} />
                     <Text style={{ fontSize: 11, color: analysis.isLiveAI ? '#10B981' : '#38BDF8', fontWeight: 'bold' }}>
-                      {analysis.isLiveAI ? 'Gemini 2.5 Flash' : 'Apex Deep Engine'}
+                      {analysis.isLiveAI ? 'Gemini 2.5 Flash' : 'Magixa Deep Engine'}
                     </Text>
                   </View>
                 </View>
@@ -2017,7 +2015,7 @@ export default function CopilotScreen() {
             </View>
             <Text style={{ color: activeTheme === 'light' ? '#78350F' : '#FDE68A', fontSize: 12, lineHeight: 19, textAlign: isRTL ? 'right' : 'left', marginBottom: 12 }}>
               {isRTL 
-                ? 'كافة الأسعار والجداول الزمنية والمواصفات المعروضة هنا هي تقديرات ذكية واسترشادية أولية مبنية على متطلبات فكرتك الحالية. لتأكيد المتطلبات الدقيقة، اعتماد بنود العقد الرسمي، وضمان بدء التنفيذ فوراً، يرجى التواصل مباشرة مع فريق مهندسي Apex.' 
+                ? 'كافة الأسعار والجداول الزمنية والمواصفات المعروضة هنا هي تقديرات ذكية واسترشادية أولية مبنية على متطلبات فكرتك الحالية. لتأكيد المتطلبات الدقيقة، اعتماد بنود العقد الرسمي، وضمان بدء التنفيذ فوراً، يرجى التواصل مباشرة مع فريق مهندسي Magixa.' 
                 : 'All pricing, timelines, and specifications shown are preliminary intelligent estimates based on your current inputs. Please connect directly with our engineering team to finalize exact scopes and sign the official contract.'}
             </Text>
 
@@ -2071,13 +2069,13 @@ export default function CopilotScreen() {
             </Text>
           </View>
 
-          {/* 2. DIRECT COMPETITORS & APEX EDGE */}
+          {/* 2. DIRECT COMPETITORS & MAGIXA EDGE */}
           {analysis.competitors && analysis.competitors.length > 0 && (
             <View style={[styles.cardSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <Ionicons name="shield-checkmark-outline" size={18} color="#38BDF8" />
                 <Text style={[styles.sectionTitle, { color: theme.text }]}>
-                  {isRTL ? 'المنافسون المباشرون ونقاط تفوق Apex التنافسية' : 'Competitors & Apex Competitive Edge'}
+                  {isRTL ? 'المنافسون المباشرون ونقاط تفوق Magixa التنافسية' : 'Competitors & Magixa Competitive Edge'}
                 </Text>
               </View>
 
@@ -2091,7 +2089,7 @@ export default function CopilotScreen() {
                     <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 6 }}>
                       <Ionicons name="checkmark-circle" size={15} color="#10B981" style={{ marginTop: 2 }} />
                       <Text style={{ flex: 1, color: '#06B6D4', fontSize: 12, lineHeight: 18, textAlign: isRTL ? 'right' : 'left' }}>
-                        <Text style={{ fontWeight: 'bold', color: theme.text }}>{isRTL ? 'تفوق Apex: ' : 'Apex Edge: '}</Text>
+                        <Text style={{ fontWeight: 'bold', color: theme.text }}>{isRTL ? 'تفوق Magixa: ' : 'Magixa Edge: '}</Text>
                         {comp.ourEdge}
                       </Text>
                     </View>
@@ -2230,8 +2228,8 @@ export default function CopilotScreen() {
               </View>
               <Text style={{ color: activeTheme === 'light' ? '#78350F' : '#FDE68A', fontSize: 11, lineHeight: 17, textAlign: isRTL ? 'right' : 'left', marginBottom: 10 }}>
                 {isRTL 
-                  ? 'الأسعار والأوقات الموضحة هي تقديرات استرشادية ذكية لحجم العمل. لتثبيت المواصفات النهائية والحصول على عرض السعر الرسمي المعتمد، تواصل مباشرة مع فريق مهندسي Apex.' 
-                  : 'Prices and timelines shown are intelligent indicative estimates. To finalize exact specifications and official proposal, connect directly with Apex engineers.'}
+                  ? 'الأسعار والأوقات الموضحة هي تقديرات استرشادية ذكية لحجم العمل. لتثبيت المواصفات النهائية والحصول على عرض السعر الرسمي المعتمد، تواصل مباشرة مع فريق مهندسي Magixa.' 
+                  : 'Prices and timelines shown are intelligent indicative estimates. To finalize exact specifications and official proposal, connect directly with Magixa engineers.'}
               </Text>
               <TouchableOpacity
                 activeOpacity={0.85}
@@ -2598,7 +2596,7 @@ export default function CopilotScreen() {
                   </View>
                   <Text style={{ color: theme.textMuted, fontSize: 12, textAlign: isRTL ? 'right' : 'left', marginBottom: 12, lineHeight: 18 }}>
                     {isRTL 
-                      ? 'ملاحظة المستشار المعماري: هذه المبالغ تُسدد مباشرة لمزودي الخدمات العالميين (Apple, Google, Cloud) لضمان استقرار ونشر المنظومة، وليست أتعاباً لشركة Apex.' 
+                      ? 'ملاحظة المستشار المعماري: هذه المبالغ تُسدد مباشرة لمزودي الخدمات العالميين (Apple, Google, Cloud) لضمان استقرار ونشر المنظومة، وليست أتعاباً لشركة Magixa.' 
                       : 'Architectural Note: These fees are paid directly to external global providers (Apple, Google, Cloud) to guarantee infrastructure uptime and app publishing.'}
                   </Text>
 
@@ -2743,7 +2741,7 @@ export default function CopilotScreen() {
             </Text>
             <Text style={styles.heroActionSub}>
               {isRTL 
-                ? `تكلفة الاستثمار: ${currency === 'EGP' ? `${currentCostEGP.toLocaleString()} جنيه مصري` : `$${currentCostUSD.toLocaleString()}`} | مدة التنفيذ: ${currentWeeks} أسابيع\nيتم تسجيل العقد فورياً في لوحة تحكمك وبدء مرحلة التصميم مع فريق مهندسي Apex.`
+                ? `تكلفة الاستثمار: ${currency === 'EGP' ? `${currentCostEGP.toLocaleString()} جنيه مصري` : `$${currentCostUSD.toLocaleString()}`} | مدة التنفيذ: ${currentWeeks} أسابيع\nيتم تسجيل العقد فورياً في لوحة تحكمك وبدء مرحلة التصميم مع فريق مهندسي Magixa.`
                 : `Investment: ${currency === 'EGP' ? `${currentCostEGP.toLocaleString()} EGP` : `$${currentCostUSD.toLocaleString()}`} | Duration: ${currentWeeks} weeks\nInstantly registered to your dashboard to begin design sprint.`}
             </Text>
 
@@ -2820,8 +2818,8 @@ export default function CopilotScreen() {
 
             <Text style={{ color: theme.textMuted, fontSize: 12, lineHeight: 18, textAlign: isRTL ? 'right' : 'left', marginBottom: 14 }}>
               {isRTL
-                ? 'خادم Apex مدمج به مفتاح رسمي مجاني 100% لـ Google Gemini 3.6 Flash. يمكنك استخدامه مباشرة أو إضافة مفتاحك الخاص.'
-                : 'Apex server comes with built-in free Google Gemini 3.6 Flash. You can also provide a custom API key.'}
+                ? 'خادم Magixa مدمج به مفتاح رسمي مجاني 100% لـ Google Gemini 3.6 Flash. يمكنك استخدامه مباشرة أو إضافة مفتاحك الخاص.'
+                : 'Magixa server comes with built-in free Google Gemini 3.6 Flash. You can also provide a custom API key.'}
             </Text>
 
             {/* Provider Switcher */}
@@ -2829,7 +2827,7 @@ export default function CopilotScreen() {
               {[
                 { id: 'gemini', title: 'Google Gemini 3.6' },
                 { id: 'openai', title: 'OpenAI GPT-4o' },
-                { id: 'deep_engine', title: isRTL ? 'محرك Apex' : 'Apex Engine' },
+                { id: 'deep_engine', title: isRTL ? 'محرك Magixa' : 'Magixa Engine' },
               ].map((p) => (
                 <TouchableOpacity
                   key={p.id}
@@ -2898,7 +2896,7 @@ export default function CopilotScreen() {
 
             <Text style={[styles.successModalBody, { color: theme.textMuted }]}>
               {isRTL
-                ? `تم تسجيل مشروعك (${analysis?.projectName || 'مشروع Apex الذكي'}) بباقة (${pkgData?.title || 'Pro'}) بنجاح.\nتم إرسال تفاصيل العقد لبريدك الإلكتروني وتحديث مرحلة المشروع في لوحة التحكم.`
+                ? `تم تسجيل مشروعك (${analysis?.projectName || 'مشروع Magixa الذكي'}) بباقة (${pkgData?.title || 'Pro'}) بنجاح.\nتم إرسال تفاصيل العقد لبريدك الإلكتروني وتحديث مرحلة المشروع في لوحة التحكم.`
                 : 'Your project contract has been recorded successfully. Confirmation details sent to your email.'}
             </Text>
 
@@ -3119,8 +3117,8 @@ export default function CopilotScreen() {
 
             <Text style={[styles.analyzingSubtitle, { color: theme.textMuted, textAlign: 'center' }]}>
               {isRTL 
-                ? 'يقوم كبير مهندسي Apex بتحليل المتطلبات وهيكلة الـ 3 باقات الآن...' 
-                : 'Apex Chief Architect is synthesizing technical specifications & 3 packages...'}
+                ? 'يقوم كبير مهندسي Magixa بتحليل المتطلبات وهيكلة الـ 3 باقات الآن...' 
+                : 'Magixa Chief Architect is synthesizing technical specifications & 3 packages...'}
             </Text>
 
             {/* Visual Step Progress Bar */}

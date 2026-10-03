@@ -53,8 +53,8 @@ export default function CheckoutScreen() {
 
   // Order Details
   const orderSummary = {
-    orderId: `APX-${Math.floor(100000 + Math.random() * 900000)}`,
-    serviceTitle: isRTL ? 'باقة تطوير برمجيات واستشارات AI' : 'Apex Software & AI Consultation',
+    orderId: `MGX-${Math.floor(100000 + Math.random() * 900000)}`,
+    serviceTitle: isRTL ? 'باقة تطوير برمجيات واستشارات AI' : 'Magixa Software & AI Consultation',
     subtotal: 350.00,
     cloudSync: 49.00,
     tax: 0.00,
@@ -133,7 +133,7 @@ export default function CheckoutScreen() {
           cvv,
         },
         customerName: cardholderName,
-        customerEmail: currentUser?.email || 'client@apex-software.io',
+        customerEmail: currentUser?.email || 'client@magixa.com',
         description: orderSummary.serviceTitle,
       });
 

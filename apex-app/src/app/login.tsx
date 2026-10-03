@@ -5,7 +5,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { BlurView } from 'expo-blur';
 import AnimatedBackground from '../components/AnimatedBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
 import { api } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import { FloatingInput } from '../components/FloatingInput';
 import { OtpInput } from '../components/OtpInput';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveSecureToken, getSecureToken, removeSecureToken } from '../utils/secureTokenStorage';
+import { offlineCache } from '../utils/cache';
 import { haptics } from '../utils/haptics';
 import { biometrics } from '../utils/biometrics';
 import { notifications } from '../utils/notifications';
@@ -22,6 +23,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function LoginScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const responsive = useResponsive();
   const { theme, t, isRTL, currentUser, setCurrentUser } = useSettings();
   const [isLogin, setIsLogin] = useState(true);
@@ -58,6 +60,10 @@ export default function LoginScreen() {
     if (bio.available && bio.enrolled) {
       setBiometricsAvailable(true);
       if (bio.biometryType) setBiometryType(bio.biometryType);
+    }
+    // If the user explicitly logged out or wants to switch account, skip auto-redirect
+    if (params.loggedOut === 'true' || params.switchAccount === 'true') {
+      return;
     }
     const token = await getSecureToken();
     const userStr = await AsyncStorage.getItem('userData');
@@ -217,9 +223,13 @@ export default function LoginScreen() {
 
       if (res.success) {
         await haptics.success();
-        setCurrentUser(res.user);
-        await saveSecureToken(res.token);
+        await offlineCache.clearAll();
+        offlineCache.setScope(res.user.id);
+        await AsyncStorage.removeItem('userToken').catch(() => {});
+        await offlineCache.set(offlineCache.keys.USER, res.user);
         await AsyncStorage.setItem('userData', JSON.stringify(res.user));
+        await saveSecureToken(res.token);
+        setCurrentUser(res.user);
         
         notifications.registerForPushNotifications().catch(() => {});
 
@@ -308,13 +318,17 @@ export default function LoginScreen() {
 
     if (res.success) {
       await haptics.success();
-      setCurrentUser(res.user);
-      await saveSecureToken(res.token);
+      await offlineCache.clearAll();
+      offlineCache.setScope(res.user.id);
+      await AsyncStorage.removeItem('userToken').catch(() => {});
+      await offlineCache.set(offlineCache.keys.USER, res.user);
       await AsyncStorage.setItem('userData', JSON.stringify(res.user));
+      await saveSecureToken(res.token);
+      setCurrentUser(res.user);
       
       notifications.sendLocalNotification(
         isRTL ? 'تم تفعيل الحساب بنجاح' : 'Account Activated',
-        isRTL ? `أهلاً بك يا ${res.user.fullName} في Apex Software` : `Welcome to Apex Software, ${res.user.fullName}`
+        isRTL ? `أهلاً بك يا ${res.user.fullName} في Magixa` : `Welcome to Magixa, ${res.user.fullName}`
       );
       notifications.registerForPushNotifications().catch(() => {});
 
@@ -406,9 +420,13 @@ export default function LoginScreen() {
 
       if (res.success) {
         await haptics.success();
-        setCurrentUser(res.user);
-        await saveSecureToken(res.token);
+        await offlineCache.clearAll();
+        offlineCache.setScope(res.user.id);
+        await AsyncStorage.removeItem('userToken').catch(() => {});
+        await offlineCache.set(offlineCache.keys.USER, res.user);
         await AsyncStorage.setItem('userData', JSON.stringify(res.user));
+        await saveSecureToken(res.token);
+        setCurrentUser(res.user);
         notifications.sendLocalNotification(
           isRTL ? 'مرحباً بك' : 'Welcome',
           isRTL ? `تم تسجيل الدخول بنجاح عبر Google: ${res.user.fullName}` : `Logged in via Google as ${res.user.fullName}`
@@ -591,7 +609,7 @@ export default function LoginScreen() {
               style={styles.brandLogoImage} 
               resizeMode="contain" 
             />
-            <Text style={[styles.logoText, { color: theme.text }]}>APEX<Text style={[styles.logoAccent, { color: theme.primary }]}> SOFTWARE</Text></Text>
+            <Text style={[styles.logoText, { color: theme.text }]}>MAGIXA</Text>
             <Text style={[styles.brandTagline, { color: theme.textMuted }]}>
               {isRTL ? 'بوابة عملاء الأنظمة الذكية' : 'Enterprise Client Portal'}
             </Text>
@@ -845,26 +863,6 @@ export default function LoginScreen() {
                         />
                       </AnimatedPressable>
                     )}
-                  </View>
-
-                  <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 10, marginTop: 10, width: '100%' }}>
-                    <TouchableOpacity 
-                      style={[styles.socialSmallBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
-                      onPress={handleAppleSignIn}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="logo-apple" size={18} color={theme.text} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
-                      <Text style={[styles.socialSmallText, { color: theme.text }]}>Apple</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity 
-                      style={[styles.socialSmallBtn, { borderColor: theme.border, backgroundColor: theme.btnBg }]}
-                      onPress={handleGitHubSignIn}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="logo-github" size={18} color={theme.text} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
-                      <Text style={[styles.socialSmallText, { color: theme.text }]}>GitHub</Text>
-                    </TouchableOpacity>
                   </View>
                 </View>
 

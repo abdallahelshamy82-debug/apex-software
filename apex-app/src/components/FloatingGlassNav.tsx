@@ -29,8 +29,8 @@ export default function FloatingGlassNav() {
 
   const handleOpenWhatsApp = () => {
     const defaultMsg = isRTL 
-      ? 'مرحباً فريق Apex Software، أود استشارة برمجية بخصوص مشروعي وتكلفته التقديرية...'
-      : 'Hello Apex Software team, I would like a consultation regarding my software project...';
+      ? 'مرحباً فريق Magixa، أود استشارة برمجية بخصوص مشروعي وتكلفته التقديرية...'
+      : 'Hello Magixa team, I would like a consultation regarding my software project...';
     const url = `https://wa.me/201027877209?text=${encodeURIComponent(defaultMsg)}`;
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {

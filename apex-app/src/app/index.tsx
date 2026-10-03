@@ -71,7 +71,7 @@ export default function HomeScreen() {
                  resizeMode="contain" 
                />
                <View style={{ alignItems: isRTL ? 'flex-end' : 'flex-start', marginHorizontal: 8 }}>
-                 <Text style={styles.brandTitle}>APEX SOFTWARE</Text>
+                 <Text style={styles.brandTitle}>MAGIXA</Text>
                  <Text style={styles.brandTagline}>{isRTL ? 'ستوديو التقنية' : 'TECH STUDIO'}</Text>
                </View>
             </View>
@@ -148,7 +148,7 @@ export default function HomeScreen() {
               <View style={[styles.heroBadge, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 <Ionicons name="rocket-outline" size={14} color="#38BDF8" />
                 <Text style={styles.heroBadgeText}>
-                  {isRTL ? 'أبكس سوفتوير • تقنيات الجيل القادم' : 'APEX SOFTWARE STUDIO • NEXT-GEN TECH'}
+                  {isRTL ? 'ماجيكسا • تقنيات الجيل القادم' : 'MAGIXA STUDIO • NEXT-GEN TECH'}
                 </Text>
               </View>
             </AnimatedReveal>

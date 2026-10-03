@@ -470,7 +470,7 @@ export default function InvoicesScreen() {
                     <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                       <Ionicons name="business-outline" size={16} color={theme.primary} />
                       <Text style={{ color: theme.primary, fontWeight: 'bold', fontSize: 13 }}>
-                        {agencySettings?.companyName || 'Apex Software Agency'}
+                        {agencySettings?.companyName || 'Magixa Agency'}
                       </Text>
                     </View>
                     <Text style={{ color: theme.textMuted, fontSize: 12, marginBottom: 8, textAlign: isRTL ? 'right' : 'left' }}>
@@ -543,7 +543,7 @@ export default function InvoicesScreen() {
                           {isRTL ? 'إنستاباي \u2066(InstaPay)\u2069:' : 'InstaPay:'}
                         </Text>
                         <Text selectable style={{ color: '#8B5CF6', fontWeight: 'bold', fontSize: 12, writingDirection: 'ltr' }}>
-                          {agencySettings?.instapayHandle || 'apex@instapay'}
+                          {agencySettings?.instapayHandle || 'magixa@instapay'}
                         </Text>
                       </View>
 
@@ -589,7 +589,7 @@ export default function InvoicesScreen() {
                       <TouchableOpacity
                         onPress={() => {
                           haptics.selection();
-                          const val = agencySettings?.instapayHandle || 'apex@instapay';
+                          const val = agencySettings?.instapayHandle || 'magixa@instapay';
                           if (Platform.OS === 'web' && typeof navigator !== 'undefined') navigator.clipboard.writeText(val);
                           Alert.alert(isRTL ? 'تم النسخ!' : 'Copied!', `${isRTL ? 'تم نسخ عنوان InstaPay:' : 'Copied InstaPay:'} ${val}`);
                         }}

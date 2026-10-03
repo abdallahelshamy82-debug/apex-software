@@ -99,7 +99,10 @@ export async function getStoredMessages(userId: number): Promise<ChatMessage[]> 
       map.set(key, norm);
     });
     return Array.from(map.values());
-  } catch (err) {
+  } catch (err: any) {
+    if (String(err?.message || err).includes('CursorWindow')) {
+      AsyncStorage.removeItem(`${STORAGE_PREFIX}${userId}`).catch(() => {});
+    }
     console.warn('Error reading stored messages for user', userId, err);
     return [];
   }
@@ -113,10 +116,15 @@ export async function saveStoredMessages(userId: number, messages: ChatMessage[]
     const map = new Map<string, ChatMessage>();
     messages.forEach(m => {
       const norm = normalizeMessage(m, userId);
+      // Strip large inline base64 images to prevent SQLite CursorWindow 2MB overflow
+      if (norm.attachmentUrl && norm.attachmentUrl.length > 50000 && norm.attachmentUrl.startsWith('data:')) {
+        norm.attachmentUrl = '';
+      }
       const key = norm.clientMsgId || norm.id;
       map.set(key, norm);
     });
-    const unique = Array.from(map.values());
+    // Keep max 100 recent messages to keep storage light and snappy
+    const unique = Array.from(map.values()).slice(-100);
     await AsyncStorage.setItem(`${STORAGE_PREFIX}${userId}`, JSON.stringify(unique));
   } catch (err) {
     console.warn('Error saving messages for user', userId, err);

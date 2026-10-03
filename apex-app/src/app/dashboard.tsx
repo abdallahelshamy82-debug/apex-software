@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Linking, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -11,6 +11,7 @@ import { Skeleton } from '../components/Skeleton';
 import NotificationModal from '../components/NotificationModal';
 import ProjectRoadmap from '../components/ProjectRoadmap';
 import { api } from '../services/api';
+import { offlineCache } from '../utils/cache';
 import { haptics } from '../utils/haptics';
 import { useResponsive } from '../hooks/useResponsive';
 
@@ -27,15 +28,23 @@ export default function DashboardScreen() {
   const [quotes, setQuotes] = useState<any[]>([]);
   const [selectedQuoteIdx, setSelectedQuoteIdx] = useState(0);
 
+  const currentUserRef = useRef(currentUser);
+  currentUserRef.current = currentUser;
+
   const loadData = useCallback(async () => {
     try {
+      if (currentUserRef.current?.id) {
+        offlineCache.setScope(currentUserRef.current.id);
+      }
+
       const [quotesRes, meRes, notifRes] = await Promise.all([
         api.getMyQuotes(),
         api.getMe(),
         api.getNotifications(),
       ]);
 
-      if (quotesRes?.isOffline || meRes?.isOffline || notifRes?.isOffline) {
+      // Only show offline banner if device is truly offline as verified by NetInfo
+      if (meRes?.isOffline || quotesRes?.isOffline) {
         setIsOffline(true);
       } else {
         setIsOffline(false);
@@ -44,10 +53,26 @@ export default function DashboardScreen() {
       if (quotesRes?.success && quotesRes.quotes) {
         setQuotes(quotesRes.quotes);
       }
+
       if (meRes?.success && meRes.user) {
-        setCurrentUser(meRes.user);
-        await AsyncStorage.setItem('userData', JSON.stringify(meRes.user));
+        offlineCache.setScope(meRes.user.id);
+        const prev = currentUserRef.current;
+        const hasChanged = !prev ||
+          prev.id !== meRes.user.id ||
+          prev.fullName !== meRes.user.fullName ||
+          prev.role !== meRes.user.role ||
+          prev.company !== meRes.user.company ||
+          prev.projectName !== meRes.user.projectName ||
+          prev.projectPhase !== meRes.user.projectPhase ||
+          prev.projectProgress !== meRes.user.projectProgress;
+
+        if (hasChanged) {
+          setCurrentUser(meRes.user);
+          await AsyncStorage.setItem('userData', JSON.stringify(meRes.user));
+        }
+        await offlineCache.set(offlineCache.keys.USER, meRes.user);
       }
+
       if (notifRes?.success && notifRes.notifications) {
         setNotifications(notifRes.notifications);
         const unread = notifRes.notifications.filter((n: any) => n.unread).length;
@@ -55,7 +80,6 @@ export default function DashboardScreen() {
       }
     } catch (e) {
       console.error('Failed to load dashboard data', e);
-      setIsOffline(true);
     } finally {
       setLoading(false);
     }
@@ -287,7 +311,7 @@ export default function DashboardScreen() {
               <View style={styles.aiLiveDot} />
               <Ionicons name="sparkles" size={16} color="#38BDF8" />
               <Text style={{ color: theme.primary, fontSize: 13, fontWeight: '900', letterSpacing: 0.5, flexShrink: 1 }}>
-                {isRTL ? 'مستشار Apex الذكي (AI Project Copilot)' : 'Apex AI Project Copilot'}
+                {isRTL ? 'مستشار Magixa الذكي (AI Project Copilot)' : 'Magixa AI Project Copilot'}
               </Text>
             </View>
             <View style={[styles.aiTagBadge, { flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 4 }]}>
@@ -727,7 +751,7 @@ export default function DashboardScreen() {
                   {isRTL ? 'هويتنا وسابقة أعمالنا المتميزة' : 'Our Identity & Proven Portfolio'}
                 </Text>
                 <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 2, textAlign: isRTL ? 'right' : 'left', flexShrink: 1 }}>
-                  {isRTL ? 'استكشف أكثر من 50 تطبيقاً ومنظومة رقمية قمنا ببنائها' : 'Explore 50+ enterprise apps and cloud platforms engineered by Apex'}
+                  {isRTL ? 'استكشف أكثر من 50 تطبيقاً ومنظومة رقمية قمنا ببنائها' : 'Explore 50+ enterprise apps and cloud platforms engineered by Magixa'}
                 </Text>
               </View>
             </View>
