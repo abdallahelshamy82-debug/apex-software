@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "apexapp",
     "userInterfaceStyle": "automatic",
-    "jsEngine": "hermes",
     "ios": {
       "icon": "./assets/expo.icon",
       "supportsTablet": true
