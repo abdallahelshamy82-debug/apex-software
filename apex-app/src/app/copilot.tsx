@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useImperativeHandle } from 'react';
 import {
   View,
   Text,
@@ -26,7 +26,6 @@ import { haptics } from '../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useResponsive } from '../hooks/useResponsive';
 import { useToast } from '../components/ApexToast';
-import KeyboardSafeView from '../components/KeyboardSafeView';
 
 // Native audio library removed to prevent UnsatisfiedLinkError crash in libexpo-av.so
 let SafeAudio: any = null;
@@ -295,12 +294,17 @@ const QUICK_SUGGESTIONS = [
   },
 ];
 
+export interface ChatInputBarHandle {
+  setValue: (text: string) => void;
+  getValue: () => string;
+  clear: () => void;
+  focus: () => void;
+}
+
 interface ChatInputBarProps {
   theme: any;
   isRTL: boolean;
-  chatInput: string;
-  onChangeText: (text: string) => void;
-  onSend: () => void;
+  onSend: (text: string) => void;
   chatLoading: boolean;
   isListening: boolean;
   isTranscribing: boolean;
@@ -310,11 +314,9 @@ interface ChatInputBarProps {
   bottomInset?: number;
 }
 
-const ChatInputBar = React.memo(function ChatInputBar({
+const ChatInputBar = React.memo(React.forwardRef<ChatInputBarHandle, ChatInputBarProps>(function ChatInputBar({
   theme,
   isRTL,
-  chatInput,
-  onChangeText,
   onSend,
   chatLoading,
   isListening,
@@ -323,8 +325,43 @@ const ChatInputBar = React.memo(function ChatInputBar({
   onToggleVoice,
   onFocus,
   bottomInset = 0,
-}: ChatInputBarProps) {
+}, ref) {
+  const [localText, setLocalText] = useState('');
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => setIsKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setIsKeyboardVisible(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    setValue: (newText: string) => {
+      setLocalText(newText);
+    },
+    getValue: () => localText,
+    clear: () => {
+      setLocalText('');
+    },
+    focus: () => {
+      inputRef.current?.focus();
+    },
+  }), [localText]);
+
+  const handlePressSend = useCallback(() => {
+    const trimmed = localText.trim();
+    if (!trimmed || chatLoading) return;
+    onSend(trimmed);
+    setLocalText('');
+  }, [localText, chatLoading, onSend]);
 
   return (
     <View style={[
@@ -332,7 +369,7 @@ const ChatInputBar = React.memo(function ChatInputBar({
       { 
         backgroundColor: theme.card, 
         borderTopColor: theme.border,
-        paddingBottom: Math.max(10, bottomInset),
+        paddingBottom: isKeyboardVisible ? 10 : Math.max(10, bottomInset),
       }
     ]}>
       <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
@@ -379,15 +416,13 @@ const ChatInputBar = React.memo(function ChatInputBar({
           placeholderTextColor={theme.textMuted}
           multiline
           numberOfLines={2}
-          value={chatInput}
-          onChangeText={onChangeText}
+          value={localText}
+          onChangeText={setLocalText}
           blurOnSubmit={false}
           onKeyPress={(e: any) => {
             if (Platform.OS === 'web' && e.nativeEvent?.key === 'Enter' && !e.nativeEvent?.shiftKey) {
               e.preventDefault?.();
-              if (chatInput.trim() && !chatLoading) {
-                onSend();
-              }
+              handlePressSend();
             }
           }}
           onFocus={onFocus}
@@ -396,13 +431,13 @@ const ChatInputBar = React.memo(function ChatInputBar({
         {/* Send Button */}
         <TouchableOpacity
           activeOpacity={0.85}
-          disabled={!chatInput.trim() || chatLoading}
-          onPress={onSend}
+          disabled={!localText.trim() || chatLoading}
+          onPress={handlePressSend}
           style={[
             styles.chatSendBtn,
             {
               backgroundColor: theme.primary,
-              opacity: (!chatInput.trim() || chatLoading) ? 0.5 : 1,
+              opacity: (!localText.trim() || chatLoading) ? 0.5 : 1,
             }
           ]}
         >
@@ -416,7 +451,7 @@ const ChatInputBar = React.memo(function ChatInputBar({
       </View>
     </View>
   );
-});
+}));
 
 export default function CopilotScreen() {
   const router = useRouter();
@@ -441,7 +476,7 @@ export default function CopilotScreen() {
   // Messages in consultation chat
   const [messages, setMessages] = useState<ChatMessage[]>(() => getInitialMessages(isRTL));
 
-  const [chatInput, setChatInput] = useState('');
+  const chatInputBarRef = useRef<ChatInputBarHandle>(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzingStep, setAnalyzingStep] = useState(0);
@@ -473,15 +508,11 @@ export default function CopilotScreen() {
   const recognitionRef = useRef<any>(null);
   const chatScrollRef = useRef<ScrollView>(null);
 
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-
-  // Track keyboard state and scroll chat messages to end when keyboard appears (only if multiple messages exist)
+  // Scroll chat messages to end when keyboard appears
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const showSub = Keyboard.addListener(showEvent, () => {
-      setIsKeyboardOpen(true);
       setTimeout(() => {
         chatScrollRef.current?.scrollToEnd({ animated: true });
       }, 60);
@@ -490,15 +521,10 @@ export default function CopilotScreen() {
       }, 260);
     });
 
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setIsKeyboardOpen(false);
-    });
-
     return () => {
       showSub.remove();
-      hideSub.remove();
     };
-  }, [messages.length]);
+  }, []);
 
   useEffect(() => {
     Animated.loop(
@@ -656,7 +682,7 @@ export default function CopilotScreen() {
               .map((r: any) => r[0]?.transcript)
               .join('');
             if (transcript) {
-              setChatInput(transcript);
+              chatInputBarRef.current?.setValue(transcript);
             }
           };
 
@@ -700,7 +726,7 @@ export default function CopilotScreen() {
               setIsTranscribing(false);
               if (res.success && res.text) {
                 haptics.success();
-                setChatInput(res.text);
+                chatInputBarRef.current?.setValue(res.text);
                 showToast({
                   type: 'success',
                   title: isRTL ? 'تم تحويل الصوت بنجاح' : 'Voice Transcribed',
@@ -805,7 +831,7 @@ export default function CopilotScreen() {
 
         if (res.success && res.text) {
           await haptics.success();
-          setChatInput(res.text);
+          chatInputBarRef.current?.setValue(res.text);
           showToast({
             type: 'success',
             title: isRTL ? 'تم تحويل صوتك بنجاح' : 'Voice Transcribed',
@@ -1038,7 +1064,7 @@ export default function CopilotScreen() {
 
   // Send message in interactive consultation chat
   const handleSendChatMessage = async (overrideText?: string) => {
-    const textToSend = (overrideText || chatInput).trim();
+    const textToSend = (overrideText || chatInputBarRef.current?.getValue() || '').trim();
     if (!textToSend || chatLoading) return;
 
     haptics.light();
@@ -1054,7 +1080,7 @@ export default function CopilotScreen() {
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     saveSession(updatedMessages);
-    setChatInput('');
+    chatInputBarRef.current?.clear();
     setChatLoading(true);
 
     setTimeout(() => {
@@ -1513,7 +1539,11 @@ export default function CopilotScreen() {
       {/* MODE 1: INTERACTIVE CONSULTANT CHAT                      */}
       {/* ========================================================= */}
       {activeMode === 'chat' && (
-        <KeyboardSafeView style={{ flex: 1 }}>
+        <KeyboardAvoidingView 
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
           <View style={{ flex: 1 }}>
             {/* Chat Messages Stream */}
             <ScrollView
@@ -1865,17 +1895,16 @@ export default function CopilotScreen() {
 
             {/* Stable Memoized Chat Input Bar */}
             <ChatInputBar
+              ref={chatInputBarRef}
               theme={theme}
               isRTL={isRTL}
-              chatInput={chatInput}
-              onChangeText={setChatInput}
-              onSend={() => handleSendChatMessage()}
+              onSend={handleSendChatMessage}
               chatLoading={chatLoading}
               isListening={isListening}
               isTranscribing={isTranscribing}
               micPulseAnim={micPulseAnim}
               onToggleVoice={toggleVoiceRecording}
-              bottomInset={isKeyboardOpen ? 0 : insets.bottom}
+              bottomInset={insets.bottom}
               onFocus={() => {
                 setTimeout(() => {
                   chatScrollRef.current?.scrollToEnd({ animated: true });
@@ -1886,7 +1915,7 @@ export default function CopilotScreen() {
               }}
             />
           </View>
-        </KeyboardSafeView>
+        </KeyboardAvoidingView>
       )}
 
       {/* ========================================================= */}

@@ -18,7 +18,7 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ADCDE4"
       },
       "permissions": [
         "android.permission.USE_BIOMETRIC",

@@ -23,7 +23,6 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import ApexLoader from '../components/ApexLoader';
-import KeyboardSafeView from '../components/KeyboardSafeView';
 import { useToast } from '../components/ApexToast';
 import { 
   getStoredMessages, 
@@ -65,34 +64,17 @@ export default function ChatScreen() {
   const { showToast } = useToast();
   const insets = useSafeAreaInsets();
   const [recording, setRecording] = useState<any>(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-
-  const effectiveKeyboardOffset = Platform.OS === 'android'
-    ? (keyboardHeight > 0
-        ? Math.max(0, keyboardHeight - insets.bottom)
-        : (isInputFocused ? Math.max(0, 310 - insets.bottom) : 0))
-    : 0;
-
   useEffect(() => {
     const showSub = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        setKeyboardHeight(e?.endCoordinates?.height || 0);
+      () => {
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: true });
         }, 60);
       }
     );
-    const hideSub = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-      }
-    );
     return () => {
       showSub.remove();
-      hideSub.remove();
     };
   }, []);
   
@@ -1010,7 +992,11 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
-      <KeyboardSafeView style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
         {/* Header - Modern Dark Theme */}
         <View
           style={[
@@ -1238,7 +1224,7 @@ export default function ChatScreen() {
             </View>
           </View>
         )}
-      </KeyboardSafeView>
+      </KeyboardAvoidingView>
 
       {/* ========================================================================= */}
       {/* Interactive Image Lightbox & Zoom & Download Modal                        */}
