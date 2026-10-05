@@ -267,7 +267,6 @@ export default function ChatScreen() {
     const sendText = text.trim();
     setText('');
     Keyboard.dismiss();
-    setIsInputFocused(false);
     await sendMessagePayload({ text: sendText, type: 'text' });
   };
 
@@ -1051,7 +1050,6 @@ export default function ChatScreen() {
           keyboardDismissMode="on-drag"
           onScrollBeginDrag={() => {
             Keyboard.dismiss();
-            setIsInputFocused(false);
           }}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={
@@ -1152,13 +1150,9 @@ export default function ChatScreen() {
                   onChangeText={setText}
                   onSubmitEditing={handleSendText}
                   onFocus={() => {
-                    setIsInputFocused(true);
                     setTimeout(() => {
                       flatListRef.current?.scrollToEnd({ animated: true });
                     }, 100);
-                  }}
-                  onBlur={() => {
-                    setIsInputFocused(false);
                   }}
                   multiline
                 />

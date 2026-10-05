@@ -2,7 +2,7 @@
   "expo": {
     "name": "Magixa",
     "slug": "apex-app",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "apexapp",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.apexsoftware.portal",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
