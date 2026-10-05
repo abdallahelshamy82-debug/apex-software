@@ -7,7 +7,6 @@ import {
   ScrollView, 
   FlatList,
   TextInput, 
-  KeyboardAvoidingView, 
   Platform, 
   ActivityIndicator, 
   Alert, 
@@ -15,6 +14,7 @@ import {
   Modal,
   Keyboard
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSettings } from '../context/SettingsContext';
@@ -994,7 +994,7 @@ export default function ChatScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
       <KeyboardAvoidingView 
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         {/* Header - Modern Dark Theme */}

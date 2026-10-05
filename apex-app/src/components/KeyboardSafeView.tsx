@@ -1,5 +1,6 @@
 import React from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, ViewProps } from 'react-native';
+import { StyleSheet, ViewProps, Platform } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 interface KeyboardSafeViewProps extends ViewProps {
   children: React.ReactNode;
@@ -7,8 +8,8 @@ interface KeyboardSafeViewProps extends ViewProps {
 }
 
 /**
- * Drop-in KeyboardAvoidingView that relies on Android's native
- * softwareKeyboardLayoutMode: "resize" (behavior=undefined) and iOS padding.
+ * Drop-in KeyboardAvoidingView powered by react-native-keyboard-controller.
+ * Ensures frame-perfect keyboard avoidance across iOS and Android (including modern Edge-to-Edge).
  */
 export default function KeyboardSafeView({
   children,
@@ -19,7 +20,7 @@ export default function KeyboardSafeView({
   return (
     <KeyboardAvoidingView
       style={[styles.container, style]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
       keyboardVerticalOffset={extraOffset}
       {...rest}
     >

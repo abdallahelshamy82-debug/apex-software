@@ -13,10 +13,10 @@ import {
   Platform,
   LayoutAnimation,
   UIManager,
-  KeyboardAvoidingView,
   Keyboard,
   Linking
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -1541,7 +1541,7 @@ export default function CopilotScreen() {
       {activeMode === 'chat' && (
         <KeyboardAvoidingView 
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior="padding"
           keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
           <View style={{ flex: 1 }}>

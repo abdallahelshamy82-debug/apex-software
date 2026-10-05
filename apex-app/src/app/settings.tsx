@@ -529,7 +529,7 @@ export default function SettingsScreen() {
 
           <View style={{ marginTop: 14, alignItems: 'center' }}>
             <Text style={{ color: theme.textMuted, fontSize: 11 }}>
-              Magixa Client Portal v1.0.2 (Build 7)
+              Magixa Client Portal v1.0.3 (Build 8)
             </Text>
             <Text style={{ color: theme.textMuted, fontSize: 10, marginTop: 2 }}>
               © 2026 Magixa Inc. All rights reserved.

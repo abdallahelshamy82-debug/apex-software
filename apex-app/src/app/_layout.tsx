@@ -45,21 +45,25 @@ if (Platform.OS === 'web') {
   };
 }
 
+import { KeyboardProvider } from 'react-native-keyboard-controller';
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <SettingsProvider>
-          <ApexToastProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="estimator" />
-              <Stack.Screen name="settings" />
-              <Stack.Screen name="admin" />
-            </Stack>
-          </ApexToastProvider>
-        </SettingsProvider>
-      </SafeAreaProvider>
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+        <SafeAreaProvider>
+          <SettingsProvider>
+            <ApexToastProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="estimator" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="admin" />
+              </Stack>
+            </ApexToastProvider>
+          </SettingsProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
