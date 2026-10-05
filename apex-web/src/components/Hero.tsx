@@ -3,9 +3,10 @@
 import { motion } from 'framer-motion';
 import Magnetic from './Magnetic';
 import { useLanguage } from '@/context/LanguageContext';
+import { APP_RELEASE } from '@/constants/appRelease';
 
 export default function Hero() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const words = t.hero.title.split(" ");
 
   const containerVariants = {
@@ -88,13 +89,30 @@ export default function Hero() {
 
               <Magnetic strength={0.2}>
                 <a 
-                  href="/magixa.apk" 
+                  href={APP_RELEASE.downloadUrl} 
                   download="magixa.apk"
-                  className="px-8 py-4 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-lg hover:bg-white/10 transition-colors block cursor-none"
+                  className="px-6 py-4 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-base md:text-lg hover:bg-white/10 transition-colors block cursor-none flex items-center justify-center gap-2 group"
                 >
-                  {t.common.downloadApp}
+                  <span>{t.common.downloadApp}</span>
+                  <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-accent-radium/15 text-accent-radium border border-accent-radium/35 font-mono font-semibold tracking-wide">
+                    {APP_RELEASE.versionFull}
+                  </span>
                 </a>
               </Magnetic>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.3, duration: 0.8 }}
+              className={`flex items-center gap-2 text-xs text-text-muted font-sans px-2 -mt-4 ${lang === 'ar' ? 'justify-end' : 'justify-start'}`}
+            >
+              <span className="w-2 h-2 rounded-full bg-accent-radium animate-pulse"></span>
+              <span>
+                {lang === 'ar' 
+                  ? `أحدث إصدار للأندرويد: ${APP_RELEASE.versionFull}` 
+                  : `Latest Android Release: ${APP_RELEASE.versionFull}`}
+              </span>
             </motion.div>
           </div>
 
