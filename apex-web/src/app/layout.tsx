@@ -20,6 +20,17 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Magixa | نبتكر ونقود مستقبلك البرمجي",
   description: "وكالة برمجيات رائدة في صياغة التجارب الرقمية والأنظمة السحابية وتطبيقات الجوال.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-48x48.png", type: "image/png", sizes: "48x48" },
+      { url: "/icon.png", type: "image/png", sizes: "48x48" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     title: "Magixa | نبتكر ونقود مستقبلك البرمجي",
     description: "نسد الفجوة بين التصميم المذهل والهندسة البرمجية المتطورة.",
