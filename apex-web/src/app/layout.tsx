@@ -57,6 +57,7 @@ export const metadata: Metadata = {
 
 import { LanguageProvider } from "@/context/LanguageContext";
 import Navbar from "@/components/Navbar";
+import WhatsAppFloatingButton from "@/components/WhatsAppFloatingButton";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SmoothScroll>
             {children}
           </SmoothScroll>
+          <WhatsAppFloatingButton />
         </LanguageProvider>
       </body>
     </html>

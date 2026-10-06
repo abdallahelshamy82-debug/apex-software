@@ -17,7 +17,7 @@ interface WhatsAppFABProps {
 
 export default function WhatsAppFAB({
   customMessage,
-  phoneNumber = '201000000000',
+  phoneNumber = '201558652579',
   bottom = 110, // Strictly above the 90px Tab Bar
   inputBarHeight,
   hidden = false,

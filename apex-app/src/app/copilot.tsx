@@ -878,7 +878,7 @@ export default function CopilotScreen() {
           ? 'مرحباً فريق Magixa، أود استشارة برمجية مباشرة بخصوص مشروعي وتثبيت المتطلبات والتكلفة والبدء...'
           : 'Hello Magixa team, I would like a consultation regarding my software project...'));
 
-    const url = `https://wa.me/201027877209?text=${encodeURIComponent(defaultMsg)}`;
+    const url = `https://wa.me/201558652579?text=${encodeURIComponent(defaultMsg)}`;
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.open(url, '_blank');

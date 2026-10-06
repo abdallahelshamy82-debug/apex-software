@@ -27,10 +27,11 @@ export default function Footer() {
           </a>
         </div>
         
-        <div className={`flex gap-4 md:gap-6 flex-wrap justify-center ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex gap-3 md:gap-4 flex-wrap justify-center items-center ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
+          <Magnetic><a href="/whatsapp" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 hover:text-white hover:bg-emerald-500/20 transition-all font-sans text-xs md:text-sm cursor-none">WhatsApp</a></Magnetic>
+          <Magnetic><a href="https://t.me/AbdAllah_IT_Full_Stack" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-sky-500/10 border border-sky-500/30 rounded-full text-sky-400 hover:text-white hover:bg-sky-500/20 transition-all font-sans text-xs md:text-sm cursor-none">@AbdAllah.IT.Full.Stack</a></Magnetic>
           <Magnetic><a href="#" className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white hover:text-accent-radium hover:bg-white/10 transition-all font-sans text-xs md:text-sm cursor-none">LinkedIn</a></Magnetic>
           <Magnetic><a href="#" className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white hover:text-accent-radium hover:bg-white/10 transition-all font-sans text-xs md:text-sm cursor-none">GitHub</a></Magnetic>
-          <Magnetic><a href="#" className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white hover:text-accent-radium hover:bg-white/10 transition-all font-sans text-xs md:text-sm cursor-none">Twitter</a></Magnetic>
         </div>
       </div>
     </footer>
