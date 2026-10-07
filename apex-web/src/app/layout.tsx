@@ -18,8 +18,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Magixa | نبتكر ونقود مستقبلك البرمجي",
-  description: "وكالة برمجيات رائدة في صياغة التجارب الرقمية والأنظمة السحابية وتطبيقات الجوال.",
+  metadataBase: new URL("https://magixa.tech"),
+  title: "Magixa | نبتكر ونصنع الأنظمة البرمجية التي تقود نجاح أعمالك",
+  description: "وكالة برمجيات متخصصة في تطوير مواقع ومتاجر إلكترونية فائقة السرعة، وأنظمة ERP ونقاط بيع سحابية وتطبيقات الموبايل.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -32,16 +33,16 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: "Magixa | نبتكر ونقود مستقبلك البرمجي",
-    description: "نسد الفجوة بين التصميم المذهل والهندسة البرمجية المتطورة.",
+    title: "Magixa | نبتكر ونصنع الأنظمة البرمجية التي تقود نجاح أعمالك",
+    description: "مواقع ومتاجر إلكترونية وأنظمة ERP سحابية متفصلة بدقة على حجم نشاطك التجاري بأعلى أداء وسرعة.",
     url: "https://magixa.tech",
-    siteName: "Magixa",
+    siteName: "Magixa Tech",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop",
+        url: "/projects/erp-pos.png",
         width: 1200,
         height: 630,
-        alt: "Magixa",
+        alt: "Magixa Tech Solutions",
       }
     ],
     locale: "ar_AR",
@@ -49,9 +50,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Magixa | نبتكر ونقود مستقبلك البرمجي",
-    description: "نسد الفجوة بين التصميم المذهل والهندسة البرمجية المتطورة.",
-    images: ["https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1200&auto=format&fit=crop"],
+    title: "Magixa | حلول برمجية وأنظمة سحابية متكاملة",
+    description: "مواقع ومتاجر إلكترونية وأنظمة ERP سحابية متفصلة بدقة على حجم نشاطك التجاري بأعلى أداء وسرعة.",
+    images: ["/projects/erp-pos.png"],
   },
 };
 

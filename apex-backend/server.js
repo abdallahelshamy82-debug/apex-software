@@ -1291,8 +1291,8 @@ app.delete('/api/admin/quotes/:id', authenticateToken, (req, res) => {
 
 // ==================== APEX AI COPILOT ROUTES ====================
 
-// Interactive Chat Consultant with Live AI (Gemini 3.5 Flash / Magixa AI Engine)
-app.post('/api/ai/chat-consultant', authenticateTokenOptional, async (req, res) => {
+// Interactive Chat Consultant with Live AI (Gemini 3.6 Flash / Deep Semantic)
+app.post('/api/ai/chat-consultant', verifyToken, async (req, res) => {
   try {
     const { messages, language, apiKey, provider } = req.body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -1315,7 +1315,7 @@ app.post('/api/ai/chat-consultant', authenticateTokenOptional, async (req, res) 
 });
 
 // Transcribe Voice Note to Text (High-accuracy Gemini 3.5 Transcribe / Flash)
-app.post('/api/ai/transcribe-voice', authenticateTokenOptional, async (req, res) => {
+app.post('/api/ai/transcribe-voice', verifyToken, async (req, res) => {
   try {
     const { audioBase64, mimeType, language } = req.body;
     if (!audioBase64) {
@@ -1337,7 +1337,7 @@ app.post('/api/ai/transcribe-voice', authenticateTokenOptional, async (req, res)
 });
 
 // Analyze Project Prompt (Voice, Text, or Chat History, Live Gemini / OpenAI / Deep Semantic)
-app.post('/api/ai/analyze-project', authenticateTokenOptional, async (req, res) => {
+app.post('/api/ai/analyze-project', verifyToken, async (req, res) => {
   try {
     const { prompt, messages, language, apiKey, provider } = req.body;
     const inputContent = (messages && Array.isArray(messages) && messages.length > 0) ? messages : prompt;

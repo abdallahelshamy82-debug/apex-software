@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # 🛡️ APEX SOFTWARE - ROOT GITIGNORE
 # ==============================================================================
 
@@ -49,6 +49,18 @@ yarn-debug.log*
 Thumbs.db
 ehthumbs.db
 
+# Next.js builds
+.next/
+*/.next/
+**/.next/
+out/
+build/
+
+# Zips and archives
+*.zip
+apex-software-main/
+New folder/
+
 # Legacy and scratch directories
 backend/
 node-backend/
@@ -64,3 +76,6 @@ secure_connect.js
 .cursor
 .vercel
 .env*
+*.png.bak
+*ChatGPT*
+.vscode/

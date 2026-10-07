@@ -52,7 +52,8 @@ export default function CustomCursor() {
         x: cursorX,
         y: cursorY,
         mixBlendMode: 'difference',
-        opacity: isVisible ? 1 : 0
+        opacity: isVisible ? 1 : 0,
+        willChange: 'transform',
       }}
     />
   );
