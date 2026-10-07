@@ -702,6 +702,10 @@ export const api = {
           provider: options?.provider
         })
       });
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
+        return { success: false, message: errJson?.message || `خطأ في الخادم (${response.status})` };
+      }
       return await response.json();
     } catch (e) {
       return { success: false, message: 'تعذر الاتصال بالمستشار الذكي، يرجى التحقق من الشبكة.' };

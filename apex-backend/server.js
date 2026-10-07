@@ -53,8 +53,14 @@ const verifyPassword = async (plain, stored) => {
 };
 
 const DEFAULT_ALLOWED_ORIGINS = [
+  'https://magixa.tech',
+  'https://www.magixa.tech',
+  'https://magixa-admin.vercel.app',
+  'https://magixa-web.vercel.app',
+  'https://magixa-backend.vercel.app',
   'https://apex-web-blond.vercel.app',
   'https://apex-admin-seven.vercel.app',
+  'https://apex-backend-ten.vercel.app',
   'https://apexsoftware.com',
   'https://www.apexsoftware.com',
   'http://localhost:3000',
@@ -71,7 +77,14 @@ const ALLOWED_ORIGINS = Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...extra
 
 const corsOrigin = (origin, callback) => {
   if (!origin) return callback(null, true);
-  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  if (
+    ALLOWED_ORIGINS.includes(origin) ||
+    origin.endsWith('.vercel.app') ||
+    origin.endsWith('.magixa.tech') ||
+    origin === 'https://magixa.tech'
+  ) {
+    return callback(null, true);
+  }
   return callback(new Error('Not allowed by CORS'));
 };
 
@@ -1291,8 +1304,8 @@ app.delete('/api/admin/quotes/:id', authenticateToken, (req, res) => {
 
 // ==================== APEX AI COPILOT ROUTES ====================
 
-// Interactive Chat Consultant with Live AI (Gemini 3.6 Flash / Deep Semantic)
-app.post('/api/ai/chat-consultant', verifyToken, async (req, res) => {
+// Interactive Chat Consultant with Live AI (Gemini Flash / Deep Semantic)
+app.post('/api/ai/chat-consultant', authenticateTokenOptional, async (req, res) => {
   try {
     const { messages, language, apiKey, provider } = req.body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -1314,8 +1327,8 @@ app.post('/api/ai/chat-consultant', verifyToken, async (req, res) => {
   }
 });
 
-// Transcribe Voice Note to Text (High-accuracy Gemini 3.5 Transcribe / Flash)
-app.post('/api/ai/transcribe-voice', verifyToken, async (req, res) => {
+// Transcribe Voice Note to Text (High-accuracy Gemini Transcribe / Flash)
+app.post('/api/ai/transcribe-voice', authenticateTokenOptional, async (req, res) => {
   try {
     const { audioBase64, mimeType, language } = req.body;
     if (!audioBase64) {
@@ -1337,7 +1350,7 @@ app.post('/api/ai/transcribe-voice', verifyToken, async (req, res) => {
 });
 
 // Analyze Project Prompt (Voice, Text, or Chat History, Live Gemini / OpenAI / Deep Semantic)
-app.post('/api/ai/analyze-project', verifyToken, async (req, res) => {
+app.post('/api/ai/analyze-project', authenticateTokenOptional, async (req, res) => {
   try {
     const { prompt, messages, language, apiKey, provider } = req.body;
     const inputContent = (messages && Array.isArray(messages) && messages.length > 0) ? messages : prompt;

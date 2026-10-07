@@ -1096,7 +1096,7 @@ export default function CopilotScreen() {
         .map(m => ({ role: m.role, text: m.text }));
 
       const res = await api.chatConsultant(
-        cleanMessages.length > 0 ? cleanMessages : [{ role: 'user', text: trimmed }],
+        cleanMessages.length > 0 ? cleanMessages : [{ role: 'user', text: textToSend }],
         isRTL ? 'ar' : 'en',
         { apiKey: activeKey, provider: aiProvider }
       );
