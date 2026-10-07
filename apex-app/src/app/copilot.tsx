@@ -1091,8 +1091,12 @@ export default function CopilotScreen() {
       const storedKey = await AsyncStorage.getItem('userGeminiKey');
       const activeKey = apiKeyInput.trim() || storedKey || undefined;
 
+      const cleanMessages = updatedMessages
+        .filter(m => !m.id?.startsWith('err-') && !m.text.includes('عذراً، حدث خطأ') && !m.text.includes('تعذر الاتصال بالمستشار'))
+        .map(m => ({ role: m.role, text: m.text }));
+
       const res = await api.chatConsultant(
-        updatedMessages.map(m => ({ role: m.role, text: m.text })),
+        cleanMessages.length > 0 ? cleanMessages : [{ role: 'user', text: trimmed }],
         isRTL ? 'ar' : 'en',
         { apiKey: activeKey, provider: aiProvider }
       );

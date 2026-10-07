@@ -1527,7 +1527,7 @@ app.put('/api/admin/users/:id/deliverables', authenticateToken, (req, res) => {
 app.get('/api/agency-settings', authenticateTokenOptional, (req, res) => {
   db.get(`SELECT * FROM agency_settings WHERE id = 1`, [], (err, row) => {
     const publicSettings = {
-      companyName: row?.companyName || 'Apex Software Agency',
+      companyName: row?.companyName || 'Magixa Software Agency',
       logo: row?.logo || null,
       description: row?.description || null,
     };
