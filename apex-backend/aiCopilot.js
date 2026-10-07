@@ -76,12 +76,15 @@ function safeParseJson(rawText) {
 // -------------------------------------------------------------
 async function callGeminiAI(prompt, apiKey, language = 'ar') {
   const modelsToTry = [
-    'gemini-3.7-flash',
-    'gemini-3.8-flash'
+    'gemini-flash-lite-latest',
+    'gemini-3.5-flash-lite',
+    'gemini-flash-latest',
+    'gemini-3.6-flash',
+    'gemini-3.7-flash'
   ];
   let lastError = null;
 
-  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
+  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa (magixa.tech).
 Your mission is to perform an EXTREMELY DETAILED, SPECIFIC, HIGHLY TAILORED architectural, technical, operational, and financial analysis of the user's software concept.
 
 CRITICAL ARCHITECTURAL & PRICING RULES:
@@ -408,42 +411,31 @@ Language: ${language === 'ar' ? 'Arabic' : 'English'}.`;
 async function callGeminiChatConsultant(messages, apiKey, language = 'ar') {
   // Reliable models ordered by current official availability & sub-second performance
   const modelsToTry = [
-    'gemini-3.7-flash',
-    'gemini-3.8-flash'
+    'gemini-flash-lite-latest',
+    'gemini-3.5-flash-lite',
+    'gemini-flash-latest',
+    'gemini-3.6-flash',
+    'gemini-3.7-flash'
   ];
   let lastError = null;
 
-  const systemInstruction = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency (شركة إيبكس لحلول البرمجيات وتطوير التطبيقات).
-You are having an interactive live consultation discussion with a client exploring a new software, mobile app, or SaaS idea.
+  const systemInstruction = `أنت المستشار الذكي والرقمي لشركة Magixa، وكالة رائدة في هندسة البرمجيات وتصميم التجارب الرقمية (magixa.tech).
+دورك هو الرد على استفسارات العملاء بأسلوب احترافي، تقني، ومقنع.
+تقدم Magixa خدمات برمجية متكاملة تشمل:
+1. تصميم وتطوير تطبيقات الهواتف الذكية (iOS و Android).
+2. تطبيقات الويب المعقدة ولوحات التحكم والمنصات السحابية المتقدمة.
+3. خبرة متقدمة في دمج الأنظمة البرمجية مع الهاردوير (IoT & Embedded Systems).
 
-Core Behavioral Guidelines:
-1. Persona: Speak with the authority, clarity, warmth, technical mastery, and strategic wisdom of a world-class CTO and Software Architect.
-2. Identity: If the user asks who you are, what your name is, or what they should call you, answer warmly and directly: tell them you are "مستشار Apex البرمجي الذكي" (Apex Chief Architect & CTO) and they can call you "مستشار Apex" or "بشمهندس".
-3. Greetings: If the user greets you or says hi, greet them back warmly and ask how you can assist with their software idea or technical question today.
-4. Lean MVP Philosophy & Lowest Cost Strategy:
-   - Always prioritize the client's return on investment. Emphasize starting with the leanest viable MVP (النموذج الأولي بأقل ميزانية ممكنة) to test and validate their idea in the market without draining their capital.
-   - Tailor the tech stack and architecture to avoid unnecessary overhead in the beginning while keeping it scalable.
-5. COMPLETE TRANSPARENCY ON RECURRING OPERATIONAL COSTS (مصاريف الطرف الثالث المستمرة):
-   Whenever discussing pricing, budgets, mobile apps (especially iOS), cloud servers, or feasibility:
-   - Clarify that Apex's software development is a one-time project fee divided across completed deliverables and milestones.
-   - PROACTIVELY and clearly explain the essential ongoing operational costs that the client pays directly to global providers:
-     * Apple Developer Program: $99 / سنة (اشتراك سنوي إلزامي لشركة Apple لنشر وإبقاء تطبيق iOS في متجر App Store باسم العميل أو الشركة).
-     * Google Play Console: $25 تدفع لمرة واحدة فقط مدى الحياة (لشركة Google لنشر تطبيقات Android).
-     * Cloud Server / VPS: يبدأ من $10 - $20 شهرياً ويتم ترقيته تدريجياً وفق عدد المستخدمين الفعليين دون إهدار.
-     * Domain & SSL: حوالي $12 - $15 سنوياً لحجز النطاق الدولي (.com/.net).
-     * Payment Gateways: بدون رسوم اشتراك شهرية ثابتة، اقتطاع نسبة بسيطة (~2.5%) فقط عند نجاح أي عملية شراء.
-6. Tailored Engagement: If the user describes an idea, engage deeply with THEIR specific idea: analyze its core value, suggest modern tech stack elements (React Native, Node.js, real-time sockets, cloud databases), and ask 1 to 2 sharp clarifying questions.
-7. NEVER assume or invent a project domain (like food delivery or restaurants) that the user did not explicitly mention!
-8. Smart Suggestion Chips: Suggest 2 to 4 high-value, actionable quick-reply chips ("suggestions") in Arabic that directly advance the discussion (e.g. asking for MVP budget, discussing iOS fees, reviewing tech stack, or moving to contract generation).
-9. CRITICAL RULE FOR "readyForSpec":
-   - Set "readyForSpec" to true ONLY IF:
-     a) The client explicitly requests generating the blueprint / feasibility study / packages ("استخراج الخطة", "دراسة الجدوى", "الباقات", "التعاقد").
-     b) OR after sufficient interactive consultation (usually after 2 to 4 back-and-forth messages) where the core workflow, platforms (web vs mobile), and user types have been clearly explained and understood!
-   - DO NOT set "readyForSpec" to true on the very first message unless the user provided a full, multi-paragraph comprehensive technical specification in that single message.
-   - NEVER set "readyForSpec" to true for greetings, questions about your identity/name, general pricing questions, or complaints!
-10. STRICT NO-EMOJI CONSTRAINT: You must NEVER use any emojis or emoji symbols anywhere in your replies ("reply") or in the suggestion chips ("suggestions"). Keep the text formal, dignified, professional, and strictly free of emojis under all circumstances.
+القواعد السلوكية والإلزامية الصارمة:
+1. التحدث بلسان الشركة: التزم بالتحدث دائماً بلسان الشركة وصيغة الجمع الرسمية (نحن / فريقنا / فريق Magixa).
+2. سياسة التسعير والتكلفة: إذا سألك العميل عن تكلفة مشروع، لا تعطِ سعراً نهائياً أبداً. استفسر عن متطلباته الأساسية أولاً، ثم وجهه للتواصل مع فريق المبيعات عبر البريد الرسمي contact@magixa.tech للحصول على عرض سعر دقيق.
+3. الهوية والاسم: إذا سألك العميل عن هويتك أو اسمك أو من أنت، أخبره بكل ثقة ووضوح أنك "المستشار الذكي والرقمي لشركة Magixa" (magixa.tech)، ومهمتك تقديم الدعم المعماري والاستشاري لمشروعه.
+4. الترحيب: رحب بالعميل بأسلوب راقٍ واحترافي واعرض مساعدة فريقنا في تصميم وتطوير مشروعه التقني.
+5. منع الرموز التعبيرية (STRICT NO-EMOJI CONSTRAINT): يُمنع منعاً باتاً ومطلقاً استخدام أي إيموجي أو رموز تعبيرية في الردود ("reply") أو الاقتراحات ("suggestions"). حافظ على أسلوب تقني رسمي ورصين خالٍ تماماً من أي إيموجي تحت أي ظرف.
+6. اقتراحات الردود السريعة (suggestions): اقترح دائماً من 2 إلى 4 اقتراحات سريعة وعملية تخدم سياق الحوار باللغة العربية الفصحى بدون أي إيموجي.
+7. خاصية "readyForSpec": اجعل قيمتها true فقط إذا طلب العميل صراحة استخراج دراسة الجدوى أو خطة المشروع أو الباقات ("استخراج الخطة"، "دراسة الجدوى"، "الباقات")، أو بعد نقاش كافٍ اتضحت فيه كافة متطلبات المنظومة. ولا تجعلها true في أول رسالة أو عند التحية أو السؤال عن السعر العام.
 
-Language: ${language === 'ar' ? 'Professional, natural Modern Arabic (العربية الفصحى التقنية الراقية والودودة بطابع مهندس معمار برمجيات خبير)' : 'English'}.
+Language: ${language === 'ar' ? 'العربية الفصحى التقنية الاحترافية الراقية والمقنعة' : 'Professional Technical English'}.
 You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, no wrapping text):
 {
   "reply": "نص الرد الاستشاري الحواري...",
@@ -529,7 +521,7 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
       if (!parsed) throw new Error(`Failed to parse JSON response from Gemini API (${model})`);
 
       return {
-        reply: parsed.reply || 'أهلاً بك! أنا مستشارك البرمجي الذكي في Apex Software. كيف يمكنني مساعدتك في تطوير فكرتك اليوم؟',
+        reply: parsed.reply || 'أهلاً بك! نحن فريق Magixa (magixa.tech). كيف يمكننا مساعدتك في تطوير فكرتك اليوم؟',
         suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
         readyForSpec: !!parsed.readyForSpec,
         isLiveAI: true,
@@ -549,12 +541,16 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
 // -------------------------------------------------------------
 async function callOpenAIChatConsultant(messages, apiKey, language = 'ar') {
   const url = 'https://api.openai.com/v1/chat/completions';
-  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
-Interactive live consultation with a client.
+  const systemPrompt = `أنت المستشار الذكي والرقمي لشركة Magixa، وكالة رائدة في هندسة البرمجيات وتصميم التجارب الرقمية (magixa.tech).
+دورك هو الرد على استفسارات العملاء بأسلوب احترافي، تقني، ومقنع.
+تقدم Magixa خدمات برمجية متكاملة تشمل: تصميم وتطوير تطبيقات الهواتف الذكية، تطبيقات الويب المعقدة ولوحات التحكم، بالإضافة إلى خبرة متقدمة في دمج الأنظمة البرمجية مع الهاردوير (IoT & Embedded Systems).
+التزم بالتحدث دائماً بلسان الشركة (نحن/فريقنا).
+إذا سألك العميل عن تكلفة مشروع، لا تعطِ سعراً نهائياً، بل استفسر عن متطلباته الأساسية أولاً، ثم وجهه للتواصل مع فريق المبيعات عبر البريد الرسمي contact@magixa.tech للحصول على عرض سعر دقيق.
+يُمنع استخدام الإيموجي تماماً.
 Output JSON only:
 {
-  "reply": "Consultative Arabic answer",
-  "suggestions": ["quick reply 1", "quick reply 2"],
+  "reply": "نص الرد الاستشاري الحواري...",
+  "suggestions": ["اقتراح 1", "اقتراح 2"],
   "readyForSpec": false
 }`;
 
@@ -590,7 +586,7 @@ Output JSON only:
   if (!text) throw new Error('No content returned from OpenAI API');
   const parsed = JSON.parse(text);
   return {
-    reply: parsed.reply || 'مرحباً بك في Apex Software. كيف نساعدك؟',
+    reply: parsed.reply || 'مرحباً بك في Magixa (magixa.tech). كيف يمكن لفريقنا مساعدتك؟',
     suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
     readyForSpec: !!parsed.readyForSpec,
     isLiveAI: true,
@@ -619,63 +615,63 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
 
   // 1. Identity & Name Questions ("انت مين", "اسمك ايه", "اقولك ايه عشان معرفش اسمك")
   if (ent.isIdentity) {
-    reply = 'أهلاً بك يا فندم! أنا **مستشار Apex البرمجي الذكي (Apex Software Architect)**.\n\nتقدر تناديني **"مستشار Apex"** أو **"بشمهندس"** زي ما تحب!\n\nأنا مهندسك المعماري التقني هنا في شركة **Apex Software**: أسمع فكرة تطبيقك، أساعدك في اختيار أفضل لغات البرمجة والمعمارية (React Native، Node.js، الخرائط، الدفع الإلكتروني)، وأستخرج لك دراسة جدوى فنية و3 باقات استثمارية واضحة بالتكلفة والمدة.\n\nقول لي، هل في فكرة تطبيق أو مشروع يدور في بالك تحب نبدأ ندردش فيها ونحللها؟';
+    reply = 'أهلاً بك يا فندم! أنا **المستشار الذكي والرقمي لشركة Magixa (magixa.tech)**.\n\nيمكنك مناداتي **"مستشار Magixa"** أو **"بشمهندس"**.\n\nنحن في **Magixa** وكالة رائدة في هندسة البرمجيات وتصميم التجارب الرقمية: نصمم ونطور تطبيقات الهواتف الذكية (iOS و Android)، وتطبيقات الويب المعقدة ولوحات التحكم، بالإضافة إلى خبرة متقدمة في دمج الأنظمة البرمجية مع الهاردوير (IoT & Embedded Systems).\n\nيسعد فريقنا بمساعدتك. هل يدور في بالك مشروع أو فكرة محددة تحب أن نناقشها؟';
     suggestions = [
-      'عندي فكرة تطبيق وأريد استشارتك فيها',
-      'ما هي الخدمات التي تقدمها شركة Apex؟',
-      'كيف يتم تحديد تكلفة ومدة أي مشروع؟'
+      'عندي فكرة مشروع وأود استشارتكم فيها',
+      'ما هي الخدمات التي تقدمها شركة Magixa؟',
+      'كيف يمكنني التواصل مع فريق المبيعات للحصول على عرض سعر؟'
     ];
     readyForSpec = false;
   }
   // 2. Apology / Misunderstanding / Complaint Handling ("مش فاهمني", "انت مش فاهم", "محللتش")
   else if (ent.isComplaint) {
-    reply = 'أعتذر منك بشدة يا فندم، حقك عليّ تماماً!\n\nأنا هنا الآن بكامل تركيزي معك دون أي افتراضات مسبقة. تفضل باختصار أو بالتفصيل: ما هي الفكرة أو السؤال الذي يدور في ذهنك؟ وسأجيبك عليه بدقة كمهندس برمجيات.';
+    reply = 'نعتذر منك بشدة يا فندم، فريقنا هنا بكامل تركيزه معك دون أي افتراضات مسبقة. تفضل بتوضيح الفكرة أو الاستفسار الذي يدور في ذهنك، وسيجيبك مستشارنا التقني بكل دقة واحترافية.';
     suggestions = [
-      'أريد شرح فكرة تطبيقي بالتفصيل',
-      'عندي استفسار عن تكلفة تطبيق موبايل',
-      'ما هي خطوات التعاقد وتطوير المشروع؟'
+      'أريد شرح فكرة مشروعي بالتفصيل',
+      'استفسار عن متطلبات وتكلفة المشروع',
+      'ما هي خطوات التعاقد وتطوير الأنظمة؟'
     ];
     readyForSpec = false;
   }
   // 3. Greetings & Casual Welcome ("السلام عليكم", "مرحبا", "ازيك", "صباح الخير")
   else if (ent.isGreeting && !ent.hasRealProjectIdea) {
-    reply = 'وعليكم السلام ورحمة الله وبركاته! أهلاً وسهلاً بك في **Apex Software**.\n\nأنا مهندسك المعماري ومستشارك التقني المخصص. يسعدني جداً التحدث معك ومساعدتك في تحويل أي فكرة برمجية أو تطبيق في ذهنك إلى خطة عمل ونظام تقني متكامل.\n\nتفضل شاركني فكرتك أو اسألني عن أي استشارة تقنية تحتاجها!';
+    reply = 'وعليكم السلام ورحمة الله وبركاته! أهلاً وسهلاً بك، معك المستشار الذكي والرقمي لشركة **Magixa** (magixa.tech).\n\nيسعد فريقنا مساعدتك في تحويل أفكارك الرقمية إلى واقع من خلال حلولنا المتكاملة في تطبيقات الهواتف الذكية، وتطبيقات الويب المعقدة ولوحات التحكم، وأنظمة دمج البرمجيات مع الهاردوير (IoT & Embedded Systems).\n\nتفضل بمشاركتنا فكرتك أو استفسارك التقني!';
     suggestions = [
-      'عندي فكرة تطبيق وأريد معرفة التكلفة التقريبية',
-      'تطبيق توصيل وخدمات مع كباتن وتتبع GPS',
-      'متجر إلكتروني متعدد التجار مع بوابات دفع',
-      'ما هي خطوات العمل والمدة الزمنية للتسليم؟'
+      'عندي فكرة تطبيق وأود استشارتكم في تنفيذها',
+      'تطوير منصة ويب ولوحة تحكم متقدمة',
+      'مشروع دمج البرمجيات مع الهاردوير IoT',
+      'التواصل مع فريق المبيعات عبر contact@magixa.tech'
     ];
     readyForSpec = false;
   }
   // 4. Gratitude / Thanks ("شكرا", "تسلم", "الله يخليك")
   else if (ent.isGratitude) {
-    reply = 'العفو يا فندم، تحت أمرك دائماً! في Apex Software هدفنا تقديم أفضل قيمة واستشارة تقنية بأعلى المعايير.\n\nإذا كان لديك أي استفسار آخر أو ترغب في بدء التخطيط لمشروعك، أنا معك دائماً.';
+    reply = 'العفو يا فندم، يسعدنا دائماً خدمتكم! في Magixa نلتزم بتقديم أعلى معايير الجودة في هندسة البرمجيات والحلول الرقمية المتقدمة.\n\nإذا كان لديك أي استفسار آخر أو ترغب في بدء التخطيط لمشروعك، فريقنا جاهز دائماً.';
     suggestions = [
-      'أريد مناقشة فكرة مشروع جديدة',
-      'عرض خطة المشروع ودراسة الجدوى والـ 3 باقات',
-      'التواصل مباشرة مع فريق التطوير عبر واتساب'
+      'مناقشة فكرة مشروع جديدة',
+      'التواصل مع فريق المبيعات والاستشارات',
+      'الاستفسار عن خدمات إنترنت الأشياء IoT'
     ];
     readyForSpec = false;
   }
-  // 5. Inquiries about Apex Agency & Services ("مين شركة ايبكس", "خدماتكم ايه", "بتعملوا ايه")
+  // 5. Inquiries about Magixa Agency & Services ("مين شركة ماجيكسا", "خدماتكم ايه", "بتعملوا ايه")
   else if (ent.isAgencyInquiry) {
-    reply = 'شركة **Apex Software** هي شريكك التقني لتطوير الحلول البرمجية المتكاملة:\n\n1. **تطبيقات الموبايل (iOS & Android):** نطور تطبيقات فائقة السرعة والأمان بتقنية React Native الموحدة.\n2. **المنصات السحابية ولوحات التحكم:** لوحات Super Admin تفاعلية ومؤتمتة لإدارة العمليات والمبيعات.\n3. **البنية التحتية والربط اللحظي:** خوادم Microservices، خرائط وتتبع GPS، وبوابات الدفع (Paymob، فودافون كاش، فيزا، كاش).\n4. **الضمان والدعم الفني:** نقدم عقوداً موثقة وضماناً مجانياً 6 أشهر بعد الإطلاق.\n\nهل تخطط لإطلاق تطبيقك الخاص وتود حساب تكلفته؟';
+    reply = 'شركة **Magixa** (magixa.tech) هي وكالة رائدة في هندسة البرمجيات وتصميم التجارب الرقمية. يقدم فريقنا باقة خدمات تقنية متكاملة تشمل:\n\n1. **تصميم وتطوير تطبيقات الهواتف الذكية:** تطبيقات متطورة موحدة لأنظمة iOS و Android بتجارب مستخدم استثنائية وبنية سريعة وآمنة.\n2. **تطبيقات الويب المعقدة ولوحات التحكم:** منصات سحابية عالية الأداء ولوحات إدارة متقدمة للعمليات والمبيعات.\n3. **دمج الأنظمة البرمجية مع الهاردوير (IoT & Embedded Systems):** خبرة متقدمة في ربط البرمجيات بالأجهزة والمتحكمات والأنظمة المدمجة الذكية.\n\nيسعد فريقنا بخدمتك ومساعدتك في هندسة وتطوير مشروعك القادم. هل تخطط لإطلاق مشروع جديد تود مناقشته؟';
     suggestions = [
-      'نعم، عندي فكرة وأريد حساب التكلفة والمدة',
-      'كيف تضمنون جودة الكود واستقرار السيرفر؟',
-      'ما هي مراحل تسليم المشروع والدفعات؟'
+      'نعم، عندي فكرة وأود استشارة فريقكم فيها',
+      'ما هي معايير الجودة والأمان المتبعة لديكم؟',
+      'التواصل مع فريق المبيعات للحصول على عرض سعر'
     ];
     readyForSpec = false;
   }
   // 6. General Pricing Inquiries ("اسعاركم كام", "التكلفة كام", "بكام")
   else if (ent.isPricing && !ent.hasRealProjectIdea) {
-    reply = 'في **Apex Software** نعتمد فلسفة الهندسة الرشيقة (Lean Architecture): نبدأ معك بأقل ميزانية ممكنة لإطلاق النموذج الأولي (MVP) لتجربة السوق والتحقق من فكرتك بأقل مخاطرة مالية، مع شفافية كاملة في كافة التكاليف:\n\n• **باقة الانطلاق السريع (MVP):** تبدأ من 18,000 - 28,000 ج.م / $380 - $600 (أقل تكلفة لتطبيق عملي متقن لاختبار الإقبال في السوق بأقل مخاطرة).\n• **باقة النمو المتكاملة (Pro):** تبدأ من 45,000 - 65,000 ج.م / $950 - $1,400 (تطبيقات متكاملة مع تتبع GPS ودفع إلكتروني ولوحة تحكم).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية Microservices متطورة.\n\n**الشفافية في التكاليف التشغيلية السنوية (رسوم الطرف الثالث):**\nلضمان دراستك للمشروع باحترافية، نوضح لك التكاليف التي تدفعها مباشرة للشركات الخارجية:\n- **تطبيق آبل (iOS):** حساب مطور أبل ($99 سنوياً تدفع لشركة Apple مباشرة لإبقاء التطبيق على App Store).\n- **تطبيق أندرويد:** حساب مطور جوجل ($25 لمرة واحدة مدى الحياة تدفع لـ Google).\n- **السيرفر والاستضافة السحابية:** تبدأ من $10 - $20 شهرياً وتزيد تدريجياً مع نمو الزوار.\n- **الدومين وشهادة الأمان:** حوالي $12 - $15 سنوياً للنطاق الدولي.\n\nما هي فكرة تطبيقك التي تود حساب تكلفتها بدقة؟';
+    reply = 'في **Magixa**، يتم تسعير المشاريع باحترافية وفق المتطلبات الفنية والوظيفية الدقيقة لكل نظام، ولا نعتمد أسعاراً نهائية مسبقة دون فهم متطلبات المشروع بدقة.\n\nلتحديد الخطة الأنسب لمشروعك:\n1. ما هي المنصات المستهدفة (تطبيقات هواتف ذكية، ويب ولوحات تحكم، أو أنظمة IoT وهاردوير مدمج)؟\n2. ما هي الميزات الأساسية ونطاق عمل النظام؟\n\nكما يمكنك توجيه متطلباتك مباشرة إلى فريق المبيعات لدينا عبر البريد الرسمي **contact@magixa.tech** للحصول على دراسة تفصيلية وعرض سعر دقيق.';
     suggestions = [
-      'أريد باقة MVP بأقل تكلفة ممكنة',
-      'تطبيق موبايل متكامل للآيفون والأندرويد',
-      'ما هي خطة الدفعات ومراحل التسليم؟',
-      'مناقشة فكرة مشروعي بالتفصيل'
+      'شرح متطلبات المشروع الأساسية',
+      'تطبيق هواتف ذكية للآيفون والأندرويد',
+      'منصة ويب ولوحة تحكم سحابية',
+      'مراسلة المبيعات عبر contact@magixa.tech'
     ];
     readyForSpec = false;
   }
@@ -751,19 +747,19 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   } else {
     // General Project Idea Discussion
     if (userMsgCount <= 1 || !allEnt.hasRealProjectIdea) {
-      reply = `أهلاً بك! في **Apex Software** نرحب بفكرتك ونحن متحمسون لتحويلها إلى منتج رقمي استثنائي في السوق.\n\nلتصميم أفضل معمارية هندسية وتحديد الميزانية بدقة: ما هي أهم الميزات والخدمات التي يقدمها تطبيقك للعميل؟ ومن هم المستخدمون المستهدفون؟`;
+      reply = `أهلاً بك! في **Magixa** (magixa.tech) نرحب بفكرتك ونحن متحمسون لتحويلها إلى منتج رقمي استثنائي في السوق.\n\nلتصميم أفضل معمارية هندسية وتحديد نطاق العمل بدقة: ما هي أهم الميزات والخدمات التي يقدمها مشروعك؟ وما هي المنصات المستهدفة؟`;
       suggestions = [
-        'التركيز على إطلاق نسخة أولية (MVP) لاختبار السوق بأسرع وقت',
-        'تطبيق موبايل موحد للآيفون والأندرويد مع لوحة تحكم سحابية',
-        'إضافة بوابات دفع إلكترونية ومحفظة رقمية للمستخدمين',
-        'جاهز لاستخراج خطة المشروع ودراسة الجدوى والـ 3 باقات'
+        'تطبيق هواتف ذكية موحد للآيفون والأندرويد',
+        'تطبيقات ويب معقدة ولوحات تحكم مخصصة',
+        'دمج الأنظمة البرمجية مع الهاردوير IoT',
+        'التواصل مع فريق المبيعات عبر contact@magixa.tech'
       ];
       readyForSpec = false;
     } else {
-      reply = 'رائع جداً! استوعبنا طبيعة الفكرة وأطراف المنظومة والحلول التقنية المناسبة لها. نحن جاهزون الآن لاستخراج وثيقة المواصفات الفنية الكاملة مع دراسة الجدوى وتفاصيل الباقات الثلاث.';
+      reply = 'رائع جداً! استوعب فريقنا في Magixa طبيعة الفكرة وأطراف المنظومة والحلول التقنية المناسبة لها. نحن جاهزون الآن لاستخراج وثيقة المواصفات الفنية الكاملة.';
       suggestions = [
-        'عرض خطة المشروع ودراسة الجدوى والـ 3 باقات الآن',
-        'ما هي خطة الدفع والمراحل الزمنية للتسليم؟'
+        'عرض خطة المشروع ودراسة الجدوى الفنية',
+        'التواصل مع فريق المبيعات للحصول على عرض سعر دقيق'
       ];
       readyForSpec = true;
     }
@@ -774,7 +770,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
     suggestions,
     readyForSpec,
     isLiveAI: false,
-    engine: 'Apex Intelligent Architectural Consultation Engine 3.0'
+    engine: 'Magixa Intelligent Consultation Engine 3.0'
   };
 }
 
@@ -1364,12 +1360,11 @@ async function transcribeAudio(audioBufferOrBase64, mimeType = 'audio/m4a', lang
 
     const cleanMime = (mimeType || 'audio/m4a').split(';')[0].trim();
     const modelsToTry = [
-      'gemini-3.8-flash',
-      'gemini-3.5-transcribe',
-      'gemini-3.7-flash',
-      'gemini-3.5-flash',
+      'gemini-flash-lite-latest',
+      'gemini-3.5-flash-lite',
       'gemini-flash-latest',
-      'gemini-2.5-flash'
+      'gemini-3.6-flash',
+      'gemini-3.7-flash'
     ];
     let lastError = null;
 
