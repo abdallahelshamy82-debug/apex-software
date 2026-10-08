@@ -248,6 +248,9 @@ export default function LoginScreen() {
         await AsyncStorage.setItem('userData', JSON.stringify(res.user));
         await saveSecureToken(res.token);
         setCurrentUser(res.user);
+        if (await biometrics.isBiometricLoginEnabled()) {
+          await biometrics.setBiometricUser(res.user, res.token);
+        }
         
         notifications.registerForPushNotifications().catch(() => {});
 
@@ -445,6 +448,9 @@ export default function LoginScreen() {
         await AsyncStorage.setItem('userData', JSON.stringify(res.user));
         await saveSecureToken(res.token);
         setCurrentUser(res.user);
+        if (await biometrics.isBiometricLoginEnabled()) {
+          await biometrics.setBiometricUser(res.user, res.token);
+        }
         notifications.sendLocalNotification(
           isRTL ? 'مرحباً بك' : 'Welcome',
           isRTL ? `تم تسجيل الدخول بنجاح عبر Google: ${res.user.fullName}` : `Logged in via Google as ${res.user.fullName}`
