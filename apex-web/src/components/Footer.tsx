@@ -36,7 +36,7 @@ export default function Footer() {
           {/* WhatsApp */}
           <Magnetic>
             <a 
-              href="https://wa.me/201285512241?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20Apex%20Software%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%83%D9%85" 
+              href="https://wa.me/201285512241?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20Magixa%20Tech%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%83%D9%85" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="px-3.5 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 hover:text-white hover:bg-emerald-500/20 transition-all font-sans text-xs md:text-sm cursor-none"

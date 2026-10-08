@@ -1,7 +1,13 @@
 node_modules
+node_modules/**
 .env.local
 .env
+.env.*
 database.sqlite
 database.sqlite-shm
 database.sqlite-wal
-uploads/
+*.sqlite
+*.db
+uploads
+uploads/**
+*.log

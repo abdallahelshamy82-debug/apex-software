@@ -16,6 +16,11 @@ export default function Root({ children }: { children: React.ReactNode }) {
           content="width=device-width, initial-scale=1.0, shrink-to-fit=no, interactive-widget=resizes-content"
         />
 
+        <title>Magixa | لوحة التحكم المركزية</title>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
         {/* Disable body scrolling on web to mimic native mobile app feel */}
         <ScrollViewStyleReset />
 

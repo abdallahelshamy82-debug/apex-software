@@ -41,6 +41,18 @@ if (!JWT_SECRET) {
   );
 }
 
+// Generate compact JWT token containing only essential auth claims to prevent HTTP 494 header overflow
+const generateUserToken = (user) => {
+  const safePayload = {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName ? String(user.fullName).substring(0, 100) : (user.email ? user.email.split('@')[0] : 'User'),
+    role: user.role,
+    isAdmin: !!(user.isAdmin || user.role === 'admin')
+  };
+  return jwt.sign(safePayload, JWT_SECRET, { expiresIn: '30d' });
+};
+
 // Password verification: bcrypt for hashed rows; plaintext comparison is ONLY tolerated for
 // legacy rows that are not bcrypt hashes (they are upgraded on login / by npm run migrate).
 const verifyPassword = async (plain, stored) => {
@@ -53,8 +65,14 @@ const verifyPassword = async (plain, stored) => {
 };
 
 const DEFAULT_ALLOWED_ORIGINS = [
+  'https://magixa.tech',
+  'https://www.magixa.tech',
+  'https://magixa-admin.vercel.app',
+  'https://magixa-web.vercel.app',
+  'https://magixa-backend.vercel.app',
   'https://apex-web-blond.vercel.app',
   'https://apex-admin-seven.vercel.app',
+  'https://apex-backend-ten.vercel.app',
   'https://apexsoftware.com',
   'https://www.apexsoftware.com',
   'http://localhost:3000',
@@ -71,7 +89,14 @@ const ALLOWED_ORIGINS = Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...extra
 
 const corsOrigin = (origin, callback) => {
   if (!origin) return callback(null, true);
-  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  if (
+    ALLOWED_ORIGINS.includes(origin) ||
+    origin.endsWith('.vercel.app') ||
+    origin.endsWith('.magixa.tech') ||
+    origin === 'https://magixa.tech'
+  ) {
+    return callback(null, true);
+  }
   return callback(new Error('Not allowed by CORS'));
 };
 
@@ -132,10 +157,10 @@ app.use('/api/auth/reset-password', authLimiter);
 //  AI Copilot Quota & DDoS Defense
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 150,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: 'تم بلوغ الحد الأقصى لاستخدام خدمات الذكاء الاصطناعي لهذه الفترة لحماية الموارد.' }
+  message: { success: false, message: 'تم بلوغ الحد الأقصى المؤقت لاستخدام خدمات المستشار الذكي (15 دقيقة) لحماية الموارد.' }
 });
 app.use('/api/ai/analyze-project', aiLimiter);
 app.use('/api/ai/chat-consultant', aiLimiter);
@@ -684,7 +709,7 @@ app.post('/api/auth/register-verify-otp', (req, res) => {
             projectPhase: row.projectPhase || row.projectphase,
             projectProgress: row.projectProgress || row.projectprogress || 0
           };
-          const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+          const token = generateUserToken(user);
 
           // Send Welcome Email
           emailService.sendWelcomeEmail({ to: normalizedEmail, fullName: user.fullName }).catch(console.error);
@@ -801,7 +826,7 @@ app.post('/api/register', (req, res) => {
                   phone: row.phone, avatarUrl: row.avatarUrl, isAdmin: hasAdminFlag(row.isAdmin) || row.role === 'admin',
                   projectName: row.projectName, projectPhase: row.projectPhase, projectProgress: row.projectProgress || 0
                 };
-                const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+                const token = generateUserToken(user);
                 return res.json({ success: true, user, token });
               });
             }
@@ -813,7 +838,7 @@ app.post('/api/register', (req, res) => {
           id: this.lastID, fullName: fullName || normalizedEmail.split('@')[0], email: normalizedEmail, company: company || 'Apex Client', role, isAdmin,
           phone: null, avatarUrl: null, projectName: null, projectPhase: null, projectProgress: 0 
         };
-        const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+        const token = generateUserToken(user);
 
         // Send Welcome Email
         emailService.sendWelcomeEmail({ to: normalizedEmail, fullName: user.fullName }).catch(console.error);
@@ -882,7 +907,7 @@ app.post('/api/login', (req, res) => {
       phone: row.phone, avatarUrl: row.avatarUrl, isAdmin,
       projectName: row.projectName, projectPhase: row.projectPhase, projectProgress: row.projectProgress || 0 
     };
-    const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+    const token = generateUserToken(user);
     res.json({ success: true, user, token });
   });
 });
@@ -924,7 +949,7 @@ app.post('/api/auth/google', async (req, res) => {
           projectPhase: existingUser.projectPhase,
           projectProgress: existingUser.projectProgress || 0
         };
-        const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+        const token = generateUserToken(user);
         return res.json({ success: true, user, token });
       }
 
@@ -949,7 +974,7 @@ app.post('/api/auth/google', async (req, res) => {
               projectPhase: null,
               projectProgress: 0
             };
-            const token = jwt.sign(newUser, JWT_SECRET, { expiresIn: '30d' });
+            const token = generateUserToken(newUser);
             return res.json({ success: true, user: newUser, token });
           }
         );
@@ -1042,7 +1067,8 @@ app.get('/api/me', authenticateToken, (req, res) => {
   db.get(`SELECT id, fullName, email, company, role, isAdmin, phone, avatarUrl, projectName, projectPhase, projectProgress, projectTasks, projectDeliverables FROM users WHERE id = ?`, [req.user.id], (err, user) => {
     if (err || !user) return res.status(404).json({ success: false, message: 'User not found' });
     user.isAdmin = hasAdminFlag(user.isAdmin) || user.role === 'admin';
-    res.json({ success: true, user });
+    const token = generateUserToken(user);
+    res.json({ success: true, user, token });
   });
 });
 
@@ -1291,8 +1317,8 @@ app.delete('/api/admin/quotes/:id', authenticateToken, (req, res) => {
 
 // ==================== APEX AI COPILOT ROUTES ====================
 
-// Interactive Chat Consultant with Live AI (Gemini 3.6 Flash / Deep Semantic)
-app.post('/api/ai/chat-consultant', verifyToken, async (req, res) => {
+// Interactive Chat Consultant with Live AI (Gemini Flash / Deep Semantic)
+app.post('/api/ai/chat-consultant', authenticateTokenOptional, async (req, res) => {
   try {
     const { messages, language, apiKey, provider } = req.body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -1314,8 +1340,8 @@ app.post('/api/ai/chat-consultant', verifyToken, async (req, res) => {
   }
 });
 
-// Transcribe Voice Note to Text (High-accuracy Gemini 3.5 Transcribe / Flash)
-app.post('/api/ai/transcribe-voice', verifyToken, async (req, res) => {
+// Transcribe Voice Note to Text (High-accuracy Gemini Transcribe / Flash)
+app.post('/api/ai/transcribe-voice', authenticateTokenOptional, async (req, res) => {
   try {
     const { audioBase64, mimeType, language } = req.body;
     if (!audioBase64) {
@@ -1337,7 +1363,7 @@ app.post('/api/ai/transcribe-voice', verifyToken, async (req, res) => {
 });
 
 // Analyze Project Prompt (Voice, Text, or Chat History, Live Gemini / OpenAI / Deep Semantic)
-app.post('/api/ai/analyze-project', verifyToken, async (req, res) => {
+app.post('/api/ai/analyze-project', authenticateTokenOptional, async (req, res) => {
   try {
     const { prompt, messages, language, apiKey, provider } = req.body;
     const inputContent = (messages && Array.isArray(messages) && messages.length > 0) ? messages : prompt;
@@ -1361,7 +1387,7 @@ app.post('/api/ai/analyze-project', verifyToken, async (req, res) => {
 });
 
 // Get AI Copilot Configuration (Public / Client)
-app.get('/api/ai/config', verifyToken, requireAdmin, (req, res) => {
+app.get('/api/ai/config', authenticateTokenOptional, (req, res) => {
   const config = aiCopilot.getAiConfig();
   res.json({
     success: true,
@@ -1527,7 +1553,7 @@ app.put('/api/admin/users/:id/deliverables', authenticateToken, (req, res) => {
 app.get('/api/agency-settings', authenticateTokenOptional, (req, res) => {
   db.get(`SELECT * FROM agency_settings WHERE id = 1`, [], (err, row) => {
     const publicSettings = {
-      companyName: row?.companyName || 'Apex Software Agency',
+      companyName: row?.companyName || 'Magixa Software Agency',
       logo: row?.logo || null,
       description: row?.description || null,
     };

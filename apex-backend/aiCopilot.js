@@ -76,12 +76,15 @@ function safeParseJson(rawText) {
 // -------------------------------------------------------------
 async function callGeminiAI(prompt, apiKey, language = 'ar') {
   const modelsToTry = [
+    'gemini-3.1-flash-lite',
+    'gemini-3.5-flash',
+    'gemini-flash-lite-latest',
     'gemini-3.7-flash',
-    'gemini-3.8-flash'
+    'gemini-flash-latest'
   ];
   let lastError = null;
 
-  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
+  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa Software Agency (شركة ماجيكسا لهندسة البرمجيات وتصميم التجارب الرقمية - magixa.tech).
 Your mission is to perform an EXTREMELY DETAILED, SPECIFIC, HIGHLY TAILORED architectural, technical, operational, and financial analysis of the user's software concept.
 
 CRITICAL ARCHITECTURAL & PRICING RULES:
@@ -312,7 +315,7 @@ The JSON must follow this exact schema:
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(14000),
+        signal: AbortSignal.timeout(25000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -408,24 +411,27 @@ Language: ${language === 'ar' ? 'Arabic' : 'English'}.`;
 async function callGeminiChatConsultant(messages, apiKey, language = 'ar') {
   // Reliable models ordered by current official availability & sub-second performance
   const modelsToTry = [
+    'gemini-3.1-flash-lite',
+    'gemini-3.5-flash',
+    'gemini-flash-lite-latest',
     'gemini-3.7-flash',
-    'gemini-3.8-flash'
+    'gemini-flash-latest'
   ];
   let lastError = null;
 
-  const systemInstruction = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency (شركة إيبكس لحلول البرمجيات وتطوير التطبيقات).
+  const systemInstruction = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa Software Agency (شركة ماجيكسا لهندسة البرمجيات وتصميم التجارب الرقمية - magixa.tech).
 You are having an interactive live consultation discussion with a client exploring a new software, mobile app, or SaaS idea.
 
 Core Behavioral Guidelines:
 1. Persona: Speak with the authority, clarity, warmth, technical mastery, and strategic wisdom of a world-class CTO and Software Architect.
-2. Identity: If the user asks who you are, what your name is, or what they should call you, answer warmly and directly: tell them you are "مستشار Apex البرمجي الذكي" (Apex Chief Architect & CTO) and they can call you "مستشار Apex" or "بشمهندس".
+2. Identity: If the user asks who you are, what your name is, or what they should call you, answer warmly and directly: tell them you are "مستشار Magixa البرمجي والتقني" (Magixa Chief Architect & Digital Consultant) and they can call you "مستشار Magixa" or "بشمهندس".
 3. Greetings: If the user greets you or says hi, greet them back warmly and ask how you can assist with their software idea or technical question today.
 4. Lean MVP Philosophy & Lowest Cost Strategy:
    - Always prioritize the client's return on investment. Emphasize starting with the leanest viable MVP (النموذج الأولي بأقل ميزانية ممكنة) to test and validate their idea in the market without draining their capital.
    - Tailor the tech stack and architecture to avoid unnecessary overhead in the beginning while keeping it scalable.
 5. COMPLETE TRANSPARENCY ON RECURRING OPERATIONAL COSTS (مصاريف الطرف الثالث المستمرة):
    Whenever discussing pricing, budgets, mobile apps (especially iOS), cloud servers, or feasibility:
-   - Clarify that Apex's software development is a one-time project fee divided across completed deliverables and milestones.
+   - Clarify that Magixa's software development is a one-time project fee divided across completed deliverables and milestones.
    - PROACTIVELY and clearly explain the essential ongoing operational costs that the client pays directly to global providers:
      * Apple Developer Program: $99 / سنة (اشتراك سنوي إلزامي لشركة Apple لنشر وإبقاء تطبيق iOS في متجر App Store باسم العميل أو الشركة).
      * Google Play Console: $25 تدفع لمرة واحدة فقط مدى الحياة (لشركة Google لنشر تطبيقات Android).
@@ -498,7 +504,7 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(20000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemInstruction }]
@@ -529,7 +535,7 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
       if (!parsed) throw new Error(`Failed to parse JSON response from Gemini API (${model})`);
 
       return {
-        reply: parsed.reply || 'أهلاً بك! أنا مستشارك البرمجي الذكي في Apex Software. كيف يمكنني مساعدتك في تطوير فكرتك اليوم؟',
+        reply: parsed.reply || 'أهلاً بك! أنا مستشارك البرمجي والتقني في Magixa Software. كيف يمكنني مساعدتك في تطوير فكرتك اليوم؟',
         suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
         readyForSpec: !!parsed.readyForSpec,
         isLiveAI: true,
@@ -619,10 +625,10 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
 
   // 1. Identity & Name Questions ("انت مين", "اسمك ايه", "اقولك ايه عشان معرفش اسمك")
   if (ent.isIdentity) {
-    reply = 'أهلاً بك يا فندم! أنا **مستشار Apex البرمجي الذكي (Apex Software Architect)**.\n\nتقدر تناديني **"مستشار Apex"** أو **"بشمهندس"** زي ما تحب!\n\nأنا مهندسك المعماري التقني هنا في شركة **Apex Software**: أسمع فكرة تطبيقك، أساعدك في اختيار أفضل لغات البرمجة والمعمارية (React Native، Node.js، الخرائط، الدفع الإلكتروني)، وأستخرج لك دراسة جدوى فنية و3 باقات استثمارية واضحة بالتكلفة والمدة.\n\nقول لي، هل في فكرة تطبيق أو مشروع يدور في بالك تحب نبدأ ندردش فيها ونحللها؟';
+    reply = 'أهلاً بك يا فندم! أنا **مستشار Magixa البرمجي والتقني (Magixa Digital Consultant)**.\n\nتقدر تناديني **"مستشار Magixa"** أو **"بشمهندس"** زي ما تحب!\n\nأنا مهندسك المعماري ومستشارك التقني هنا في شركة **Magixa**: أسمع فكرة تطبيقك، أساعدك في اختيار أفضل لغات البرمجة والمعمارية (React Native، Node.js، الخرائط، الدفع الإلكتروني)، وأستخرج لك دراسة جدوى فنية و3 باقات استثمارية واضحة بالتكلفة والمدة.\n\nقول لي، هل في فكرة تطبيق أو مشروع يدور في بالك تحب نبدأ ندردش فيها ونحللها؟';
     suggestions = [
       'عندي فكرة تطبيق وأريد استشارتك فيها',
-      'ما هي الخدمات التي تقدمها شركة Apex؟',
+      'ما هي الخدمات التي تقدمها شركة Magixa؟',
       'كيف يتم تحديد تكلفة ومدة أي مشروع؟'
     ];
     readyForSpec = false;
@@ -639,7 +645,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   }
   // 3. Greetings & Casual Welcome ("السلام عليكم", "مرحبا", "ازيك", "صباح الخير")
   else if (ent.isGreeting && !ent.hasRealProjectIdea) {
-    reply = 'وعليكم السلام ورحمة الله وبركاته! أهلاً وسهلاً بك في **Apex Software**.\n\nأنا مهندسك المعماري ومستشارك التقني المخصص. يسعدني جداً التحدث معك ومساعدتك في تحويل أي فكرة برمجية أو تطبيق في ذهنك إلى خطة عمل ونظام تقني متكامل.\n\nتفضل شاركني فكرتك أو اسألني عن أي استشارة تقنية تحتاجها!';
+    reply = 'وعليكم السلام ورحمة الله وبركاته! أهلاً وسهلاً بك في **Magixa** (magixa.tech).\n\nأنا مهندسك المعماري ومستشارك التقني المخصص. يسعدني جداً التحدث معك ومساعدتك في تحويل أي فكرة برمجية أو تطبيق في ذهنك إلى خطة عمل ونظام تقني متكامل.\n\nتفضل شاركني فكرتك أو اسألني عن أي استشارة تقنية تحتاجها!';
     suggestions = [
       'عندي فكرة تطبيق وأريد معرفة التكلفة التقريبية',
       'تطبيق توصيل وخدمات مع كباتن وتتبع GPS',
@@ -650,7 +656,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   }
   // 4. Gratitude / Thanks ("شكرا", "تسلم", "الله يخليك")
   else if (ent.isGratitude) {
-    reply = 'العفو يا فندم، تحت أمرك دائماً! في Apex Software هدفنا تقديم أفضل قيمة واستشارة تقنية بأعلى المعايير.\n\nإذا كان لديك أي استفسار آخر أو ترغب في بدء التخطيط لمشروعك، أنا معك دائماً.';
+    reply = 'العفو يا فندم، تحت أمرك دائماً! في Magixa هدفنا تقديم أفضل قيمة واستشارة تقنية بأعلى المعايير.\n\nإذا كان لديك أي استفسار آخر أو ترغب في بدء التخطيط لمشروعك، أنا معك دائماً.';
     suggestions = [
       'أريد مناقشة فكرة مشروع جديدة',
       'عرض خطة المشروع ودراسة الجدوى والـ 3 باقات',
@@ -658,9 +664,9 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
     ];
     readyForSpec = false;
   }
-  // 5. Inquiries about Apex Agency & Services ("مين شركة ايبكس", "خدماتكم ايه", "بتعملوا ايه")
+  // 5. Inquiries about Magixa Agency & Services ("مين شركة ماجيكسا", "خدماتكم ايه", "بتعملوا ايه")
   else if (ent.isAgencyInquiry) {
-    reply = 'شركة **Apex Software** هي شريكك التقني لتطوير الحلول البرمجية المتكاملة:\n\n1. **تطبيقات الموبايل (iOS & Android):** نطور تطبيقات فائقة السرعة والأمان بتقنية React Native الموحدة.\n2. **المنصات السحابية ولوحات التحكم:** لوحات Super Admin تفاعلية ومؤتمتة لإدارة العمليات والمبيعات.\n3. **البنية التحتية والربط اللحظي:** خوادم Microservices، خرائط وتتبع GPS، وبوابات الدفع (Paymob، فودافون كاش، فيزا، كاش).\n4. **الضمان والدعم الفني:** نقدم عقوداً موثقة وضماناً مجانياً 6 أشهر بعد الإطلاق.\n\nهل تخطط لإطلاق تطبيقك الخاص وتود حساب تكلفته؟';
+    reply = 'شركة **Magixa** هي شريكك التقني لتطوير الحلول البرمجية وتصميم التجارب الرقمية (magixa.tech):\n\n1. **تطبيقات الموبايل (iOS & Android):** نطور تطبيقات فائقة السرعة والأمان بتقنية React Native الموحدة.\n2. **المنصات السحابية ولوحات التحكم:** لوحات Super Admin تفاعلية ومؤتمتة لإدارة العمليات والمبيعات.\n3. **البنية التحتية والربط اللحظي:** خوادم سحابية حديثة، خرائط وتتبع GPS، وبوابات الدفع (Paymob، فودافون كاش، فيزا، كاش)، وحلول IoT والهاردوير.\n4. **الضمان والدعم الفني:** نقدم عقوداً موثقة وضماناً مجانياً 6 أشهر بعد الإطلاق.\n\nهل تخطط لإطلاق تطبيقك الخاص وتود حساب تكلفته؟';
     suggestions = [
       'نعم، عندي فكرة وأريد حساب التكلفة والمدة',
       'كيف تضمنون جودة الكود واستقرار السيرفر؟',
@@ -670,7 +676,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   }
   // 6. General Pricing Inquiries ("اسعاركم كام", "التكلفة كام", "بكام")
   else if (ent.isPricing && !ent.hasRealProjectIdea) {
-    reply = 'في **Apex Software** نعتمد فلسفة الهندسة الرشيقة (Lean Architecture): نبدأ معك بأقل ميزانية ممكنة لإطلاق النموذج الأولي (MVP) لتجربة السوق والتحقق من فكرتك بأقل مخاطرة مالية، مع شفافية كاملة في كافة التكاليف:\n\n• **باقة الانطلاق السريع (MVP):** تبدأ من 18,000 - 28,000 ج.م / $380 - $600 (أقل تكلفة لتطبيق عملي متقن لاختبار الإقبال في السوق بأقل مخاطرة).\n• **باقة النمو المتكاملة (Pro):** تبدأ من 45,000 - 65,000 ج.م / $950 - $1,400 (تطبيقات متكاملة مع تتبع GPS ودفع إلكتروني ولوحة تحكم).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية Microservices متطورة.\n\n**الشفافية في التكاليف التشغيلية السنوية (رسوم الطرف الثالث):**\nلضمان دراستك للمشروع باحترافية، نوضح لك التكاليف التي تدفعها مباشرة للشركات الخارجية:\n- **تطبيق آبل (iOS):** حساب مطور أبل ($99 سنوياً تدفع لشركة Apple مباشرة لإبقاء التطبيق على App Store).\n- **تطبيق أندرويد:** حساب مطور جوجل ($25 لمرة واحدة مدى الحياة تدفع لـ Google).\n- **السيرفر والاستضافة السحابية:** تبدأ من $10 - $20 شهرياً وتزيد تدريجياً مع نمو الزوار.\n- **الدومين وشهادة الأمان:** حوالي $12 - $15 سنوياً للنطاق الدولي.\n\nما هي فكرة تطبيقك التي تود حساب تكلفتها بدقة؟';
+    reply = 'في **Magixa** نعتمد فلسفة الهندسة الرشيقة (Lean Architecture): نبدأ معك بأقل ميزانية ممكنة لإطلاق النموذج الأولي (MVP) لتجربة السوق والتحقق من فكرتك بأقل مخاطرة مالية، مع شفافية كاملة في كافة التكاليف:\n\n• **باقة الانطلاق السريع (MVP):** تبدأ من 18,000 - 28,000 ج.م / $380 - $600 (أقل تكلفة لتطبيق عملي متقن لاختبار الإقبال في السوق بأقل مخاطرة).\n• **باقة النمو المتكاملة (Pro):** تبدأ من 45,000 - 65,000 ج.م / $950 - $1,400 (تطبيقات متكاملة مع تتبع GPS ودفع إلكتروني ولوحة تحكم).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية متطورة.\n\n**الشفافية في التكاليف التشغيلية السنوية (رسوم الطرف الثالث):**\nلضمان دراستك للمشروع باحترافية، نوضح لك التكاليف التي تدفعها مباشرة للشركات الخارجية:\n- **تطبيق آبل (iOS):** حساب مطور أبل ($99 سنوياً تدفع لشركة Apple مباشرة لإبقاء التطبيق على App Store).\n- **تطبيق أندرويد:** حساب مطور جوجل ($25 لمرة واحدة مدى الحياة تدفع لـ Google).\n- **السيرفر والاستضافة السحابية:** تبدأ من $10 - $20 شهرياً وتزيد تدريجياً مع نمو الزوار.\n- **الدومين وشهادة الأمان:** حوالي $12 - $15 سنوياً للنطاق الدولي.\n\nما هي فكرة تطبيقك التي تود حساب تكلفتها بدقة؟';
     suggestions = [
       'أريد باقة MVP بأقل تكلفة ممكنة',
       'تطبيق موبايل متكامل للآيفون والأندرويد',
@@ -751,7 +757,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   } else {
     // General Project Idea Discussion
     if (userMsgCount <= 1 || !allEnt.hasRealProjectIdea) {
-      reply = `أهلاً بك! في **Apex Software** نرحب بفكرتك ونحن متحمسون لتحويلها إلى منتج رقمي استثنائي في السوق.\n\nلتصميم أفضل معمارية هندسية وتحديد الميزانية بدقة: ما هي أهم الميزات والخدمات التي يقدمها تطبيقك للعميل؟ ومن هم المستخدمون المستهدفون؟`;
+      reply = `أهلاً بك! في **Magixa** نرحب بفكرتك ونحن متحمسون لتحويلها إلى منتج رقمي استثنائي في السوق (magixa.tech).\n\nلتصميم أفضل معمارية هندسية وتحديد الميزانية بدقة: ما هي أهم الميزات والخدمات التي يقدمها تطبيقك للعميل؟ ومن هم المستخدمون المستهدفون؟`;
       suggestions = [
         'التركيز على إطلاق نسخة أولية (MVP) لاختبار السوق بأسرع وقت',
         'تطبيق موبايل موحد للآيفون والأندرويد مع لوحة تحكم سحابية',
@@ -774,7 +780,7 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
     suggestions,
     readyForSpec,
     isLiveAI: false,
-    engine: 'Apex Intelligent Architectural Consultation Engine 3.0'
+    engine: 'Magixa Intelligent Architectural Consultation Engine 3.0'
   };
 }
 
@@ -788,24 +794,44 @@ async function chatConsultant(messages = [], options = {}) {
   const userProvider = typeof options === 'object' ? options.provider : null;
 
   const activeProvider = userProvider || config.provider || 'gemini';
-  const geminiKey = userApiKey || config.geminiApiKey || process.env.GEMINI_API_KEY;
-  const openaiKey = userApiKey || config.openaiApiKey || process.env.OPENAI_API_KEY;
+  const serverGeminiKey = config.geminiApiKey || process.env.GEMINI_API_KEY;
+  const serverOpenaiKey = config.openaiApiKey || process.env.OPENAI_API_KEY;
+
+  const geminiKey = (userApiKey && userApiKey.trim().length > 10) ? userApiKey.trim() : serverGeminiKey;
+  const openaiKey = (userApiKey && userApiKey.trim().length > 10) ? userApiKey.trim() : serverOpenaiKey;
 
   // 1. If OpenAI is requested & key available -> Call OpenAI Chat Consultant
   if (activeProvider === 'openai' && openaiKey && openaiKey.trim().length > 10) {
     try {
       return await callOpenAIChatConsultant(messages, openaiKey.trim(), lang);
     } catch (err) {
-      console.warn('OpenAI chat consultant failed, falling back to Intelligent Engine:', err.message);
+      console.warn('OpenAI chat consultant failed, checking fallback server key:', err.message);
+      if (serverOpenaiKey && serverOpenaiKey !== openaiKey) {
+        try {
+          return await callOpenAIChatConsultant(messages, serverOpenaiKey.trim(), lang);
+        } catch (e2) {
+          console.warn('OpenAI chat consultant server key also failed:', e2.message);
+        }
+      }
     }
   }
 
   // 2. If Gemini is requested & key available -> Call Gemini Chat Consultant
-  if (activeProvider === 'gemini' && geminiKey && geminiKey.trim().length > 10) {
-    try {
-      return await callGeminiChatConsultant(messages, geminiKey.trim(), lang);
-    } catch (err) {
-      console.warn('Gemini chat consultant failed, falling back to Intelligent Engine:', err.message);
+  if (activeProvider === 'gemini') {
+    if (geminiKey && geminiKey.trim().length > 10) {
+      try {
+        return await callGeminiChatConsultant(messages, geminiKey.trim(), lang);
+      } catch (err) {
+        console.warn('Gemini chat consultant failed with primary key:', err.message);
+        if (serverGeminiKey && serverGeminiKey !== geminiKey) {
+          try {
+            console.log('Retrying chat consultant with server default Gemini key...');
+            return await callGeminiChatConsultant(messages, serverGeminiKey.trim(), lang);
+          } catch (e2) {
+            console.warn('Gemini chat consultant server key also failed:', e2.message);
+          }
+        }
+      }
     }
   }
 
@@ -1308,24 +1334,46 @@ async function analyzeProjectPrompt(promptOrMessages = '', options = {}) {
   const userProvider = typeof options === 'object' ? options.provider : null;
 
   const activeProvider = userProvider || config.provider || 'gemini';
-  const geminiKey = userApiKey || config.geminiApiKey || process.env.GEMINI_API_KEY;
-  const openaiKey = userApiKey || config.openaiApiKey || process.env.OPENAI_API_KEY;
+  const serverGeminiKey = config.geminiApiKey || process.env.GEMINI_API_KEY;
+  const serverOpenaiKey = config.openaiApiKey || process.env.OPENAI_API_KEY;
 
-  // 1. If Gemini is requested & key available -> Call Gemini 1.5/3.6 Flash
-  if (activeProvider === 'gemini' && geminiKey && geminiKey.trim().length > 10) {
-    try {
-      return await callGeminiAI(prompt, geminiKey.trim(), lang);
-    } catch (err) {
-      console.warn('Gemini AI call failed, falling back to Deep Semantic Engine:', err.message);
+  const geminiKey = (userApiKey && userApiKey.trim().length > 10) ? userApiKey.trim() : serverGeminiKey;
+  const openaiKey = (userApiKey && userApiKey.trim().length > 10) ? userApiKey.trim() : serverOpenaiKey;
+
+  // 1. If Gemini is requested & key available -> Call Gemini Flash
+  if (activeProvider === 'gemini') {
+    if (geminiKey && geminiKey.trim().length > 10) {
+      try {
+        return await callGeminiAI(prompt, geminiKey.trim(), lang);
+      } catch (err) {
+        console.warn('Gemini AI call failed with primary key:', err.message);
+        if (serverGeminiKey && serverGeminiKey !== geminiKey) {
+          try {
+            console.log('Retrying analyzeProjectPrompt with server default Gemini key...');
+            return await callGeminiAI(prompt, serverGeminiKey.trim(), lang);
+          } catch (e2) {
+            console.warn('Gemini AI server key retry also failed:', e2.message);
+          }
+        }
+      }
     }
   }
 
   // 2. If OpenAI is requested & key available -> Call OpenAI
-  if (activeProvider === 'openai' && openaiKey && openaiKey.trim().length > 10) {
-    try {
-      return await callOpenAI(prompt, openaiKey.trim(), lang);
-    } catch (err) {
-      console.warn('OpenAI call failed, falling back to Deep Semantic Engine:', err.message);
+  if (activeProvider === 'openai') {
+    if (openaiKey && openaiKey.trim().length > 10) {
+      try {
+        return await callOpenAI(prompt, openaiKey.trim(), lang);
+      } catch (err) {
+        console.warn('OpenAI call failed with primary key:', err.message);
+        if (serverOpenaiKey && serverOpenaiKey !== openaiKey) {
+          try {
+            return await callOpenAI(prompt, serverOpenaiKey.trim(), lang);
+          } catch (e2) {
+            console.warn('OpenAI server key retry also failed:', e2.message);
+          }
+        }
+      }
     }
   }
 

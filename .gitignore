@@ -6,6 +6,8 @@
 node_modules/
 */node_modules/
 vendor/
+backend/
+node-backend/
 
 # Environment Secrets (CRITICAL)
 .env
@@ -28,6 +30,8 @@ example
 # Android & iOS Local Builds
 /ios
 /android
+*.apk
+*.aab
 
 # SQLite databases and WAL locks (never commit live data)
 *.sqlite

@@ -595,7 +595,8 @@ export default function CopilotScreen() {
             if (latest) {
               setCurrentSessionId(latest.id);
               if (latest.messages && latest.messages.length > 0) {
-                setMessages(latest.messages);
+                const cleanedInitial = latest.messages.filter(m => !m.id?.startsWith('err-') && !m.text?.includes('عذراً، حدث خطأ') && !m.text?.includes('تعذر الاتصال'));
+                setMessages(cleanedInitial.length > 0 ? cleanedInitial : getInitialMessages(isRTL));
               } else {
                 setMessages(getInitialMessages(isRTL));
               }
@@ -903,13 +904,18 @@ export default function CopilotScreen() {
       const effectiveAnalysis = newAnalysis !== undefined ? newAnalysis : analysis;
       const effectivePkg = newPkg !== undefined ? newPkg : selectedPackage;
 
-      const firstUserMsg = updatedMessages.find(m => m.role === 'user');
+      // Filter out transient error bubbles so they are never persisted to AsyncStorage
+      const persistedMessages = updatedMessages.filter(
+        m => !m.id?.startsWith('err-') && !m.text?.includes('عذراً، حدث خطأ') && !m.text?.includes('تعذر الاتصال بالمستشار')
+      );
+
+      const firstUserMsg = persistedMessages.find(m => m.role === 'user');
       let title = isRTL ? 'استشارة جديدة' : 'New Consultation';
       if (firstUserMsg && firstUserMsg.text) {
         title = firstUserMsg.text.trim().slice(0, 40) + (firstUserMsg.text.length > 40 ? '...' : '');
       }
 
-      const lastMsg = updatedMessages[updatedMessages.length - 1];
+      const lastMsg = persistedMessages[persistedMessages.length - 1];
       const preview = lastMsg?.text ? (lastMsg.text.slice(0, 65) + (lastMsg.text.length > 65 ? '...' : '')) : '';
 
       setSessions(prevSessions => {
@@ -923,7 +929,7 @@ export default function CopilotScreen() {
             ...existing,
             title: existing.title && existing.title !== 'استشارة جديدة' && existing.title !== 'New Consultation' ? existing.title : title,
             updatedAt: now,
-            messages: updatedMessages,
+            messages: persistedMessages,
             analysis: effectiveAnalysis,
             selectedPackage: effectivePkg,
             preview,
@@ -939,7 +945,7 @@ export default function CopilotScreen() {
             title,
             createdAt: now,
             updatedAt: now,
-            messages: updatedMessages,
+            messages: persistedMessages,
             analysis: effectiveAnalysis,
             selectedPackage: effectivePkg,
             preview,
@@ -1089,10 +1095,15 @@ export default function CopilotScreen() {
 
     try {
       const storedKey = await AsyncStorage.getItem('userGeminiKey');
-      const activeKey = apiKeyInput.trim() || storedKey || undefined;
+      const rawKey = apiKeyInput.trim() || (storedKey ? storedKey.trim() : '');
+      const activeKey = rawKey.length > 15 ? rawKey : undefined;
+
+      const cleanMessages = updatedMessages
+        .filter(m => m && m.text && m.text.trim().length > 0 && !m.id?.startsWith('err-') && !m.text.includes('عذراً، حدث خطأ') && !m.text.includes('تعذر الاتصال بالمستشار'))
+        .map(m => ({ role: m.role, text: m.text.trim() }));
 
       const res = await api.chatConsultant(
-        updatedMessages.map(m => ({ role: m.role, text: m.text })),
+        cleanMessages.length > 0 ? cleanMessages : [{ role: 'user', text: textToSend }],
         isRTL ? 'ar' : 'en',
         { apiKey: activeKey, provider: aiProvider }
       );
@@ -1118,30 +1129,31 @@ export default function CopilotScreen() {
         }, 150);
       } else {
         haptics.error();
+        const serverError = (res && typeof res === 'object' && (res as any).message) ? (res as any).message : '';
         const errorMsg: ChatMessage = {
           id: `err-${Date.now()}`,
           role: 'assistant',
-          text: isRTL ? 'عذراً، حدث خطأ أثناء المعالجة، يرجى المحاولة ثانية.' : 'Sorry, failed to process message. Please try again.',
+          text: serverError || (isRTL ? 'عذراً، حدث خطأ أثناء المعالجة، يرجى المحاولة ثانية.' : 'Sorry, failed to process message. Please try again.'),
           suggestions: ['إعادة المحاولة', 'استخراج خطة المشروع مباشرة'],
           timestamp: new Date().toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
         };
         const newMessagesWithError = [...updatedMessages, errorMsg];
         setMessages(newMessagesWithError);
-        saveSession(newMessagesWithError);
+        saveSession(updatedMessages);
       }
-    } catch (err) {
+    } catch (err: any) {
       setChatLoading(false);
       haptics.error();
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         role: 'assistant',
-        text: isRTL ? 'تعذر الاتصال بالمستشار الذكي، يرجى التحقق من الشبكة والمحاولة مجدداً.' : 'Connection error. Please check network.',
+        text: err?.message || (isRTL ? 'تعذر الاتصال بالمستشار الذكي، يرجى التحقق من الشبكة والمحاولة مجدداً.' : 'Connection error. Please check network.'),
         suggestions: ['إعادة المحاولة'],
         timestamp: new Date().toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
       };
       const newMessagesWithError = [...updatedMessages, errorMsg];
       setMessages(newMessagesWithError);
-      saveSession(newMessagesWithError);
+      saveSession(updatedMessages);
     }
   };
 
@@ -1158,10 +1170,15 @@ export default function CopilotScreen() {
 
     try {
       const storedKey = await AsyncStorage.getItem('userGeminiKey');
-      const activeKey = apiKeyInput.trim() || storedKey || undefined;
+      const rawKey = apiKeyInput.trim() || (storedKey ? storedKey.trim() : '');
+      const activeKey = rawKey.length > 15 ? rawKey : undefined;
+
+      const cleanBlueprintMessages = messages
+        .filter(m => m && m.text && m.text.trim().length > 0 && !m.id?.startsWith('err-') && !m.text.includes('عذراً، حدث خطأ') && !m.text.includes('تعذر الاتصال بالمستشار'))
+        .map(m => ({ role: m.role, text: m.text.trim() }));
 
       const res = await api.analyzeAiProject(
-        messages.map(m => ({ role: m.role, text: m.text })),
+        cleanBlueprintMessages.length > 0 ? cleanBlueprintMessages : [{ role: 'user', text: isRTL ? 'أريد خطة متكاملة للمشروع' : 'I want a project blueprint' }],
         isRTL ? 'ar' : 'en',
         { apiKey: activeKey, provider: aiProvider }
       );
@@ -1834,6 +1851,12 @@ export default function CopilotScreen() {
                               onPress={() => {
                                 if (sug.includes('استخراج') || sug.includes('عرض خطة') || sug.includes('خطة المشروع')) {
                                   handleGenerateBlueprint();
+                                } else if (sug === 'إعادة المحاولة' || sug.includes('المحاولة')) {
+                                  const lastRealUserMsg = [...messages].reverse().find(m => m.role === 'user' && !m.text.includes('المحاولة'));
+                                  const promptToRetry = lastRealUserMsg ? lastRealUserMsg.text : (isRTL ? 'أود استشارتك في تطوير مشروعي التقني.' : 'I would like to consult on my software project.');
+                                  const cleaned = messages.filter(m => !m.id?.startsWith('err-') && !m.text.includes('عذراً، حدث خطأ') && !m.text.includes('تعذر الاتصال'));
+                                  setMessages(cleaned);
+                                  handleSendChatMessage(promptToRetry);
                                 } else {
                                   handleSendChatMessage(sug);
                                 }

@@ -8,13 +8,23 @@ import NetInfo from '@react-native-community/netinfo';
 export const BASE_URL = 'https://apex-backend-ten.vercel.app';
 export const API_URL = `${BASE_URL}/api`;
 
-const getAuthHeaders = async () => {
-  const token = await getSecureToken();
-  return {
+const getAuthHeaders = async (): Promise<Record<string, string>> => {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'X-Client-Platform': Platform.OS,
-    'Authorization': token ? `Bearer ${token}` : ''
   };
+  try {
+    const rawToken = await getSecureToken();
+    if (typeof rawToken === 'string') {
+      const sanitized = rawToken.trim().replace(/[\r\n\t]/g, '');
+      if (sanitized.length > 10 && sanitized.length < 3000 && !/[^\x20-\x7E]/.test(sanitized)) {
+        headers['Authorization'] = `Bearer ${sanitized}`;
+      }
+    }
+  } catch (e) {
+    // Graceful fallback to unauthenticated headers if keystore/storage fails
+  }
+  return headers;
 };
 
 const REQUEST_TIMEOUT_MS = 25000;
@@ -691,25 +701,47 @@ export const api = {
   },
 
   async chatConsultant(messages: Array<{ role: string; text: string }>, language: string = 'ar', options?: { apiKey?: string; provider?: string }) {
-    try {
-      const response = await fetch(`${API_URL}/ai/chat-consultant`, {
+    const makeRequest = async (authHeaders: Record<string, string>) => {
+      return await fetchWithTimeout(`${API_URL}/ai/chat-consultant`, {
         method: 'POST',
-        headers: await getAuthHeaders(),
+        headers: authHeaders,
         body: JSON.stringify({
           messages,
           language,
           apiKey: options?.apiKey,
           provider: options?.provider
         })
-      });
+      }, 35000);
+    };
+
+    try {
+      const headers = await getAuthHeaders();
+      let response = await makeRequest(headers).catch(() => null);
+
+      // If token expired (401/403) or header too large (494/431) or request failed, transparently fallback to guest mode
+      if (!response || response.status === 401 || response.status === 403 || response.status === 494 || response.status === 431) {
+        response = await makeRequest({
+          'Content-Type': 'application/json',
+          'X-Client-Platform': Platform.OS,
+        }).catch(() => null);
+      }
+
+      if (!response) {
+        return { success: false, message: 'تعذر الاتصال بالمستشار الذكي، يرجى التحقق من اتصال الشبكة.' };
+      }
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
+        return { success: false, message: errJson?.message || `خطأ في الخادم (${response.status})` };
+      }
       return await response.json();
-    } catch (e) {
-      return { success: false, message: 'تعذر الاتصال بالمستشار الذكي، يرجى التحقق من الشبكة.' };
+    } catch (e: any) {
+      return { success: false, message: e?.message ? `خطأ في الاتصال: ${e.message}` : 'تعذر الاتصال بالمستشار الذكي، يرجى التحقق من الشبكة.' };
     }
   },
 
   async analyzeAiProject(promptOrMessages: string | any[], language: string = 'ar', options?: { apiKey?: string; provider?: string }) {
-    try {
+    const makeRequest = async (authHeaders: Record<string, string>) => {
       const bodyPayload: any = {
         language,
         apiKey: options?.apiKey,
@@ -721,24 +753,60 @@ export const api = {
         bodyPayload.prompt = promptOrMessages;
       }
 
-      const response = await fetch(`${API_URL}/ai/analyze-project`, {
+      return await fetchWithTimeout(`${API_URL}/ai/analyze-project`, {
         method: 'POST',
-        headers: await getAuthHeaders(),
+        headers: authHeaders,
         body: JSON.stringify(bodyPayload)
-      });
+      }, 35000);
+    };
+
+    try {
+      const headers = await getAuthHeaders();
+      let response = await makeRequest(headers).catch(() => null);
+
+      if (!response || response.status === 401 || response.status === 403 || response.status === 494 || response.status === 431) {
+        response = await makeRequest({
+          'Content-Type': 'application/json',
+          'X-Client-Platform': Platform.OS,
+        }).catch(() => null);
+      }
+
+      if (!response) {
+        return { success: false, message: 'تعذر الاتصال بمحرك الذكاء الاصطناعي، يرجى التحقق من الشبكة.' };
+      }
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
+        return { success: false, message: errJson?.message || `خطأ في الخادم (${response.status})` };
+      }
       return await response.json();
-    } catch (e) {
-      return { success: false, message: 'تعذر الاتصال بمحرك الذكاء الاصطناعي، يرجى التحقق من الشبكة.' };
+    } catch (e: any) {
+      return { success: false, message: e?.message ? `خطأ في الاتصال: ${e.message}` : 'تعذر الاتصال بمحرك الذكاء الاصطناعي، يرجى التحقق من الشبكة.' };
     }
   },
 
   async getAiConfig() {
     try {
-      const response = await fetch(`${API_URL}/ai/config`, {
+      const headers = await getAuthHeaders();
+      let response = await fetchWithTimeout(`${API_URL}/ai/config`, {
         method: 'GET',
-        headers: await getAuthHeaders(),
-      });
-      return await response.json();
+        headers,
+      }, 10000).catch(() => null);
+
+      if (!response || !response.ok) {
+        response = await fetchWithTimeout(`${API_URL}/ai/config`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Client-Platform': Platform.OS,
+          },
+        }, 10000).catch(() => null);
+      }
+
+      if (response && response.ok) {
+        return await response.json();
+      }
+      return { success: false, provider: 'gemini', hasGeminiKey: false };
     } catch (e) {
       return { success: false, provider: 'gemini', hasGeminiKey: false };
     }
