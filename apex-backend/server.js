@@ -41,6 +41,18 @@ if (!JWT_SECRET) {
   );
 }
 
+// Generate compact JWT token containing only essential auth claims to prevent HTTP 494 header overflow
+const generateUserToken = (user) => {
+  const safePayload = {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName ? String(user.fullName).substring(0, 100) : (user.email ? user.email.split('@')[0] : 'User'),
+    role: user.role,
+    isAdmin: !!(user.isAdmin || user.role === 'admin')
+  };
+  return jwt.sign(safePayload, JWT_SECRET, { expiresIn: '30d' });
+};
+
 // Password verification: bcrypt for hashed rows; plaintext comparison is ONLY tolerated for
 // legacy rows that are not bcrypt hashes (they are upgraded on login / by npm run migrate).
 const verifyPassword = async (plain, stored) => {
@@ -697,7 +709,7 @@ app.post('/api/auth/register-verify-otp', (req, res) => {
             projectPhase: row.projectPhase || row.projectphase,
             projectProgress: row.projectProgress || row.projectprogress || 0
           };
-          const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+          const token = generateUserToken(user);
 
           // Send Welcome Email
           emailService.sendWelcomeEmail({ to: normalizedEmail, fullName: user.fullName }).catch(console.error);
@@ -814,7 +826,7 @@ app.post('/api/register', (req, res) => {
                   phone: row.phone, avatarUrl: row.avatarUrl, isAdmin: hasAdminFlag(row.isAdmin) || row.role === 'admin',
                   projectName: row.projectName, projectPhase: row.projectPhase, projectProgress: row.projectProgress || 0
                 };
-                const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+                const token = generateUserToken(user);
                 return res.json({ success: true, user, token });
               });
             }
@@ -826,7 +838,7 @@ app.post('/api/register', (req, res) => {
           id: this.lastID, fullName: fullName || normalizedEmail.split('@')[0], email: normalizedEmail, company: company || 'Apex Client', role, isAdmin,
           phone: null, avatarUrl: null, projectName: null, projectPhase: null, projectProgress: 0 
         };
-        const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+        const token = generateUserToken(user);
 
         // Send Welcome Email
         emailService.sendWelcomeEmail({ to: normalizedEmail, fullName: user.fullName }).catch(console.error);
@@ -895,7 +907,7 @@ app.post('/api/login', (req, res) => {
       phone: row.phone, avatarUrl: row.avatarUrl, isAdmin,
       projectName: row.projectName, projectPhase: row.projectPhase, projectProgress: row.projectProgress || 0 
     };
-    const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+    const token = generateUserToken(user);
     res.json({ success: true, user, token });
   });
 });
@@ -937,7 +949,7 @@ app.post('/api/auth/google', async (req, res) => {
           projectPhase: existingUser.projectPhase,
           projectProgress: existingUser.projectProgress || 0
         };
-        const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
+        const token = generateUserToken(user);
         return res.json({ success: true, user, token });
       }
 
@@ -962,7 +974,7 @@ app.post('/api/auth/google', async (req, res) => {
               projectPhase: null,
               projectProgress: 0
             };
-            const token = jwt.sign(newUser, JWT_SECRET, { expiresIn: '30d' });
+            const token = generateUserToken(newUser);
             return res.json({ success: true, user: newUser, token });
           }
         );
@@ -1055,7 +1067,8 @@ app.get('/api/me', authenticateToken, (req, res) => {
   db.get(`SELECT id, fullName, email, company, role, isAdmin, phone, avatarUrl, projectName, projectPhase, projectProgress, projectTasks, projectDeliverables FROM users WHERE id = ?`, [req.user.id], (err, user) => {
     if (err || !user) return res.status(404).json({ success: false, message: 'User not found' });
     user.isAdmin = hasAdminFlag(user.isAdmin) || user.role === 'admin';
-    res.json({ success: true, user });
+    const token = generateUserToken(user);
+    res.json({ success: true, user, token });
   });
 });
 

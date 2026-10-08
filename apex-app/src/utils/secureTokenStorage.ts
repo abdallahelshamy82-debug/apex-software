@@ -54,6 +54,11 @@ export const getSecureToken = async (): Promise<string | null> => {
       }
     }
 
+    if (token && token.length > 3000) {
+      await removeSecureToken().catch(() => {});
+      return null;
+    }
+
     return token;
   } catch (error) {
     console.warn('[Keystore Warning] Read fallback:', error);

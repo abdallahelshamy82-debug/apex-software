@@ -135,6 +135,14 @@ export const biometrics = {
       }
 
       if (!token) return null;
+
+      if (token && token.length > 3000) {
+        await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY).catch(() => {});
+        await AsyncStorage.removeItem(BIOMETRIC_USER_KEY).catch(() => {});
+        await AsyncStorage.setItem('apex_biometrics_enabled', 'false').catch(() => {});
+        return null;
+      }
+
       if (Object.prototype.hasOwnProperty.call(payload, 'token')) {
         await AsyncStorage.setItem(BIOMETRIC_USER_KEY, JSON.stringify({
           user: payload.user,

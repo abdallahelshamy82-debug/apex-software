@@ -17,7 +17,7 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
     const rawToken = await getSecureToken();
     if (typeof rawToken === 'string') {
       const sanitized = rawToken.trim().replace(/[\r\n\t]/g, '');
-      if (sanitized.length > 10 && !/[^\x20-\x7E]/.test(sanitized)) {
+      if (sanitized.length > 10 && sanitized.length < 3000 && !/[^\x20-\x7E]/.test(sanitized)) {
         headers['Authorization'] = `Bearer ${sanitized}`;
       }
     }
@@ -718,8 +718,8 @@ export const api = {
       const headers = await getAuthHeaders();
       let response = await makeRequest(headers).catch(() => null);
 
-      // If token expired (401/403) or request failed, transparently fallback to guest mode
-      if (!response || response.status === 401 || response.status === 403) {
+      // If token expired (401/403) or header too large (494/431) or request failed, transparently fallback to guest mode
+      if (!response || response.status === 401 || response.status === 403 || response.status === 494 || response.status === 431) {
         response = await makeRequest({
           'Content-Type': 'application/json',
           'X-Client-Platform': Platform.OS,
@@ -764,7 +764,7 @@ export const api = {
       const headers = await getAuthHeaders();
       let response = await makeRequest(headers).catch(() => null);
 
-      if (!response || response.status === 401 || response.status === 403) {
+      if (!response || response.status === 401 || response.status === 403 || response.status === 494 || response.status === 431) {
         response = await makeRequest({
           'Content-Type': 'application/json',
           'X-Client-Platform': Platform.OS,

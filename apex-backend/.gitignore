@@ -12,3 +12,5 @@ database.sqlite-wal
 *.db
 .env.*
 !.env.example
+.vercel/
+

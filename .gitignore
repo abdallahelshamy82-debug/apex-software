@@ -30,6 +30,8 @@ example
 # Android & iOS Local Builds
 /ios
 /android
+*.apk
+*.aab
 
 # SQLite databases and WAL locks (never commit live data)
 *.sqlite
