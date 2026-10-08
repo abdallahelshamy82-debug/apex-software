@@ -45,13 +45,13 @@ export default function BioLinksPage() {
       id: 'order',
       title: 'اطلب خدمة أو استشارة برمجية فورية',
       subtitle: 'تطوير مواقع ومتاجر إلكترونية، تطبيقات موبايل، وأنظمة ERP سحابية متكاملة',
-      url: 'https://wa.me/201285512241?text=مرحباً%20Magixa%20Tech،%20أود%20طلب%20مشروع%20أو%20استشارة%20برمجية',
+      url: 'https://wa.me/201558652579?text=مرحباً%20Magixa%20Tech،%20أود%20طلب%20مشروع%20أو%20استشارة%20برمجية',
       icon: (
         <svg className="w-6 h-6 text-accent-radium" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
         </svg>
       ),
-      badge: 'تواصل فوري ⚡',
+      badge: 'تواصل فوري',
       badgeColor: 'bg-accent-radium/20 text-accent-radium border-accent-radium/40 font-bold',
       highlight: true,
       featured: true,
@@ -67,7 +67,7 @@ export default function BioLinksPage() {
           <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
         </svg>
       ),
-      badge: 'الرئيسية 🌐',
+      badge: 'الرئيسية',
       badgeColor: 'bg-white/10 text-white border-white/20',
       featured: true,
       actionText: 'تصفح الموقع',
@@ -85,21 +85,21 @@ export default function BioLinksPage() {
           <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
         </svg>
       ),
-      badge: 'مهني 💼',
+      badge: 'مهني',
       badgeColor: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
       actionText: 'متابعة',
     },
     {
       id: 'whatsapp',
       title: 'واتساب مباشر (WhatsApp)',
-      subtitle: '+201285512241 • استفسار وسرعة رد',
-      url: 'https://wa.me/201285512241',
+      subtitle: '+201558652579 • استفسار وسرعة رد',
+      url: 'https://wa.me/201558652579',
       icon: (
         <svg className="w-5 h-5 text-emerald-400 fill-current" viewBox="0 0 24 24">
           <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.761.814 2.791.814 3.18 0 5.767-2.586 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.828c0 5.514-4.486 10-10 10-1.748 0-3.385-.45-4.819-1.242l-5.181 1.356 1.378-5.034c-.886-1.488-1.378-3.216-1.378-5.08 0-5.514 4.486-10 10-10s10 4.486 10 10z"/>
         </svg>
       ),
-      badge: 'متاح الآن 🟢',
+      badge: 'متاح الآن',
       badgeColor: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
       actionText: 'محادثة',
     },
@@ -392,10 +392,10 @@ export default function BioLinksPage() {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-1 font-mono text-xs sm:text-sm">
             <span className="text-accent-radium bg-accent-radium/10 border border-accent-radium/30 px-3.5 py-1.5 rounded-lg select-all">
-              contact@apexsoftware.com
+              contact@magixa.tech
             </span>
             <span className="text-white bg-white/5 border border-border-glass px-3.5 py-1.5 rounded-lg">
-              هاتف / واتساب: +201285512241
+              هاتف / واتساب: +201558652579
             </span>
           </div>
         </div>
