@@ -145,10 +145,10 @@ app.use('/api/auth/reset-password', authLimiter);
 //  AI Copilot Quota & DDoS Defense
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 150,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: 'تم بلوغ الحد الأقصى لاستخدام خدمات الذكاء الاصطناعي لهذه الفترة لحماية الموارد.' }
+  message: { success: false, message: 'تم بلوغ الحد الأقصى المؤقت لاستخدام خدمات المستشار الذكي (15 دقيقة) لحماية الموارد.' }
 });
 app.use('/api/ai/analyze-project', aiLimiter);
 app.use('/api/ai/chat-consultant', aiLimiter);

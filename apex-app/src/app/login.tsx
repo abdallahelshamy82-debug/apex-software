@@ -174,9 +174,27 @@ export default function LoginScreen() {
 
     if (auth.success) {
       await haptics.success();
-      setCurrentUser(bound.user);
+      await offlineCache.clearAll();
+      offlineCache.setScope(bound.user.id);
+      await AsyncStorage.removeItem('userToken').catch(() => {});
+      await offlineCache.set(offlineCache.keys.USER, bound.user);
       await saveSecureToken(bound.token);
+      setCurrentUser(bound.user);
       await AsyncStorage.setItem('userData', JSON.stringify(bound.user));
+
+      // Refresh and synchronize session in background to guarantee token freshness
+      api.verifySession().then(async (session) => {
+        if (session.success && session.user) {
+          setCurrentUser(session.user);
+          await AsyncStorage.setItem('userData', JSON.stringify(session.user));
+          await offlineCache.set(offlineCache.keys.USER, session.user);
+          if (session.token) {
+            await saveSecureToken(session.token);
+            await biometrics.setBiometricUser(session.user, session.token);
+          }
+        }
+      }).catch(() => {});
+
       notifications.sendLocalNotification(
         isRTL ? 'مرحباً بك مجدداً' : 'Welcome Back',
         isRTL ? `تم تسجيل الدخول بالمستشعرات الحيوية بنجاح يا ${bound.user.fullName}` : `Logged in with biometrics as ${bound.user.fullName}`
