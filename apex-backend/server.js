@@ -1374,7 +1374,7 @@ app.post('/api/ai/analyze-project', authenticateTokenOptional, async (req, res) 
 });
 
 // Get AI Copilot Configuration (Public / Client)
-app.get('/api/ai/config', verifyToken, requireAdmin, (req, res) => {
+app.get('/api/ai/config', authenticateTokenOptional, (req, res) => {
   const config = aiCopilot.getAiConfig();
   res.json({
     success: true,

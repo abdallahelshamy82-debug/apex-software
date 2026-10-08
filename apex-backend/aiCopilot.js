@@ -794,24 +794,44 @@ async function chatConsultant(messages = [], options = {}) {
   const userProvider = typeof options === 'object' ? options.provider : null;
 
   const activeProvider = userProvider || config.provider || 'gemini';
-  const geminiKey = userApiKey || config.geminiApiKey || process.env.GEMINI_API_KEY;
-  const openaiKey = userApiKey || config.openaiApiKey || process.env.OPENAI_API_KEY;
+  const serverGeminiKey = config.geminiApiKey || process.env.GEMINI_API_KEY;
+  const serverOpenaiKey = config.openaiApiKey || process.env.OPENAI_API_KEY;
+
+  const geminiKey = (userApiKey && userApiKey.trim().length > 10) ? userApiKey.trim() : serverGeminiKey;
+  const openaiKey = (userApiKey && userApiKey.trim().length > 10) ? userApiKey.trim() : serverOpenaiKey;
 
   // 1. If OpenAI is requested & key available -> Call OpenAI Chat Consultant
   if (activeProvider === 'openai' && openaiKey && openaiKey.trim().length > 10) {
     try {
       return await callOpenAIChatConsultant(messages, openaiKey.trim(), lang);
     } catch (err) {
-      console.warn('OpenAI chat consultant failed, falling back to Intelligent Engine:', err.message);
+      console.warn('OpenAI chat consultant failed, checking fallback server key:', err.message);
+      if (serverOpenaiKey && serverOpenaiKey !== openaiKey) {
+        try {
+          return await callOpenAIChatConsultant(messages, serverOpenaiKey.trim(), lang);
+        } catch (e2) {
+          console.warn('OpenAI chat consultant server key also failed:', e2.message);
+        }
+      }
     }
   }
 
   // 2. If Gemini is requested & key available -> Call Gemini Chat Consultant
-  if (activeProvider === 'gemini' && geminiKey && geminiKey.trim().length > 10) {
-    try {
-      return await callGeminiChatConsultant(messages, geminiKey.trim(), lang);
-    } catch (err) {
-      console.warn('Gemini chat consultant failed, falling back to Intelligent Engine:', err.message);
+  if (activeProvider === 'gemini') {
+    if (geminiKey && geminiKey.trim().length > 10) {
+      try {
+        return await callGeminiChatConsultant(messages, geminiKey.trim(), lang);
+      } catch (err) {
+        console.warn('Gemini chat consultant failed with primary key:', err.message);
+        if (serverGeminiKey && serverGeminiKey !== geminiKey) {
+          try {
+            console.log('Retrying chat consultant with server default Gemini key...');
+            return await callGeminiChatConsultant(messages, serverGeminiKey.trim(), lang);
+          } catch (e2) {
+            console.warn('Gemini chat consultant server key also failed:', e2.message);
+          }
+        }
+      }
     }
   }
 
@@ -1314,24 +1334,46 @@ async function analyzeProjectPrompt(promptOrMessages = '', options = {}) {
   const userProvider = typeof options === 'object' ? options.provider : null;
 
   const activeProvider = userProvider || config.provider || 'gemini';
-  const geminiKey = userApiKey || config.geminiApiKey || process.env.GEMINI_API_KEY;
-  const openaiKey = userApiKey || config.openaiApiKey || process.env.OPENAI_API_KEY;
+  const serverGeminiKey = config.geminiApiKey || process.env.GEMINI_API_KEY;
+  const serverOpenaiKey = config.openaiApiKey || process.env.OPENAI_API_KEY;
 
-  // 1. If Gemini is requested & key available -> Call Gemini 1.5/3.6 Flash
-  if (activeProvider === 'gemini' && geminiKey && geminiKey.trim().length > 10) {
-    try {
-      return await callGeminiAI(prompt, geminiKey.trim(), lang);
-    } catch (err) {
-      console.warn('Gemini AI call failed, falling back to Deep Semantic Engine:', err.message);
+  const geminiKey = (userApiKey && userApiKey.trim().length > 10) ? userApiKey.trim() : serverGeminiKey;
+  const openaiKey = (userApiKey && userApiKey.trim().length > 10) ? userApiKey.trim() : serverOpenaiKey;
+
+  // 1. If Gemini is requested & key available -> Call Gemini Flash
+  if (activeProvider === 'gemini') {
+    if (geminiKey && geminiKey.trim().length > 10) {
+      try {
+        return await callGeminiAI(prompt, geminiKey.trim(), lang);
+      } catch (err) {
+        console.warn('Gemini AI call failed with primary key:', err.message);
+        if (serverGeminiKey && serverGeminiKey !== geminiKey) {
+          try {
+            console.log('Retrying analyzeProjectPrompt with server default Gemini key...');
+            return await callGeminiAI(prompt, serverGeminiKey.trim(), lang);
+          } catch (e2) {
+            console.warn('Gemini AI server key retry also failed:', e2.message);
+          }
+        }
+      }
     }
   }
 
   // 2. If OpenAI is requested & key available -> Call OpenAI
-  if (activeProvider === 'openai' && openaiKey && openaiKey.trim().length > 10) {
-    try {
-      return await callOpenAI(prompt, openaiKey.trim(), lang);
-    } catch (err) {
-      console.warn('OpenAI call failed, falling back to Deep Semantic Engine:', err.message);
+  if (activeProvider === 'openai') {
+    if (openaiKey && openaiKey.trim().length > 10) {
+      try {
+        return await callOpenAI(prompt, openaiKey.trim(), lang);
+      } catch (err) {
+        console.warn('OpenAI call failed with primary key:', err.message);
+        if (serverOpenaiKey && serverOpenaiKey !== openaiKey) {
+          try {
+            return await callOpenAI(prompt, serverOpenaiKey.trim(), lang);
+          } catch (e2) {
+            console.warn('OpenAI server key retry also failed:', e2.message);
+          }
+        }
+      }
     }
   }
 

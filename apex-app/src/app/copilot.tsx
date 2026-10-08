@@ -1089,7 +1089,8 @@ export default function CopilotScreen() {
 
     try {
       const storedKey = await AsyncStorage.getItem('userGeminiKey');
-      const activeKey = apiKeyInput.trim() || storedKey || undefined;
+      const rawKey = apiKeyInput.trim() || (storedKey ? storedKey.trim() : '');
+      const activeKey = rawKey.length > 15 ? rawKey : undefined;
 
       const cleanMessages = updatedMessages
         .filter(m => !m.id?.startsWith('err-') && !m.text.includes('عذراً، حدث خطأ') && !m.text.includes('تعذر الاتصال بالمستشار'))
@@ -1162,7 +1163,8 @@ export default function CopilotScreen() {
 
     try {
       const storedKey = await AsyncStorage.getItem('userGeminiKey');
-      const activeKey = apiKeyInput.trim() || storedKey || undefined;
+      const rawKey = apiKeyInput.trim() || (storedKey ? storedKey.trim() : '');
+      const activeKey = rawKey.length > 15 ? rawKey : undefined;
 
       const res = await api.analyzeAiProject(
         messages.map(m => ({ role: m.role, text: m.text })),
@@ -1838,6 +1840,12 @@ export default function CopilotScreen() {
                               onPress={() => {
                                 if (sug.includes('استخراج') || sug.includes('عرض خطة') || sug.includes('خطة المشروع')) {
                                   handleGenerateBlueprint();
+                                } else if (sug === 'إعادة المحاولة' || sug.includes('المحاولة')) {
+                                  const lastRealUserMsg = [...messages].reverse().find(m => m.role === 'user' && !m.text.includes('المحاولة'));
+                                  const promptToRetry = lastRealUserMsg ? lastRealUserMsg.text : (isRTL ? 'أود استشارتك في تطوير مشروعي التقني.' : 'I would like to consult on my software project.');
+                                  const cleaned = messages.filter(m => !m.id?.startsWith('err-') && !m.text.includes('عذراً، حدث خطأ') && !m.text.includes('تعذر الاتصال'));
+                                  setMessages(cleaned);
+                                  handleSendChatMessage(promptToRetry);
                                 } else {
                                   handleSendChatMessage(sug);
                                 }
