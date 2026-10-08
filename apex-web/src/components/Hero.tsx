@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Magnetic from './Magnetic';
 import { useLanguage } from '@/context/LanguageContext';
+import { APP_RELEASE } from '@/constants/appRelease';
 
 export default function Hero() {
   const { t, lang } = useLanguage();
@@ -56,7 +57,7 @@ export default function Hero() {
 
         <div className="mt-16 md:mt-24 flex flex-col md:flex-row justify-between items-start gap-10 border-t border-border-glass pt-10">
           
-          <div className="flex flex-col gap-8 max-w-xl">
+          <div className="flex flex-col gap-6 max-w-2xl">
             <motion.p 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
@@ -71,36 +72,75 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.7 }}
-              className="flex flex-col w-full sm:flex-row items-center gap-3.5"
+              className="flex flex-wrap items-center gap-3"
             >
+              {/* 1. Start Project -> Scrolls smoothly to #contact */}
               <Magnetic strength={0.2}>
                 <a 
-                  href="https://wa.me/201558652579?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20Magixa%20Tech%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%D9%83%D9%85%20%D9%88%D8%A8%D8%AF%D8%A1%20%D9%85%D8%B4%D8%B1%D9%88%D8%B9%20%D8%AC%D8%AF%D9%8A%D8%AF" 
-                  target="_blank"  
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto text-center px-8 py-3.5 rounded-full bg-accent-radium text-bg-onyx font-sans font-bold text-base md:text-lg hover:bg-white hover:shadow-[0_0_25px_rgba(204,255,0,0.5)] transition-all shadow-[0_0_15px_rgba(204,255,0,0.35)] block cursor-none"
+                  href="#contact"
+                  className="w-full sm:w-auto text-center px-8 py-3.5 rounded-full bg-accent-radium text-bg-onyx font-sans font-bold text-base hover:bg-white hover:shadow-[0_0_25px_rgba(204,255,0,0.5)] transition-all shadow-[0_0_15px_rgba(204,255,0,0.35)] block cursor-none"
                 >
                   {t.common.startProject}
                 </a>
               </Magnetic>
               
+              {/* 2. Download Latest App APK */}
+              <Magnetic strength={0.2}>
+                <a 
+                  href={APP_RELEASE.downloadUrl}
+                  download="magixa.apk"
+                  className="w-full sm:w-auto text-center px-6 py-3.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-sm md:text-base hover:bg-white/10 hover:border-accent-radium/40 transition-all flex items-center justify-center gap-2 block cursor-none group"
+                >
+                  <svg className="w-4 h-4 text-accent-radium shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span>{t.common.downloadApp}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-radium/15 text-accent-radium border border-accent-radium/35 font-mono font-semibold">
+                    {APP_RELEASE.versionFull}
+                  </span>
+                </a>
+              </Magnetic>
+
+              {/* 3. Explore Portfolio */}
               <Magnetic strength={0.2}>
                 <a 
                   href="#portfolio"
-                  className="w-full sm:w-auto text-center px-7 py-3.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-base md:text-lg hover:bg-white/10 hover:border-accent-radium/40 transition-all block cursor-none"
+                  className="w-full sm:w-auto text-center px-6 py-3.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-white font-sans font-bold text-sm md:text-base hover:bg-white/10 hover:border-accent-radium/40 transition-all block cursor-none"
                 >
                   {t.common.viewWork}
                 </a>
               </Magnetic>
 
+              {/* 4. Masked WhatsApp Contact */}
               <Magnetic strength={0.2}>
                 <a 
-                  href="#contact"
-                  className="w-full sm:w-auto text-center px-6 py-3.5 rounded-full bg-transparent border border-white/10 text-text-muted hover:text-white hover:border-white/20 font-sans font-medium text-sm md:text-base transition-colors block cursor-none"
+                  href="/whatsapp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto text-center px-5 py-3.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:text-white transition-all font-sans font-medium text-sm flex items-center justify-center gap-2 block cursor-none"
                 >
-                  {t.common.contactUs}
+                  <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.761.814 2.791.814 3.18 0 5.767-2.586 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.828c0 5.514-4.486 10-10 10-1.748 0-3.385-.45-4.819-1.242l-5.181 1.356 1.378-5.034c-.886-1.488-1.378-3.216-1.378-5.08 0-5.514 4.486-10 10-10s10 4.486 10 10z"/>
+                  </svg>
+                  <span>WhatsApp</span>
                 </a>
               </Magnetic>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1, duration: 0.8 }}
+              className="flex items-center gap-2 text-xs text-text-muted font-sans px-1"
+            >
+              <span className="w-2 h-2 rounded-full bg-accent-radium animate-pulse" />
+              <span>
+                {lang === 'ar' 
+                  ? `أحدث إصدار أندرويد متوفر للتحميل: ${APP_RELEASE.versionFull}` 
+                  : `Latest Android APK Available: ${APP_RELEASE.versionFull}`}
+              </span>
             </motion.div>
           </div>
 

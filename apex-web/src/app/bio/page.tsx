@@ -45,7 +45,7 @@ export default function BioLinksPage() {
       id: 'order',
       title: 'اطلب خدمة أو استشارة برمجية فورية',
       subtitle: 'تطوير مواقع ومتاجر إلكترونية، تطبيقات موبايل، وأنظمة ERP سحابية متكاملة',
-      url: 'https://wa.me/201558652579?text=مرحباً%20Magixa%20Tech،%20أود%20طلب%20مشروع%20أو%20استشارة%20برمجية',
+      url: '/whatsapp',
       icon: (
         <svg className="w-6 h-6 text-accent-radium" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
@@ -91,9 +91,9 @@ export default function BioLinksPage() {
     },
     {
       id: 'whatsapp',
-      title: 'واتساب مباشر (WhatsApp)',
+      title: 'واتساب (@AbdAllah.IT.Full.Stack)',
       subtitle: '+201558652579 • استفسار وسرعة رد',
-      url: 'https://wa.me/201558652579',
+      url: '/whatsapp',
       icon: (
         <svg className="w-5 h-5 text-emerald-400 fill-current" viewBox="0 0 24 24">
           <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.761.814 2.791.814 3.18 0 5.767-2.586 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.828c0 5.514-4.486 10-10 10-1.748 0-3.385-.45-4.819-1.242l-5.181 1.356 1.378-5.034c-.886-1.488-1.378-3.216-1.378-5.08 0-5.514 4.486-10 10-10s10 4.486 10 10z"/>

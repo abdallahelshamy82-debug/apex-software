@@ -26,6 +26,7 @@ export const dict = {
       landingCategory: "صفحات هبوط وأدوات",
       gridView: "عرض كشبكة",
       sliderView: "عرض أفقي سلايدر",
+      downloadApp: "تحميل التطبيق",
     },
     hero: {
       title: "نبتكر ونصنع الأنظمة البرمجية التي تقود نجاح أعمالك",
@@ -391,6 +392,7 @@ export const dict = {
       landingCategory: "Landing & Tools",
       gridView: "Grid View",
       sliderView: "Slider View",
+      downloadApp: "Download App",
     },
     hero: {
       title: "Scalable Systems, Flawless Engineering.",

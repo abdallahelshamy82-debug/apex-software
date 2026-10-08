@@ -78,9 +78,22 @@ export default function Navbar() {
               href="/bio"
               className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-accent-radium/15 border border-accent-radium/40 text-accent-radium hover:bg-accent-radium hover:text-bg-onyx font-sans text-xs sm:text-sm font-bold transition-all shadow-[0_0_15px_rgba(204,255,0,0.18)] flex items-center gap-1.5 cursor-none"
             >
-              <span className="text-sm">🔗</span>
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
               <span>{lang === 'ar' ? 'روابطنا' : 'Bio'}</span>
             </Link>
+
+            {/* Direct APK Download Button */}
+            <a 
+              href="/magixa.apk"
+              download="magixa.apk"
+              className="hidden lg:flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-white/5 border border-white/15 text-slate-200 hover:text-white hover:border-accent-radium/50 font-sans text-xs sm:text-sm font-medium transition-all backdrop-blur-md cursor-none"
+            >
+              <svg className="w-3.5 h-3.5 text-accent-radium" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>{lang === 'ar' ? 'تطبيق أندرويد' : 'App APK'}</span>
+            </a>
 
             <a 
               href="#portfolio"

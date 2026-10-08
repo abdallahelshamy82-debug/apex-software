@@ -202,7 +202,7 @@ export default function Contact() {
                   </Magnetic>
 
                   <a 
-                    href="https://wa.me/201558652579?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20Magixa%20Tech%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%83%D9%85"
+                    href="/whatsapp"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25 hover:text-white transition-all font-sans text-sm font-semibold cursor-none"
@@ -269,7 +269,7 @@ export default function Contact() {
                 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
                   <a 
-                    href="https://wa.me/201558652579?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20Magixa%20Tech%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%83%D9%85"
+                    href="/whatsapp"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:text-white transition-all font-sans text-sm font-semibold cursor-none"
