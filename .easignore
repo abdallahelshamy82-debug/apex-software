@@ -1,0 +1,7 @@
+backend/
+node-backend/
+awwwards-portfolio/
+apex-web/
+.vercel/
+.git/
+*.log

@@ -6,6 +6,8 @@
 node_modules/
 */node_modules/
 vendor/
+backend/
+node-backend/
 
 # Environment Secrets (CRITICAL)
 .env
