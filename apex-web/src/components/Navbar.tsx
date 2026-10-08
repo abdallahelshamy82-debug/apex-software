@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
 
 export default function Navbar() {
+  const pathname = usePathname();
   const { lang, toggleLang, t } = useLanguage();
   const [isVisible, setIsVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -42,6 +45,10 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  if (pathname === '/bio') {
+    return null;
+  }
+
   return (
     <motion.header 
       initial={{ y: -100 }}
@@ -66,6 +73,15 @@ export default function Navbar() {
           
           {/* Quick Navigation & Language Switcher */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Direct Link in Bio Button */}
+            <Link
+              href="/bio"
+              className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-accent-radium/15 border border-accent-radium/40 text-accent-radium hover:bg-accent-radium hover:text-bg-onyx font-sans text-xs sm:text-sm font-bold transition-all shadow-[0_0_15px_rgba(204,255,0,0.18)] flex items-center gap-1.5 cursor-none"
+            >
+              <span className="text-sm">🔗</span>
+              <span>{lang === 'ar' ? 'روابطنا' : 'Bio'}</span>
+            </Link>
+
             <a 
               href="#portfolio"
               className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/15 text-slate-200 hover:text-white hover:border-accent-radium/50 font-sans text-xs sm:text-sm font-medium transition-all backdrop-blur-md cursor-none"

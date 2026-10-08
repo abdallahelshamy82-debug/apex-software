@@ -12,24 +12,24 @@ import { BlurView } from 'expo-blur';
 const bgImage = require('../../assets/images/login-bg-dev.jpg');
 
 const PLATFORMS = [
-  { id: 'web', label: 'Web Application', labelAr: 'موقع ويب / تطبيق ويب', price: 600, timeDays: 14, icon: 'desktop-outline' },
-  { id: 'android', label: 'Android App', labelAr: 'تطبيق أندرويد', price: 800, timeDays: 21, icon: 'logo-android' },
-  { id: 'ios', label: 'iOS App', labelAr: 'تطبيق آيفون (iOS)', price: 900, timeDays: 21, icon: 'logo-apple' },
+  { id: 'web', label: 'Web Application / Landing Page', labelAr: 'موقع ويب / صفحة هبوط سريعة', price: 100, timeDays: 5, icon: 'desktop-outline', noteAr: 'واجهة عصرية سريعة، متوافقة 100% مع الموبايل والتابلت' },
+  { id: 'android', label: 'Android App (APK + AAB)', labelAr: 'تطبيق أندرويد متكامل (APK + AAB)', price: 200, timeDays: 10, icon: 'logo-android', noteAr: 'ملفات جاهزة للإطلاق وتناسب أنظمة الشركات و ERP' },
+  { id: 'ios', label: 'iOS App (iPhone)', labelAr: 'تطبيق آيفون (iOS)', price: 300, timeDays: 12, icon: 'logo-apple', noteAr: 'أداء فائق وسلاسة تامة بنظام iOS الحديث' },
 ];
 
 const FEATURES = [
-  { id: 'auth', label: 'User Authentication', labelAr: 'تسجيل دخول وحسابات', price: 150, timeDays: 3, icon: 'person-outline' },
-  { id: 'payments', label: 'Payment Gateway', labelAr: 'بوابات الدفع الإلكتروني', price: 300, timeDays: 5, icon: 'card-outline' },
-  { id: 'chat', label: 'Real-time Chat', labelAr: 'محادثات فورية (Chat)', price: 400, timeDays: 7, icon: 'chatbubbles-outline' },
-  { id: 'maps', label: 'Maps & GPS', labelAr: 'خرائط وتتبع', price: 250, timeDays: 4, icon: 'map-outline' },
-  { id: 'ai', label: 'AI Integration', labelAr: 'ذكاء اصطناعي (AI)', price: 500, timeDays: 10, icon: 'hardware-chip-outline' },
+  { id: 'auth', label: 'User Authentication & DB', labelAr: 'تسجيل دخول وحسابات وقاعدة بيانات', price: 60, timeDays: 2, icon: 'person-outline', noteAr: 'حسابات مستخدمين، لوحة بروفايل وقاعدة بيانات آمنة' },
+  { id: 'payments', label: 'Payment Gateway', labelAr: 'بوابات الدفع الإلكتروني (Paymob / Stripe)', price: 80, timeDays: 3, icon: 'card-outline', noteAr: 'ربط فيزا، ماستركارد، فودافون كاش، باي موب وسترايب' },
+  { id: 'chat', label: 'Real-time Chat & n8n', labelAr: 'محادثات فورية وربط الأتمتة (n8n)', price: 180, timeDays: 4, icon: 'chatbubbles-outline', noteAr: 'شات فوري بين المستخدمين وسيرفر أتمتة n8n ذكي' },
+  { id: 'maps', label: 'Live Maps & GPS Tracking', labelAr: 'خرائط حية وتتبع GPS ومسارات', price: 220, timeDays: 4, icon: 'map-outline', noteAr: 'ربط خرائط جوجل وتتبع خطوط السير والمسافات' },
+  { id: 'ai', label: 'AI Copilot & ChatGPT', labelAr: 'ذكاء اصطناعي ومساعد ذكي (AI Copilot)', price: 120, timeDays: 3, icon: 'hardware-chip-outline', noteAr: 'مساعد ذكي مدرب على إجابة استفسارات العملاء آلياً' },
 ];
 
 const EXTRAS = [
-  { id: 'playstore', label: 'Upload to Google Play', labelAr: 'رفع الموبايل على متجر جوجل', price: 50, timeDays: 2, icon: 'logo-google-playstore' },
-  { id: 'appstore', label: 'Upload to Apple Store', labelAr: 'رفع الموبايل على آبل ستور', price: 100, timeDays: 4, icon: 'logo-apple-appstore' },
-  { id: 'hosting', label: 'Domain & Hosting (1yr)', labelAr: 'حجز دومين واستضافة (سنة)', price: 150, timeDays: 1, icon: 'server-outline' },
-  { id: 'uiux', label: 'Custom UI/UX Design', labelAr: 'تصميم واجهات احترافي (UI/UX)', price: 350, timeDays: 10, icon: 'color-palette-outline' },
+  { id: 'playstore', label: 'Publish to Google Play', labelAr: 'رفع وضبط التطبيق على Google Play', price: 40, timeDays: 2, icon: 'logo-google-playstore', noteAr: 'تجهيز لقطات الشاشة، سياسة الخصوصية وتوليد الـ Bundle' },
+  { id: 'appstore', label: 'Publish to Apple Store', labelAr: 'رفع وإعداد الشهادات على Apple Store', price: 130, timeDays: 3, icon: 'logo-apple-appstore', noteAr: 'إعداد الشهادات ومراجعة أبل (شامل اشتراك أبل وحساب المطور)' },
+  { id: 'hosting', label: 'Domain & Cloud Hosting (1yr)', labelAr: 'دومين .com واستضافة سحابية سريعة (سنة)', price: 50, timeDays: 1, icon: 'server-outline', noteAr: 'حجز دومين رسمي واستضافة سحابية فائقة السرعة مع SSL' },
+  { id: 'uiux', label: 'Custom Modern UI/UX', labelAr: 'تصميم واجهات وتجربة مستخدم عصرية (UI/UX)', price: 70, timeDays: 3, icon: 'color-palette-outline', noteAr: 'تصميم واجهات احترافي مخصص بالكامل لهوية علامتك' },
 ];
 
 export default function EstimatorScreen() {
@@ -179,11 +179,25 @@ export default function EstimatorScreen() {
               <View style={[styles.iconWrapper, isSelected && { backgroundColor: 'rgba(180, 248, 44, 0.15)' }]}>
                 <Ionicons name={opt.icon as any} size={24} color={isSelected ? theme.primary : '#94A3B8'} />
               </View>
-              <Text style={[styles.optionText, isSelected && { color: '#FFF' }, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0, textAlign: isRTL ? 'right' : 'left', flex: 1 }]}>
-                {isRTL ? opt.labelAr : opt.label}
-              </Text>
+              <View style={{ flex: 1, marginHorizontal: 12 }}>
+                <Text style={[styles.optionText, isSelected && { color: '#FFF' }, { textAlign: isRTL ? 'right' : 'left' }]}>
+                  {isRTL ? opt.labelAr : opt.label}
+                </Text>
+                {opt.noteAr && isRTL && (
+                  <Text style={[styles.optionSubnote, isSelected && { color: 'rgba(255,255,255,0.7)' }]}>
+                    {opt.noteAr}
+                  </Text>
+                )}
+              </View>
             </View>
-            <Text style={[styles.priceTag, isSelected && { color: theme.primary }]}>+${opt.price}</Text>
+            <View style={{ alignItems: isRTL ? 'flex-start' : 'flex-end', minWidth: 70 }}>
+              <Text style={[styles.priceTag, isSelected && { color: theme.primary }]}>+${opt.price}</Text>
+              {isRTL && (
+                <Text style={[styles.egpTag, isSelected && { color: theme.primary }]}>
+                  ~{(opt.price * 50).toLocaleString()} ج.م
+                </Text>
+              )}
+            </View>
           </TouchableOpacity>
         );
       })}
@@ -268,9 +282,12 @@ export default function EstimatorScreen() {
                 <View style={styles.iconCircleBig}>
                   <Ionicons name="receipt" size={48} color={theme.primary} />
                 </View>
-                <Text style={styles.summaryTitle}>{isRTL ? 'الملخص والتكلفة التقريبية' : 'Summary & Estimated Cost'}</Text>
+                <Text style={styles.summaryTitle}>{isRTL ? 'الملخص والتكلفة المبدئية' : 'Summary & Estimated Cost'}</Text>
                 
                 <Text style={styles.totalCost}>${calculateTotal()}</Text>
+                {isRTL && calculateTotal() > 0 && (
+                  <Text style={styles.totalEgp}>~{(calculateTotal() * 50).toLocaleString()} جنيه مصري تقريباً</Text>
+                )}
                 
                 <View style={[styles.timePill, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                   <Ionicons name="time-outline" size={20} color="#38BDF8" />
@@ -280,7 +297,7 @@ export default function EstimatorScreen() {
                 </View>
 
                 <Text style={styles.summaryNotice}>
-                  {isRTL ? 'هذه التكلفة والمدة مبدئية وقد تتغير بناءً على التفاصيل الدقيقة التي سنناقشها في الاستشارة.' : 'This cost and duration are rough estimates and may change based on specific details discussed during consultation.'}
+                  {isRTL ? 'هذه التكلفة والمدة مبدئية تنافسية لأقصى حد، ويتم تثبيتها في العقد الرسمي فور مراجعة متطلباتك الدقيقة.' : 'This cost and duration are rough estimates and may change based on specific details discussed during consultation.'}
                 </Text>
               </View>
             )}
@@ -292,21 +309,41 @@ export default function EstimatorScreen() {
       <View style={[styles.bottomGlassBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]} >
         <View style={[styles.bottomGlassContent, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
           <View style={{ alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-            <Text style={styles.bottomLabel}>{isRTL ? 'الإجمالي والمدة' : 'Est. Total & Time'}</Text>
-            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'baseline' }}>
+            <Text style={styles.bottomLabel}>{isRTL ? 'الإجمالي والمدة التقديرية' : 'Est. Total & Time'}</Text>
+            <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'baseline', gap: 6 }}>
               <Text style={styles.bottomTotal}>${calculateTotal()}</Text>
+              {isRTL && calculateTotal() > 0 && (
+                <Text style={styles.bottomEgp}>({(calculateTotal() * 50).toLocaleString()} ج.م)</Text>
+              )}
               <Text style={[styles.bottomTime, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>• {calculateTime()}</Text>
             </View>
           </View>
           
-          <TouchableOpacity 
-            style={[styles.nextBtn, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
-            onPress={() => step < 4 ? setStep(step + 1) : handleSubmit()}
-            disabled={loading}
-          >
-            <Text style={styles.nextBtnText}>{step < 4 ? (isRTL ? 'التالي' : 'Next Step') : (isRTL ? 'إرسال الطلب' : 'Submit Request')}</Text>
-            {step < 4 && <Ionicons name={isRTL ? 'arrow-back' : 'arrow-forward'} size={18} color="#0F172A" style={{ marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }} />}
-          </TouchableOpacity>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 12, alignItems: 'center' }}>
+            {step > 1 && (
+              <TouchableOpacity 
+                style={[styles.prevBtn, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+                onPress={() => setStep(step - 1)}
+                disabled={loading}
+              >
+                <Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={18} color="#CBD5E1" />
+                <Text style={styles.prevBtnText}>{isRTL ? 'السابق' : 'Previous'}</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity 
+              style={[styles.nextBtn, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+              onPress={() => step < 4 ? setStep(step + 1) : handleSubmit()}
+              disabled={loading}
+            >
+              <Text style={styles.nextBtnText}>{step < 4 ? (isRTL ? 'التالي' : 'Next Step') : (isRTL ? 'إرسال وحفظ الطلب' : 'Submit Request')}</Text>
+              {step < 4 ? (
+                <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={18} color="#0F172A" style={{ marginLeft: isRTL ? 4 : 8, marginRight: isRTL ? 8 : 4 }} />
+              ) : (
+                <Ionicons name="rocket-outline" size={18} color="#0F172A" style={{ marginLeft: isRTL ? 4 : 8, marginRight: isRTL ? 8 : 4 }} />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ImageBackground>
@@ -463,4 +500,40 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   nextBtnText: { color: '#0F172A', fontWeight: 'bold', fontSize: 16 },
+  prevBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 30,
+    alignItems: 'center',
+  },
+  prevBtnText: {
+    color: '#E2E8F0',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  egpTag: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  bottomEgp: {
+    color: '#94A3B8',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  totalEgp: {
+    color: '#38BDF8',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  optionSubnote: {
+    color: '#64748B',
+    fontSize: 12,
+    marginTop: 3,
+  },
 });

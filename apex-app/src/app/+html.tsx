@@ -7,7 +7,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
   const { bodyAttributes, bodyNodes, htmlAttributes, headNodes } = useServerDocumentContext();
 
   return (
-    <html lang="ar" dir="rtl" {...htmlAttributes}>
+    <html lang="ar" dir="ltr" {...htmlAttributes}>
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -21,7 +21,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
         {headNodes}
 
-        {/* Global responsive viewport & keyboard adaptation styling */}
+        {/* Global responsive viewport, keyboard adaptation & unified right scrollbar */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -34,6 +34,29 @@ export default function Root({ children }: { children: React.ReactNode }) {
                 flex-direction: column;
                 overflow: hidden;
                 -webkit-tap-highlight-color: transparent;
+                direction: ltr !important;
+              }
+
+              /* Custom sleek dark scrollbar placed strictly on the right */
+              ::-webkit-scrollbar {
+                width: 7px;
+                height: 7px;
+              }
+              ::-webkit-scrollbar-track {
+                background: #09090b;
+              }
+              ::-webkit-scrollbar-thumb {
+                background: #27272a;
+                border-radius: 4px;
+              }
+              ::-webkit-scrollbar-thumb:hover {
+                background: #b4f82c;
+              }
+
+              /* Firefox support */
+              * {
+                scrollbar-width: thin;
+                scrollbar-color: #27272a #09090b;
               }
             `,
           }}

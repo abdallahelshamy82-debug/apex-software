@@ -158,7 +158,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       language, setLanguage, t, isRTL, currentUser, setCurrentUser,
       isAppReady
     }}>
-      <View style={{ flex: 1, direction: isRTL ? 'rtl' : 'ltr', backgroundColor: theme.bg }}>
+      <View style={{ flex: 1, backgroundColor: theme.bg }}>
         {!isAppReady ? (
           <ApexLoader fullScreen theme={theme} isRTL={isRTL} message={isRTL ? 'جاري تشغيل منصة ماجيكسا...' : 'Initializing Magixa Platform...'} />
         ) : (
