@@ -91,8 +91,8 @@ export default function BioLinksPage() {
     },
     {
       id: 'whatsapp',
-      title: 'واتساب (@AbdAllah.IT.Full.Stack)',
-      subtitle: '+201558652579 • استفسار وسرعة رد',
+      title: 'واتساب (WhatsApp)',
+      subtitle: '@AbdAllah.IT.Full.Stack • محادثة فورية واستفسار',
       url: '/whatsapp',
       icon: (
         <svg className="w-5 h-5 text-emerald-400 fill-current" viewBox="0 0 24 24">
@@ -394,9 +394,17 @@ export default function BioLinksPage() {
             <span className="text-accent-radium bg-accent-radium/10 border border-accent-radium/30 px-3.5 py-1.5 rounded-lg select-all">
               contact@magixa.tech
             </span>
-            <span className="text-white bg-white/5 border border-border-glass px-3.5 py-1.5 rounded-lg">
-              هاتف / واتساب: +201558652579
-            </span>
+            <a 
+              href="/whatsapp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:text-accent-radium bg-white/5 border border-border-glass px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-none"
+            >
+              <svg className="w-3.5 h-3.5 text-emerald-400 fill-current" viewBox="0 0 24 24">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.761.814 2.791.814 3.18 0 5.767-2.586 5.768-5.766 0-3.18-2.587-5.766-5.768-5.766zm9.969 5.828c0 5.514-4.486 10-10 10-1.748 0-3.385-.45-4.819-1.242l-5.181 1.356 1.378-5.034c-.886-1.488-1.378-3.216-1.378-5.08 0-5.514 4.486-10 10-10s10 4.486 10 10z"/>
+              </svg>
+              <span>واتساب: @AbdAllah.IT.Full.Stack</span>
+            </a>
           </div>
         </div>
 

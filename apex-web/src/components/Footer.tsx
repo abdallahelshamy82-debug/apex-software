@@ -26,6 +26,16 @@ export default function Footer() {
             <span className="w-1.5 h-1.5 rounded-full bg-accent-radium animate-pulse" />
             <span>{lang === 'ar' ? 'تطبيق أندرويد' : 'Android App'}: {APP_RELEASE.versionFull}</span>
           </a>
+          <span className="text-white/20 hidden md:inline">•</span>
+          <a 
+            href="/system"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-radium/10 border border-accent-radium/30 hover:border-accent-radium/60 text-accent-radium hover:text-white transition-colors text-xs font-sans cursor-none"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-accent-radium" />
+            <span>{lang === 'ar' ? 'نسخة الويب السحابية (iOS / Web)' : 'Cloud Web App (iOS & Web)'}</span>
+          </a>
         </div>
         
         <div className="flex gap-2.5 md:gap-3 flex-wrap justify-center items-center">

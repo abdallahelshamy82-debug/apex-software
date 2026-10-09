@@ -22,6 +22,21 @@ const nextConfig = {
         destination: 'https://wa.me/201558652579?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20Magixa%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%D9%83%D9%85%20%D8%A7%D9%84%D8%A8%D8%B1%D9%85%D8%AC%D9%8A%D8%A9',
         permanent: false,
       },
+      {
+        source: '/system',
+        destination: 'https://apex-app-delta-neon.vercel.app',
+        permanent: false,
+      },
+      {
+        source: '/portal',
+        destination: 'https://apex-app-delta-neon.vercel.app',
+        permanent: false,
+      },
+      {
+        source: '/app',
+        destination: 'https://apex-app-delta-neon.vercel.app',
+        permanent: false,
+      },
     ];
   },
 };

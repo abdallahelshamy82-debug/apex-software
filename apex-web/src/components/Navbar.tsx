@@ -103,7 +103,9 @@ export default function Navbar() {
             </a>
 
             <a 
-              href="#contact"
+              href="/system"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hidden sm:inline-block px-4 py-2 rounded-full bg-accent-radium/15 border border-accent-radium/35 text-accent-radium hover:bg-accent-radium hover:text-bg-onyx font-sans text-xs sm:text-sm font-bold transition-all shadow-sm cursor-none"
             >
               {t.common.startProject}

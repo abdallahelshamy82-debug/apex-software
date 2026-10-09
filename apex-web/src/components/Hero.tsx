@@ -74,10 +74,12 @@ export default function Hero() {
               transition={{ delay: 0.8, duration: 0.7 }}
               className="flex flex-wrap items-center gap-3"
             >
-              {/* 1. Start Project -> Scrolls smoothly to #contact */}
+              {/* 1. Start Project -> Opens the full Cloud System Web App */}
               <Magnetic strength={0.2}>
                 <a 
-                  href="#contact"
+                  href="/system"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full sm:w-auto text-center px-8 py-3.5 rounded-full bg-accent-radium text-bg-onyx font-sans font-bold text-base hover:bg-white hover:shadow-[0_0_25px_rgba(204,255,0,0.5)] transition-all shadow-[0_0_15px_rgba(204,255,0,0.35)] block cursor-none"
                 >
                   {t.common.startProject}
@@ -133,14 +135,27 @@ export default function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 0.8 }}
-              className="flex items-center gap-2 text-xs text-text-muted font-sans px-1"
+              className="flex flex-wrap items-center gap-3 text-xs text-text-muted font-sans px-1"
             >
-              <span className="w-2 h-2 rounded-full bg-accent-radium animate-pulse" />
-              <span>
-                {lang === 'ar' 
-                  ? `أحدث إصدار أندرويد متوفر للتحميل: ${APP_RELEASE.versionFull}` 
-                  : `Latest Android APK Available: ${APP_RELEASE.versionFull}`}
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-accent-radium animate-pulse" />
+                <span>
+                  {lang === 'ar' 
+                    ? `تطبيق أندرويد APK: ${APP_RELEASE.versionFull}` 
+                    : `Android APK: ${APP_RELEASE.versionFull}`}
+                </span>
               </span>
+              <span className="text-white/20 hidden sm:inline">•</span>
+              <a 
+                href="/system" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-slate-300 hover:text-accent-radium underline underline-offset-4 transition-colors cursor-none"
+              >
+                {lang === 'ar' 
+                  ? 'نسخة الويب السحابية متاحة لجميع أجهزة iPhone والمتصفحات' 
+                  : 'Cloud Web App available for iPhone & all browsers'}
+              </a>
             </motion.div>
           </div>
 
