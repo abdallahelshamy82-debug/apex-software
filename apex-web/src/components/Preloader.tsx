@@ -44,7 +44,7 @@ export default function Preloader() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="scale-110 md:scale-130 origin-bottom-left"
         >
-          <Logo size="lg" />
+          <Logo />
         </motion.div>
         
         <h2 className="text-white font-sans text-6xl md:text-[8rem] font-black leading-none tracking-tighter">
