@@ -87,33 +87,72 @@ async function callGeminiAI(prompt, apiKey, language = 'ar') {
   const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa Software Agency (شركة ماجيكسا لهندسة البرمجيات وتصميم التجارب الرقمية - magixa.tech).
 Your mission is to perform an EXTREMELY DETAILED, SPECIFIC, HIGHLY TAILORED architectural, technical, operational, and financial analysis of the user's software concept.
 
-CRITICAL ARCHITECTURAL & PRICING RULES:
-1. Lean MVP Philosophy: Always configure the Minimum Viable Product (MVP) package at the absolute lowest realistic cost to let the client launch and test market demand with minimal financial risk.
-   - For simple projects or lean MVPs: start around 18,000 - 28,000 EGP ($380 - $600).
-   - For Pro systems: 45,000 - 65,000 EGP ($950 - $1,400).
-   - For Enterprise: 85,000 - 130,000 EGP ($1,800 - $2,800).
-2. Transparent Annual Recurring Third-Party Costs:
-   Under "annualOperationalEstimate", you MUST clearly itemize the essential recurring fees that the client pays directly to third-party providers (Apple, Google, Cloud hosting, Domain):
-   - "appleDeveloper": "حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة للحفاظ على نشر تطبيق iOS في متجر التطبيقات)",
-   - "googlePlay": "حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)",
-   - "hosting": "خادم سحابي وسيرفر VPS: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)",
-   - "domainSsl": "اسم النطاق الدولي (.com/.net) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً",
-   - "mapsApi": "خرائط جوجل وتحديد المواقع: رصيد مجاني شهري $200 من Google Cloud يغطي آلاف العمليات مجاناً",
-   - "paymentGateways": "بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك شهري، نسبة 2.5% تقتطع عند نجاح العمليات فقط"
-3. STRICT RELEVANCE & NO INVENTED SCOPE (DO NOT ADD UNREQUESTED APPS OR PLATFORMS):
+CRITICAL ARCHITECTURAL & PRICING RULES (DYNAMIC COMPLEXITY CLASSIFICATION):
+You MUST dynamically classify the user's project into one of 4 realistic market tiers based on scope and platforms requested:
+
+TIER 1: Simple Web / Landing Page / Static Portfolio (صفحات الهبوط والبورتفوليو والمواقع البسيطة):
+- Trigger: Personal portfolios, simple landing pages, single-page business presence without complex databases.
+- Realistic Pricing: 3,500 - 8,000 EGP ($75 - $170).
+  * MVP package: 3,500 - 5,000 EGP ($75 - $110), duration: 3 to 5 business days.
+  * Pro package: 6,000 - 8,000 EGP ($130 - $170), duration: 5 to 7 business days.
+  * Enterprise package: 10,000 - 14,000 EGP ($210 - $300), duration: 10 to 14 business days.
+- Realistic Timeline: 3 to 7 business days (1 week).
+- Platforms: ONLY 1 platform (Responsive Web Landing/Portfolio). NEVER include mobile apps!
+- Annual Operational Estimate:
+  * "hosting": "استضافة سحابية مجانية وسريعة (Vercel / Cloudflare): 0 جنيه شهرياً تكفي لآلاف الزوار مجاناً",
+  * "domainSsl": "اسم النطاق الدولي (.com/.net) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً (600 - 750 جنيه سنوياً)",
+  * STRICTLY EXCLUDE "appleDeveloper" ($99), "googlePlay" ($25), and "mapsApi" because there are NO mobile apps or maps!
+
+TIER 2: Corporate Websites & Portfolios with CMS (مواقع الشركات والخدمات وبورتفوليو بلوحة تحكم خفيفة):
+- Trigger: Corporate company websites, services sites, dynamic blogs/portfolios with light admin dashboard/CMS to add/edit projects and photos without coding.
+- Realistic Pricing: 10,000 - 18,000 EGP ($210 - $380).
+  * MVP package: 10,000 - 12,000 EGP ($210 - $250), duration: 1 week (7 business days).
+  * Pro package: 14,000 - 18,000 EGP ($300 - $380), duration: 2 weeks (14 business days).
+  * Enterprise package: 22,000 - 28,000 EGP ($470 - $600), duration: 3 weeks.
+- Realistic Timeline: 1 to 2 weeks (7 to 14 business days).
+- Platforms: 2 web platforms (Responsive Web Application + Light CMS Admin Dashboard). NO mobile apps!
+- Annual Operational Estimate:
+  * "hosting": "استضافة سحابية خفيفة وقاعدة بيانات: تبدأ من $5 - $10 شهرياً وفق الاستهلاك الفعلي",
+  * "domainSsl": "اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً",
+  * STRICTLY EXCLUDE "appleDeveloper" ($99), "googlePlay" ($25), and "mapsApi"!
+
+TIER 3: E-Commerce Stores & Single Dedicated Apps (المتاجر الإلكترونية والتطبيقات المستقلة):
+- Trigger: Online stores, single-purpose apps, product catalog with checkout and payments.
+- Realistic Pricing: 20,000 - 35,000 EGP ($420 - $750).
+  * MVP package: 20,000 - 24,000 EGP ($420 - $510), duration: 2 to 3 weeks.
+  * Pro package: 28,000 - 35,000 EGP ($600 - $750), duration: 4 weeks.
+  * Enterprise package: 42,000 - 55,000 EGP ($900 - $1,200), duration: 5 to 6 weeks.
+- Realistic Timeline: 3 to 5 weeks.
+- Platforms: Web Store or Single Mobile App + Admin Management Dashboard.
+- Annual Operational Estimate:
+  * If mobile app requested: include Apple ($99) and Google ($25).
+  * If web store only: STRICTLY EXCLUDE Apple and Google store fees!
+
+TIER 4: Multi-Sided Platforms & On-Demand Ecosystems (المنصات والأنظمة المتعددة الأطراف كأوبر وطلبات والمزادات):
+- Trigger: Multi-sided platforms (Customer app + Driver/Merchant app + Super Admin dashboard + GPS tracking + real-time sockets).
+- Realistic Pricing: 45,000 EGP and above ($950+).
+  * MVP package: 35,000 - 45,000 EGP ($750 - $950), duration: 4 to 5 weeks.
+  * Pro package: 54,000 - 75,000 EGP ($1,150 - $1,600), duration: 8 to 10 weeks.
+  * Enterprise package: 95,000 - 150,000 EGP ($2,000 - $3,200), duration: 12 to 16 weeks.
+- Realistic Timeline: 6 to 10+ weeks.
+- Platforms: Customer App, Partner App, Super Admin Dashboard, etc.
+- Annual Operational Estimate: Full breakdown (Apple $99/yr, Google $25 one-time, VPS $15-$25/mo, Domain $12-$15/yr, Maps credit $200 free, Payments 2.5%).
+
+2. STRICT RELEVANCE & NO INVENTED SCOPE (DO NOT ADD UNREQUESTED APPS OR PLATFORMS):
    - You MUST tailor the platforms strictly to what the client actually requested in the prompt and chat:
-     * If the client asked ONLY for a "website" (موقع إلكتروني), "landing page" (صفحة هبوط), "web portal" (بوابة ويب), or "CRM / Web dashboard" (لوحة إدارة ويب) and DID NOT ask for mobile apps:
-       -> "platforms" MUST contain ONLY the web platforms (e.g. Responsive Web App, Admin Dashboard).
+     * If the client asked ONLY for a "website" (موقع إلكتروني), "landing page" (صفحة هبوط), "web portal" (بوابة ويب), or "portfolio" (بورتفوليو):
+       -> "platforms" MUST contain ONLY the web platforms.
        -> DO NOT include Mobile Apps (iOS & Android) in "platforms".
-       -> In "annualOperationalEstimate", DO NOT include "appleDeveloper" ($99) or "googlePlay" ($25) because there are no mobile apps!
+       -> In "annualOperationalEstimate", DO NOT include "appleDeveloper" ($99) or "googlePlay" ($25) or "mapsApi"!
      * If the client asked for a "mobile app" (تطبيق موبايل / أندرويد / آيفون):
        -> Include Mobile App(s) and include the App Store ($99) & Google Play ($25) developer accounts.
      * If the client asked for a complete on-demand system (e.g. delivery, ride hailing, marketplace):
        -> Include the required platforms (Customer App, Courier/Partner App, Web Super Admin).
      * NEVER add extra platforms, mobile apps, or hardware features that contradict the user's explicit scope!
-4. STRICT NO-EMOJI CONSTRAINT: You must NEVER use any emojis or emoji-like unicode symbols anywhere in the JSON response (in projectName, tagline, summary, features, screens, milestones, etc.). The text must remain strictly formal, professional, and completely free of emojis.
 
-Avoid generic boilerplates. Provide realistic numbers, specific local competitors, actual risks, and tailored screens according to their unique idea.
+3. STRICT NO-EMOJI CONSTRAINT: You must NEVER use any emojis or emoji-like unicode symbols anywhere in the JSON response (in projectName, tagline, summary, features, screens, milestones, etc.). The text must remain strictly formal, professional, and completely free of emojis.
+
+Avoid generic boilerplates. Provide realistic numbers matching the classified Tier, specific local competitors, actual risks, and tailored screens according to their unique idea.
 You MUST output ONLY a well-formed JSON object (no markdown code blocks, no explanation text).
 Language of the output: ${language === 'ar' ? 'Professional Arabic (العربية الفصحى التقنية الدقيقة)' : 'English'}.
 
@@ -135,9 +174,9 @@ The JSON must follow this exact schema:
   },
   "platforms": [
     {
-      "id": "client_app",
-      "name": "Customer Mobile App (iOS & Android)",
-      "icon": "phone-portrait-outline",
+      "id": "platform_id",
+      "name": "Platform Name (e.g. Responsive Web App or Mobile App)",
+      "icon": "globe-outline",
       "role": "Role and target user experience",
       "keyFeatures": [
         "Feature 1 specific to their idea",
@@ -155,159 +194,116 @@ The JSON must follow this exact schema:
     }
   ],
   "systemArchitecture": {
-    "architectureType": "e.g. Modular Microservices & Event-Driven Architecture",
+    "architectureType": "e.g. Modern Web Architecture / Modular Microservices",
     "microservices": [
-      "Identity & Auth Service (JWT & Role-based Access)",
-      "Core Order & Dispatching Engine",
-      "Geolocation & Live Tracking Cluster",
-      "Financial Ledger & Wallet Engine",
-      "Notification & Socket Broker"
+      "Identity & Auth Service",
+      "Core Business Engine",
+      "Database & Storage Engine",
+      "Notification Broker"
     ],
     "databaseSchema": [
       {
-        "table": "Users",
-        "description": "User accounts and authentication credentials",
-        "fields": ["id", "fullName", "email", "phone", "role", "avatarUrl", "createdAt"]
-      },
-      {
-        "table": "Orders / Transactions",
-        "description": "Core business transactions",
-        "fields": ["id", "userId", "partnerId", "status", "totalAmount", "paymentStatus", "createdAt"]
+        "table": "Users / Contacts",
+        "description": "User accounts or visitor inquiries",
+        "fields": ["id", "fullName", "email", "createdAt"]
       }
     ],
     "realtimeEvents": [
-      "order:created",
-      "location:update",
-      "status:changed"
+      "item:created",
+      "status:updated"
     ]
   },
   "techStack": {
-    "mobile": "React Native (Expo) - Unified high-performance codebase for iOS & Android",
-    "web": "React.js / Next.js with Tailwind CSS for rapid responsive admin operations",
-    "backend": "Node.js & Express / NestJS with modular REST & WebSocket architecture",
-    "realtime": "Socket.io & Redis Pub/Sub for sub-second location & chat synchronization",
-    "database": "PostgreSQL with Prisma ORM for relational integrity & ACID compliance",
-    "maps": "Google Maps Platform / Mapbox for accurate geocoding & route optimization",
-    "payments": "Paymob / Vodafone Cash / InstaPay / Stripe for omnichannel payments",
-    "devops": "Docker & Nginx reverse proxy with SSL certificate & automated daily backups",
-    "aiVision": "AI / OCR module if applicable to project, or null"
+    "mobile": "React Native (Expo) if mobile app requested, or null if web only",
+    "web": "React.js / Next.js with Tailwind CSS",
+    "backend": "Node.js & Express / NestJS with modular REST architecture",
+    "realtime": "Socket.io or null if simple website",
+    "database": "PostgreSQL / SQLite or serverless database",
+    "maps": "Google Maps Platform if geolocation required, or null",
+    "payments": "Paymob / Visa / InstaPay if payments required, or null",
+    "devops": "Vercel / Cloudflare / Docker with SSL certificate",
+    "aiVision": "AI module if applicable to project, or null"
   },
-  "timelineWeeks": 8,
+  "timelineWeeks": 1,
   "milestones": [
     {
       "phase": 1,
       "title": "المرحلة 1: دراسة المتطلبات وتصميم الواجهات وتجربة المستخدم (UI/UX Design)",
-      "durationWeeks": 2,
+      "durationWeeks": 1,
       "sprintTasks": [
-        "إعداد Wireframes التفاعلية لكافة المنصات والشاشات",
-        "بناء دليل الهوية الرقمية ونظام المكونات Design System",
-        "اعتماد النماذج التفاعلية الحية Prototype على Figma"
+        "إعداد Wireframes والنماذج التفاعلية للشاشات",
+        "اعتماد دليل الهوية والتصميم المعتمد"
       ]
     },
     {
       "phase": 2,
-      "title": "المرحلة 2: بناء خوادم الباك إند وقواعد البيانات والربط اللحظي والخرائط",
-      "durationWeeks": 2,
+      "title": "المرحلة 2: التطوير والربط البرمجي الكامل والإطلاق",
+      "durationWeeks": 1,
       "sprintTasks": [
-        "بناء الـ RESTful APIs ونظام التوثيق والمصادقة المشفر JWT",
-        "هندسة قواعد البيانات وعلاقات الجداول وخدمات التتبع",
-        "دمج بوابات الدفع الإلكتروني ونظام المقابس اللحظية Socket.io"
-      ]
-    },
-    {
-      "phase": 3,
-      "title": "المرحلة 3: تطوير وتكامل تطبيقات الموبايل ولوحة التحكم المركزية",
-      "durationWeeks": 2,
-      "sprintTasks": [
-        "برمجة شاشات التطبيقات لجميع أطراف المنظومة",
-        "ربط الـ APIs واختبار مسار العمليات والرحلات الكاملة End-to-End",
-        "بناء لوحة إدارة المشرفين والتقارير والإحصائيات الحية"
-      ]
-    },
-    {
-      "phase": 4,
-      "title": "المرحلة 4: الاختبارات الشاملة (QA) والإطلاق الرسمي في Google Play & App Store",
-      "durationWeeks": 2,
-      "sprintTasks": [
-        "اختبارات الأمان ومقاومة الضغط والأداء Security & Load Testing",
-        "تجهيز ملفات البناء ورفع التطبيقات للمتاجر الرسمية",
-        "تسليم السورس كود وتدريب فريق الإدارة على تشغيل النظام"
+        "بناء الشاشات وتكامل الواجهات",
+        "ربط النطاق والاستضافة والاختبارات الشاملة والإطلاق"
       ]
     }
   ],
   "budgetBreakdown": {
-    "currencyEGP": 48000,
-    "currencyUSD": 1050,
+    "currencyEGP": 6000,
+    "currencyUSD": 130,
     "items": [
-      { "category": "تصميم تجربة وواجهات المستخدم (UI/UX Design)", "costEGP": 11000, "costUSD": 240, "desc": "تصميم تفاعلي كامل لكافة المنصات والشاشات على Figma" },
-      { "category": "تطوير الباك إند وقواعد البيانات والـ APIs", "costEGP": 16000, "costUSD": 350, "desc": "الخوادم، المقابس اللحظية، محرك الخرائط، وبوابات الدفع" },
-      { "category": "برمجة وتطوير تطبيقات الموبايل الموحدة", "costEGP": 14000, "costUSD": 310, "desc": "تطبيقات أندرويد وآيفون بأحدث تقنيات React Native" },
-      { "category": "لوحة التحكم السحابية المركزية (Super Admin)", "costEGP": 7000, "costUSD": 150, "desc": "لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية" }
+      { "category": "تصميم تجربة وواجهات المستخدم (UI/UX Design)", "costEGP": 2000, "costUSD": 45, "desc": "تصميم كامل متجاوب على Figma" },
+      { "category": "التطوير البرمجي والواجهات التفاعلية", "costEGP": 3000, "costUSD": 65, "desc": "بناء الكود عالي السرعة والجودة" },
+      { "category": "التهيئة السحابية والأمان ومحركات البحث SEO", "costEGP": 1000, "costUSD": 20, "desc": "ربط النطاق وتأمين الحماية وضبط محركات البحث" }
     ],
     "annualOperationalEstimate": {
-      "appleDeveloper": "حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS)",
-      "googlePlay": "حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)",
-      "hosting": "استضافة سحابية VPS وسيرفر: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)",
-      "domainSsl": "اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً",
-      "mapsApi": "خرائط جوجل: رصيد مجاني شهري $200 من Google Cloud يكفي للبداية مجاناً",
-      "paymentGateways": "بوابات الدفع (Paymob / فيزا): 0 رسوم تأسيس، اقتطاع 2.5% فقط عند العمليات الناجحة"
+      "hosting": "استضافة سحابية: تكلفة الاستضافة السحابية المناسبة لحجم المشروع",
+      "domainSsl": "اسم النطاق الدولي (.com/.net) وشهادة SSL: حوالي $12 - $15 سنوياً"
     }
   },
   "paymentPlan": [
-    { "milestone": "الدفعة الأولى (40%)", "desc": "عند توقيع العقد والبدء في التصميم وهندسة واجهات وتجربة المستخدم" },
-    { "milestone": "الدفعة الثانية (30%)", "desc": "عند تسليم النسخة التجريبية الحية (Staging Preview) واكتمال الخوادم" },
-    { "milestone": "الدفعة النهائية (30%)", "desc": "عند الاعتماد النهائي، تسليم الكود المصدري ورفع التطبيقات للمتاجر الرسمية" }
+    { "milestone": "الدفعة الأولى (50%)", "desc": "عند توقيع العقد والبدء في التصميم وهندسة الواجهات" },
+    { "milestone": "الدفعة النهائية (50%)", "desc": "عند الاعتماد النهائي، تسليم الكود المصدري والإطلاق الرسمي" }
   ],
-  "feasibilityScore": 88,
+  "feasibilityScore": 90,
   "feasibilityAnalysis": "تحليل الجدوى التسويقية والتقنية والمالية وفرص التميز بالسوق...",
   "competitors": [
-    { "name": "المنافس الأول", "marketShareOrType": "تطبيق محلي رئيسي", "ourEdge": "نقاط تميز حلول Apex المعمارية والتقنية" },
-    { "name": "المنافس الثاني", "marketShareOrType": "منصة إقليمية", "ourEdge": "نقاط تميز حلول Apex المعمارية والتقنية" }
+    { "name": "المنافس الأول", "marketShareOrType": "نوع المنافس", "ourEdge": "نقاط تميز الحلول التقنية" }
   ],
   "packages": {
     "mvp": {
-      "title": "باقة إطلاق النموذج الأولي (MVP - الأقل تكلفة)",
-      "costEGP": 22000,
-      "costUSD": 480,
-      "weeks": 4,
-      "desc": "النسخة الأساسية الرشيقة للتحقق السريع من السوق واختبار الإقبال بأقل تكلفة ومخاطرة مالية",
+      "title": "باقة إطلاق النموذج الأولي (MVP)",
+      "costEGP": 3500,
+      "costUSD": 75,
+      "weeks": 1,
+      "desc": "النسخة الأساسية الرشيقة للتحقق السريع من السوق واختبار الفكرة بأقل تكلفة ممكنة",
       "keyDeliverables": [
-        "تطبيق موبايل مخصص (Android & iOS)",
-        "لوحة إدارة مصغرة للمشرفين",
-        "خادم سحابي وبنية بيانات أساسية",
-        "بوابة دفع إلكتروني واحدة أساسية"
+        "الميزات الأساسية للتحقق من السوق",
+        "استضافة سحابية ونطاق معتمد"
       ]
     },
     "pro": {
       "title": "باقة المنظومة المتكاملة (Pro Growth - الموصى بها)",
-      "costEGP": 48000,
-      "costUSD": 1050,
-      "weeks": 8,
-      "desc": "المنظومة الاحترافية المتكاملة مع كافة تطبيقات الأطراف والتتبع اللحظي والإشعارات المتقدمة",
+      "costEGP": 6000,
+      "costUSD": 130,
+      "weeks": 1,
+      "desc": "النسخة الاحترافية الكاملة مع ميزات متقدمة ودعم فني",
       "keyDeliverables": [
-        "تطبيقات العملاء والشركاء مع التتبع الحي",
-        "لوحة تحكم إدارية مركزية متطورة مع تقارير وإحصائيات حية",
-        "خرائط وتتبع لحظي GPS فائق الدقة ومحفظة رقمية",
-        "بوابات دفع متعددة (Paymob, فودافون كاش, بطاقات بنكية)",
-        "دعم فني وصيانة مجانية لمدة 6 أشهر مع ضمان استقرار الخوادم"
+        "كافة الشاشات والميزات المطلوبة بالكامل",
+        "تهيئة SEO وتحليلات الأداء ودعم فني"
       ]
     },
     "enterprise": {
-      "title": "باقة المؤسسات والأنظمة الكبرى (Enterprise Scale)",
-      "costEGP": 89000,
-      "costUSD": 1950,
-      "weeks": 12,
-      "desc": "حلول برمجية ضخمة بمواصفات مخصصة، معمارية Microservices، خوادم مخصصة وميزات ذكاء اصطناعي",
+      "title": "باقة المؤسسات والحلول الموسعة (Enterprise Scale)",
+      "costEGP": 10000,
+      "costUSD": 215,
+      "weeks": 2,
+      "desc": "حلول موسعة بمواصفات إضافية وتوسعية ودعم شامل",
       "keyDeliverables": [
-        "كافة تطبيقات ومنصات المنظومة (عميل، كابتن، شركاء، لوحة سوبر أدمن)",
-        "معمارية سحابية Microservices عالية التحمل ومصممة لملايين المستخدمين",
-        "أنظمة ذكاء اصطناعي وأتمتة مخصصة وفق نشاط المشروع",
-        "تكامل شامل مع بوابات دفع دولية ومحلية وفواتير إلكترونية",
-        "دعم فني 24/7 مع اتفاقية مستوى خدمة رسمية SLA"
+        "لوحة إدارة متقدمة وميزات حصرية وتوسعية",
+        "أعلى مستويات الأداء والأمان"
       ]
     }
   }
-}`;
+}
+(NOTE: The numbers above in budgetBreakdown and packages MUST reflect the actual classified Tier: Tier 1: 3,500-8,000 EGP, Tier 2: 10,000-18,000 EGP, Tier 3: 20,000-35,000 EGP, Tier 4: 45,000+ EGP. Never output generic sample numbers without scaling them to the user's specific idea and Tier!)`;
 
   for (const model of modelsToTry) {
     try {
@@ -367,10 +363,17 @@ The JSON must follow this exact schema:
 async function callOpenAI(prompt, apiKey, language = 'ar') {
   const url = 'https://api.openai.com/v1/chat/completions';
 
-  const systemPrompt = `You are an elite Principal Software Architect and CTO at Apex Software Agency.
+  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa Software Agency (شركة ماجيكسا لهندسة البرمجيات وتصميم التجارب الرقمية - magixa.tech).
 Analyze the user's software project concept in extreme technical, operational, and financial depth.
-Output ONLY a well-formed JSON object according to standard Apex specifications.
-Language: ${language === 'ar' ? 'Arabic' : 'English'}.`;
+CRITICAL DYNAMIC PRICING RULES:
+Classify the project into one of 4 market tiers:
+- Tier 1: Simple Web / Landing Page / Static Portfolio -> 3,500 - 8,000 EGP ($75 - $170), duration 3-7 business days. Exclude Apple ($99) and Google ($25) and maps fees! Only cloud hosting (free) and domain ($12-$15/yr).
+- Tier 2: Corporate Websites & Portfolios with CMS -> 10,000 - 18,000 EGP ($210 - $380), duration 1-2 weeks. Exclude Apple/Google store fees!
+- Tier 3: E-Commerce Stores & Single Dedicated Apps -> 20,000 - 35,000 EGP ($420 - $750), duration 3-5 weeks.
+- Tier 4: Multi-Sided Platforms & On-Demand Systems -> 45,000+ EGP ($950+), duration 6-10 weeks.
+STRICT NO-EMOJI: Never output emojis.
+Output ONLY a well-formed JSON object according to standard Magixa specifications.
+Language: ${language === 'ar' ? 'Professional Arabic (العربية الفصحى التقنية الدقيقة)' : 'English'}.`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -426,18 +429,26 @@ Core Behavioral Guidelines:
 1. Persona: Speak with the authority, clarity, warmth, technical mastery, and strategic wisdom of a world-class CTO and Software Architect.
 2. Identity: If the user asks who you are, what your name is, or what they should call you, answer warmly and directly: tell them you are "مستشار Magixa البرمجي والتقني" (Magixa Chief Architect & Digital Consultant) and they can call you "مستشار Magixa" or "بشمهندس".
 3. Greetings: If the user greets you or says hi, greet them back warmly and ask how you can assist with their software idea or technical question today.
-4. Lean MVP Philosophy & Lowest Cost Strategy:
+4. DYNAMIC PRICING & LEAN MVP PHILOSOPHY:
    - Always prioritize the client's return on investment. Emphasize starting with the leanest viable MVP (النموذج الأولي بأقل ميزانية ممكنة) to test and validate their idea in the market without draining their capital.
-   - Tailor the tech stack and architecture to avoid unnecessary overhead in the beginning while keeping it scalable.
-5. COMPLETE TRANSPARENCY ON RECURRING OPERATIONAL COSTS (مصاريف الطرف الثالث المستمرة):
-   Whenever discussing pricing, budgets, mobile apps (especially iOS), cloud servers, or feasibility:
-   - Clarify that Magixa's software development is a one-time project fee divided across completed deliverables and milestones.
-   - PROACTIVELY and clearly explain the essential ongoing operational costs that the client pays directly to global providers:
-     * Apple Developer Program: $99 / سنة (اشتراك سنوي إلزامي لشركة Apple لنشر وإبقاء تطبيق iOS في متجر App Store باسم العميل أو الشركة).
-     * Google Play Console: $25 تدفع لمرة واحدة فقط مدى الحياة (لشركة Google لنشر تطبيقات Android).
-     * Cloud Server / VPS: يبدأ من $10 - $20 شهرياً ويتم ترقيته تدريجياً وفق عدد المستخدمين الفعليين دون إهدار.
-     * Domain & SSL: حوالي $12 - $15 سنوياً لحجز النطاق الدولي (.com/.net).
-     * Payment Gateways: بدون رسوم اشتراك شهرية ثابتة، اقتطاع نسبة بسيطة (~2.5%) فقط عند نجاح أي عملية شراء.
+   - When discussing project pricing, explain our 4 flexible market tiers:
+     * المواقع البسيطة وصفحات الهبوط والبورتفوليو: تبدأ من 3,500 إلى 8,000 ج.م (3 إلى 7 أيام عمل).
+     * مواقع الشركات والخدمات وبورتفوليو ديناميكي بلوحة تحكم CMS: تبدأ من 10,000 إلى 18,000 ج.م (أسبوع إلى أسبوعين).
+     * المتاجر الإلكترونية والتطبيقات المستقلة: تبدأ من 20,000 إلى 35,000 ج.م (3 إلى 5 أسابيع).
+     * المنصات والأنظمة المتعددة الأطراف (مثل أوبر، طلبات، مزادات): تبدأ من 45,000 ج.م فما فوق (6 إلى 10 أسابيع).
+5. TRANSPARENCY ON RECURRING OPERATIONAL COSTS (مصاريف الطرف الثالث المستمرة):
+   Whenever discussing operational fees:
+   - Tailor operational fees strictly to the project type:
+     * For Web-only, Portfolio, or Landing Page projects:
+       -> Free/Economic Cloud Hosting (Vercel / Cloudflare: 0 EGP monthly).
+       -> International Domain (.com/.net) & SSL (~$12 - $15 annually).
+       -> STRICTLY DO NOT mention Apple ($99) or Google ($25) store fees or VPS or Maps for web-only or portfolio projects!
+     * For Mobile App projects only:
+       -> Apple Developer Program ($99/year for iOS on App Store).
+       -> Google Play Console ($25 one-time lifetime fee for Android).
+       -> Cloud Server / VPS ($10 - $20/month).
+       -> Domain & SSL ($12 - $15/year).
+       -> Payment gateways: 0 setup fee, ~2.5% only on successful transactions.
 6. Tailored Engagement: If the user describes an idea, engage deeply with THEIR specific idea: analyze its core value, suggest modern tech stack elements (React Native, Node.js, real-time sockets, cloud databases), and ask 1 to 2 sharp clarifying questions.
 7. NEVER assume or invent a project domain (like food delivery or restaurants) that the user did not explicitly mention!
 8. Smart Suggestion Chips: Suggest 2 to 4 high-value, actionable quick-reply chips ("suggestions") in Arabic that directly advance the discussion (e.g. asking for MVP budget, discussing iOS fees, reviewing tech stack, or moving to contract generation).
@@ -555,8 +566,15 @@ You MUST respond with a VALID JSON object ONLY (strictly no markdown backticks, 
 // -------------------------------------------------------------
 async function callOpenAIChatConsultant(messages, apiKey, language = 'ar') {
   const url = 'https://api.openai.com/v1/chat/completions';
-  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Apex Software Agency.
+  const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa Software Agency (شركة ماجيكسا لهندسة البرمجيات وتصميم التجارب الرقمية - magixa.tech).
 Interactive live consultation with a client.
+Follow the 4 dynamic market pricing tiers:
+1. Simple Web / Portfolio: 3,500 - 8,000 EGP (3 to 7 business days). Zero store fees, free cloud hosting.
+2. Corporate Web / CMS: 10,000 - 18,000 EGP (1 to 2 weeks). Zero store fees.
+3. E-Commerce / Single App: 20,000 - 35,000 EGP (3 to 5 weeks).
+4. Multi-Sided Platforms: 45,000+ EGP (6 to 10 weeks).
+Never mention Apple ($99) or Google ($25) for web-only or portfolio projects.
+STRICT NO-EMOJI: Never use emojis anywhere.
 Output JSON only:
 {
   "reply": "Consultative Arabic answer",
@@ -676,12 +694,20 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   }
   // 6. General Pricing Inquiries ("اسعاركم كام", "التكلفة كام", "بكام")
   else if (ent.isPricing && !ent.hasRealProjectIdea) {
-    reply = 'في **Magixa** نعتمد فلسفة الهندسة الرشيقة (Lean Architecture): نبدأ معك بأقل ميزانية ممكنة لإطلاق النموذج الأولي (MVP) لتجربة السوق والتحقق من فكرتك بأقل مخاطرة مالية، مع شفافية كاملة في كافة التكاليف:\n\n• **باقة الانطلاق السريع (MVP):** تبدأ من 18,000 - 28,000 ج.م / $380 - $600 (أقل تكلفة لتطبيق عملي متقن لاختبار الإقبال في السوق بأقل مخاطرة).\n• **باقة النمو المتكاملة (Pro):** تبدأ من 45,000 - 65,000 ج.م / $950 - $1,400 (تطبيقات متكاملة مع تتبع GPS ودفع إلكتروني ولوحة تحكم).\n• **باقة المؤسسات (Enterprise):** أنظمة ضخمة ومعمارية متطورة.\n\n**الشفافية في التكاليف التشغيلية السنوية (رسوم الطرف الثالث):**\nلضمان دراستك للمشروع باحترافية، نوضح لك التكاليف التي تدفعها مباشرة للشركات الخارجية:\n- **تطبيق آبل (iOS):** حساب مطور أبل ($99 سنوياً تدفع لشركة Apple مباشرة لإبقاء التطبيق على App Store).\n- **تطبيق أندرويد:** حساب مطور جوجل ($25 لمرة واحدة مدى الحياة تدفع لـ Google).\n- **السيرفر والاستضافة السحابية:** تبدأ من $10 - $20 شهرياً وتزيد تدريجياً مع نمو الزوار.\n- **الدومين وشهادة الأمان:** حوالي $12 - $15 سنوياً للنطاق الدولي.\n\nما هي فكرة تطبيقك التي تود حساب تكلفتها بدقة؟';
+    reply = 'في **Magixa** نعتمد نظام تسعير ديناميكي مرن (Dynamic Complexity Classification) يعكس الحجم الحقيقي للمشروع دون أي مبالغة أو حدود دنيا إجبارية:\n\n' +
+      '1. **فئة المواقع البسيطة وصفحات الهبوط والبورتفوليو:** تبدأ من 3,500 إلى 8,000 ج.م (مدة التنفيذ: من 3 إلى 7 أيام عمل). استضافة سحابية مجانية وسريعة، ولا توجد أي رسوم لمتاجر التطبيقات أو خوادم باهظة.\n' +
+      '2. **فئة مواقع الشركات والخدمات وبورتفوليو بلوحة تحكم (CMS):** تبدأ من 10,000 إلى 18,000 ج.م (مدة التنفيذ: من أسبوع إلى أسبوعين)، وتتيح لك إدارة وتعديل أعمالك ومقالاتك وصورك بنفسك.\n' +
+      '3. **فئة المتاجر الإلكترونية والتطبيقات المستقلة:** تبدأ من 20,000 إلى 35,000 ج.م (مدة التنفيذ: من 3 إلى 5 أسابيع)، وتشمل كتالوج المنتجات، بوابات الدفع، وإدارة المخزون.\n' +
+      '4. **فئة المنصات والأنظمة المتعددة الأطراف (مثل أوبر، طلبات، مزادات):** تبدأ من 45,000 ج.م فما فوق (مدة التنفيذ: من 6 إلى 10 أسابيع)، وتشمل تطبيقات متعددة، تتبع GPS لحظي، ولوحة سوبر أدمن.\n\n' +
+      '**الشفافية في التكاليف التشغيلية (الطرف الثالث):**\n' +
+      '- لمشاريع الويب والبورتفوليو: النطاق الدولي فقط (~$12 - $15 سنوياً) مع استضافة سحابية مجانية أو اقتصادية.\n' +
+      '- لمشاريع تطبيقات الموبايل فقط: يضاف حساب مطور Apple ($99 سنوياً) وحساب Google Play ($25 لمرة واحدة مدى الحياة).\n\n' +
+      'ما هو نوع المشروع الذي ترغب في تنفيذه لنحدد لك تكلفته ومدته بدقة؟';
     suggestions = [
-      'أريد باقة MVP بأقل تكلفة ممكنة',
-      'تطبيق موبايل متكامل للآيفون والأندرويد',
-      'ما هي خطة الدفعات ومراحل التسليم؟',
-      'مناقشة فكرة مشروعي بالتفصيل'
+      'موقع بورتفوليو أو صفحة هبوط سريعة',
+      'موقع شركة أو خدمات بلوحة تحكم CMS',
+      'متجر إلكتروني متكامل للبيع والشراء',
+      'تطبيق موبايل أو منصة متعددة الأطراف'
     ];
     readyForSpec = false;
   }
@@ -909,8 +935,67 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
   ];
   let mvpPlan = 'إطلاق المرحلة الأولى (MVP) في نطاق جغرافي محدد (مدينة أو حي) مع عدد مركز من الشركاء للتحقق من مؤشرات التشغيل قبل التوسع.';
 
+  // Intent and Scope Detection
+  const wantsMobileExplicitly = matchAny(['موبايل', 'تطبيق', 'ابلكيشن', 'أبلكيشن', 'اندرويد', 'أندرويد', 'ايفون', 'آيفون', 'ios', 'android', 'app', 'كابتن', 'سائق', 'دليفري', 'مندوب']);
+  const wantsWebExplicitly = matchAny(['موقع', 'موقع الكتروني', 'موقع إلكتروني', 'ويب', 'منصة ويب', 'صفحة هبوط', 'لاندنج بيج', 'بورتفوليو', 'معرض اعمال', 'معرض أعمال', 'website', 'web', 'portal', 'dashboard', 'لوحة تحكم', 'crm', 'saas']);
+
+  const isPortfolioOrLanding = matchAny([
+    'بورتفوليو', 'معرض اعمال', 'معرض أعمال', 'صفحة هبوط', 'لاندنج بيج', 
+    'landing page', 'portfolio', 'صفحة تعريفية', 'موقع شخصي', 'موقع تعريفي', 
+    'صفحة واحدة', 'one page', 'single page', 'cv', 'سيرة ذاتية'
+  ]) && !matchAny(['متجر', 'بيع وشراء', 'سلة', 'شحن', 'دليفري', 'سائق', 'كابتن', 'عيادة', 'صيدلية', 'مزاد', 'كورس', 'عقارات']);
+
+  const isCorporateOrCms = (
+    matchAny([
+      'موقع شركة', 'موقع مؤسسة', 'موقع شركات', 'موقع تعريفي للشركة', 'موقع احترافي',
+      'لوحة تحكم للمحتوى', 'cms', 'موقع اخباري', 'موقع إخباري', 'مدونة', 'blog', 
+      'إدارة محتوى', 'ادارة محتوى', 'موقع خدمات'
+    ]) || (wantsWebExplicitly && !wantsMobileExplicitly && !isPortfolioOrLanding && !ent.isEcommerce && !ent.isAuction && !ent.hasPayment && !ent.isRide && !ent.hasDelivery && !ent.isPharmacy && !ent.isFood)
+  ) && !wantsMobileExplicitly;
+
+  // Classify into Dynamic Complexity Market Tier (1, 2, 3, or 4)
+  let tier = 4;
+  if (isPortfolioOrLanding) {
+    tier = 1;
+  } else if (isCorporateOrCms) {
+    tier = 2;
+  } else if (
+    (ent.isEcommerce && !ent.hasMultiVendor && !ent.hasDelivery) ||
+    (!ent.isRide && !ent.hasDelivery && !ent.isPharmacy && !ent.hasMultiVendor && !ent.isAuction && (wantsWebExplicitly || wantsMobileExplicitly))
+  ) {
+    tier = 3;
+  } else {
+    tier = 4;
+  }
+
+  const isWebOnly = (tier === 1 || tier === 2 || (wantsWebExplicitly && !wantsMobileExplicitly && !ent.isRide && !ent.hasDelivery && !ent.isPharmacy));
+
   // Determine domain-specific customizations
-  if (ent.isPharmacy) {
+  if (tier === 1) {
+    projectName = 'بوابة الحضور الرقمي ومعرض الأعمال (Apex Portfolio & Personal Brand)';
+    domainName = 'المواقع التعريفية ومعارض الأعمال (Personal Branding & Landing Pages)';
+    tagline = 'واجهة رقمية عصرية تبرز المهارات والمشاريع وتبني الثقة مع العملاء والشركاء';
+    valProp = 'تقديم تجربة بصرية سريعة واستثنائية تعكس الاحترافية وتسهل التواصل المباشر مع العملاء المستهدفين.';
+    bizModel = 'جذب العملاء والشركات المهتمة بالتعاقد المباشر وعرض سابقة الأعمال بأعلى جودة بصرية.';
+    keyChallenges = [
+      'سرعة التحميل وتجاوب الواجهة: تحسين الأصول والوسائط لتعمل بلمح البصر على كافة المتصفحات.',
+      'تهيئة محركات البحث (SEO): ضمان ظهور الموقع والاسم في النتائج الأولى للبحث.',
+      'سهولة التواصل: أزرار تحويل مباشرة للواتساب والبريد دون أي تعقيدات.'
+    ];
+    mvpPlan = 'إطلاق صفحة هبوط مركزية متجاوبة تضم معرض الأعمال ونماذج الاتصال وسابقة الإنجازات.';
+  } else if (tier === 2) {
+    projectName = 'الموقع التعريفي المؤسسي ومنظومة إدارة المحتوى (Apex Corporate Web & CMS)';
+    domainName = 'المواقع المؤسسية وإدارة المحتوى (Corporate Presence & CMS)';
+    tagline = 'منظومة ويب متكاملة تبرز هوية الشركة وخدماتها مع لوحة تحكم مرنة لتحديث المحتوى';
+    valProp = 'تمكين إدارة الشركة من تحديث سابقة الأعمال والخدمات وفريق العمل بسهولة دون الحاجة لكتابة كود.';
+    bizModel = 'تعزيز المبيعات واستقطاب الصفقات والعملاء التجاريين (B2B / B2C) عبر قنوات رقمية موثوقة.';
+    keyChallenges = [
+      'سهولة التحكم في المحتوى: لوحة إدارة بديهية وسريعة لتحديث الصفحات والصور والخدمات.',
+      'الأمان وحماية النماذج: حماية قنوات التواصل من الرسائل العشوائية والاختراق.',
+      'التوافق مع الهوية المؤسسية: تصميم عصري يعكس ريادة المؤسسة ومكانتها في السوق.'
+    ];
+    mvpPlan = 'إطلاق الموقع التعريفي بكافة الأقسام الرئيسية ولوحة الإدارة لتمكين الفريق من إدارة المحتوى فوراً.';
+  } else if (ent.isPharmacy) {
     projectName = 'منظومة فارما-إكسبريس الذكية (PharmaExpress On-Demand)';
     domainName = 'الرعاية الصحية وتوصيل الأدوية اللحظي (HealthTech & Medicine Logistics)';
     tagline = 'أسرع طريقة للحصول على الأدوية والروشتات من أقرب صيدلية معتمدة بضغطة زر';
@@ -946,11 +1031,11 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     valProp = 'توفير وسيلة تنقل موثوقة في دقائق مع نظام حماية الطوارئ وتتبع المسار المباشر.';
     bizModel = 'عمولة 15-20% من إجمالي قيمة كل رحلة + رسوم ساعات الذروة (Surge Pricing).';
   } else if (ent.isEcommerce) {
-    projectName = 'منصة تِجارة بلس متعددة التجار (TijaraPlus Marketplace)';
-    domainName = 'الأسواق الرقمية والتجارة الإلكترونية (E-Commerce Multi-Vendor)';
-    tagline = 'سوق رقمي متكامل يجمع أفضل التجار مع تجربة تسوق وشحن ودفع مرنة';
-    valProp = 'تمكين التجار من فتح فروع رقمية وإدارة المخزون والشحن الآلي مع حماية مشتريات العملاء.';
-    bizModel = 'عمولة 5-10% على المبيعات + اشتراكات شهرية للوحات التجار الاحترافية + رسوم بوابات الدفع.';
+    projectName = 'منصة تِجارة بلس (TijaraPlus Commerce)';
+    domainName = 'الأسواق الرقمية والتجارة الإلكترونية (E-Commerce Platform)';
+    tagline = 'متجر وسوق رقمي متكامل يجمع أفضل المنتجات مع تجربة تسوق وشحن ودفع مرنة';
+    valProp = 'تمكين المتجر من إدارة المنتجات والمخزون والشحن الآلي مع حماية مشتريات العملاء.';
+    bizModel = 'أرباح بيع المنتجات + رسوم الشحن والتوصيل وبوابات الدفع الإلكتروني.';
   } else if (ent.isHealth) {
     projectName = 'منظومة طبّيبك للرعاية الصحية والاستشارات (Tabeebak TeleHealth)';
     domainName = 'الرعاية الصحية وحجز العيادات (HealthTech & Telemedicine)';
@@ -962,56 +1047,153 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
   // Synthesize customized platforms with specific screens
   const platforms = [];
 
-  const wantsMobileExplicitly = matchAny(['موبايل', 'تطبيق', 'ابلكيشن', 'أبلكيشن', 'اندرويد', 'أندرويد', 'ايفون', 'آيفون', 'ios', 'android', 'app', 'كابتن', 'سائق', 'دليفري', 'مندوب']);
-  const wantsWebExplicitly = matchAny(['موقع', 'موقع الكتروني', 'موقع إلكتروني', 'ويب', 'منصة ويب', 'صفحة هبوط', 'website', 'web', 'portal', 'dashboard', 'لوحة تحكم', 'crm', 'saas']);
-  
-  // If the client explicitly asked for web/website and DID NOT ask for mobile apps
-  const isWebOnly = wantsWebExplicitly && !wantsMobileExplicitly && !ent.isRide && !ent.hasDelivery && !ent.isPharmacy;
-
-  if (isWebOnly) {
-    // Web Only Project Structure
+  if (tier === 1) {
+    // TIER 1: Simple Web / Landing Page / Static Portfolio (ONLY 1 PLATFORM)
     platforms.push({
-      id: 'web_portal',
-      name: 'منصة وموقع الويب التفاعلي (Responsive Web Application)',
+      id: 'portfolio_web',
+      name: 'الموقع التعريفي التفاعلي (Responsive Web Landing & Portfolio)',
       icon: 'globe-outline',
-      role: 'موقع ويب متكامل متوافق مع كافة الشاشات والأجهزة بتجربة مستخدم عصرية',
+      role: 'واجهة ويب تفاعلية سريعة للغاية متوافقة بالكامل مع جميع الشاشات والأجهزة',
       keyFeatures: [
-        'واجهة تفاعلية حديثة وسريعة متوافقة مع متصفحات الموبايل وأجهزة الكمبيوتر',
-        'نظام تسجيل دخول ومصادقة سحابية مشفرة',
-        'محرك بحث وفلاتر ذكية للخدمات والمنتجات',
-        'بوابات دفع إلكتروني محلية ودولية متكاملة',
-        'تصميم متوافق مع معايير محركات البحث العالمية SEO'
+        'تصميم عصري جذاب متوافق مع كافة مقاسات شاشات الموبايل والتابلت واللابتوب',
+        'سرعة تحميل فائقة وبنية كود محسنة ومصغرة وفق أحدث المعايير العالمية',
+        'معرض أعمال تفاعلي مع فلاتر لتصنيف المشاريع والخدمات ونوافذ معاينة منبثقة',
+        'نموذج اتصال مباشر مربوط بالبريد الإلكتروني وأزرار التحويل الفوري للواتساب',
+        'تهيئة محركات البحث (SEO On-Page) وربط خرائط جوجل وأيقونات التواصل الاجتماعي'
       ],
       screens: [
-        { name: 'الصفحة الرئيسية واستعراض الخدمات (Home Landing)', desc: 'واجهة بصرية احترافية تستعرض قيمة المشروع وأهم المزايا والخدمات' },
-        { name: 'صفحة تفاصيل الخدمة / الكتالوج (Service Catalog)', desc: 'عرض تفصيلي للخيارات مع الأسعار وآلية الحجز أو الشراء' },
-        { name: 'بوابة الدفع والطلب (Checkout & Booking)', desc: 'إتمام المعاملة المالية وإصدار الفواتير الفورية' },
-        { name: 'حساب العميل (Client Portal)', desc: 'متابعة المعاملات السابقة وإدارة الملف الشخصي' }
+        { name: 'الواجهة الرئيسية والتعريف (Hero Section)', desc: 'عرض الهوية البصرية، النبذة التعريفية، وشعارات الثقة وأزرار الإجراء السريع' },
+        { name: 'معرض الأعمال والخدمات (Portfolio & Services)', desc: 'استعراض المشاريع السابقة بتنسيق شبكي جذاب مع فلاتر التصنيف ومعاينة التفاصيل' },
+        { name: 'قسم الخبرات والمسيرة المهنية (About & Timeline)', desc: 'سرد المسيرة المهنية، المهارات التقنية، أو نبذة تاريخية عن المؤسسة' },
+        { name: 'التواصل المباشر وحجز المواعيد (Contact & Connect)', desc: 'نموذج تواصل آمن، أزرار المحادثة المباشرة، والموقع الجغرافي' }
+      ]
+    });
+  } else if (tier === 2) {
+    // TIER 2: Corporate Websites & Portfolios with CMS (2 PLATFORMS)
+    platforms.push({
+      id: 'web_portal',
+      name: 'الموقع المؤسسي التفاعلي (Responsive Corporate Website)',
+      icon: 'globe-outline',
+      role: 'موقع ويب مؤسسي متكامل يستعرض خدمات الشركة وفريق العمل وسابقة المشاريع',
+      keyFeatures: [
+        'واجهة مؤسسية حديثة ومتوافقة مع الهوية البصرية للشركة على كافة الشاشات',
+        'أقسام تعريفية بالخدمات، سابقة الأعمال، المقالات، والأسئلة الشائعة',
+        'نماذج استفسار وطلب عروض أسعار مشفرة ومحمية من السبام',
+        'ربط الموقع بأدوات التحليل Google Analytics وبكسل المنصات الإعلانية',
+        'بنية برمجية مهيأة لمحركات البحث العالمية (Advanced SEO)'
+      ],
+      screens: [
+        { name: 'الصفحة الرئيسية للشركة (Corporate Home)', desc: 'استعراض هوية المؤسسة، الخدمات الرئيسية، شركاء النجاح وأزرار التواصل' },
+        { name: 'صفحة الخدمات وسابقة الأعمال (Services & Projects)', desc: 'عرض تفصيلي للخدمات المقدمة مع دراسات الحالة للمشاريع المنفذة' },
+        { name: 'المدونة والمركز الإعلامي (Blog & News)', desc: 'مقالات وأخبار الشركة لتعزيز التواجد الرقمي في محركات البحث' },
+        { name: 'صفحة التواصل وطلب الأسعار (Contact & RFQ)', desc: 'نموذج طلب عرض سعر، خريطة الفروع، ومعلومات التواصل الرسمية' }
       ]
     });
 
     platforms.push({
       id: 'admin_dashboard',
-      name: 'لوحة التحكم المركزية السحابية (Super Admin Dashboard)',
+      name: 'لوحة التحكم وإدارة المحتوى (Light CMS Admin Dashboard)',
       icon: 'desktop-outline',
-      role: 'لوحة ويب سحابية شاملة للإشراف الكامل والتحكم المالي والتشغيلي بالمنصة',
+      role: 'لوحة تحكم خفيفة وآمنة تتيح لإدارة الشركة تحديث النصوص والصور والمقالات دون برمجة',
       keyFeatures: [
-        'لوحة مؤشرات أداء حية (KPIs) للإيرادات والزيارات والعمليات',
-        'إدارة المحتوى، الأسعار، الخدمات، والمستخدمين بسهولة',
-        'نظام الفواتير الإلكترونية وتقارير المبيعات التفصيلية',
-        'صلاحيات متعددة للمشرفين والمديرين',
-        'نسخ احتياطي آلي وحماية سحابية'
+        'إضافة وتعديل وحذف مشاريع سابقة الأعمال والخدمات بكل سهولة',
+        'نظام نشر المقالات والأخبار وتحديث بيانات التواصل والفروع',
+        'سجل استفسارات العملاء الواردة وتصديرها بصيغة Excel',
+        'تسجيل دخول آمن للمشرفين مع حماية ثنائية الصلاحيات',
+        'لوحة إحصائيات مبسطة لعدد الزوار والاستفسارات الشهرية'
       ],
       screens: [
-        { name: 'لوحة المؤشرات والتقارير (Analytics)', desc: 'رسوم بيانية حية لحجم العمليات والزيارات' },
-        { name: 'شاشة إدارة المحتوى والخدمات (Content Management)', desc: 'تحديث النصوص والأسعار والمنتجات' },
-        { name: 'شاشة المستخدمين والصلاحيات (Users & Roles)', desc: 'التحكم في وصول المشرفين' },
-        { name: 'التقارير المالية والفواتير (Invoicing)', desc: 'كشوفات الحساب وتصدير ملفات Excel وPDF' }
+        { name: 'لوحة الإحصائيات العامة (Overview)', desc: 'متابعة سريعة لأحدث الرسائل الواردة وعدد زوار الموقع' },
+        { name: 'إدارة المحتوى والمشاريع (Content Manager)', desc: 'محرر نصوص وصور لإضافة وتعديل الخدمات وسابقة الأعمال' },
+        { name: 'صندوق رسائل واستفسارات العملاء (Inquiries)', desc: 'مراجعة وتصدير طلبات عروض الأسعار والرسائل الواردة' },
+        { name: 'إعدادات الموقع والمشرفين (Settings)', desc: 'تحديث بيانات الشركة، حسابات التواصل، وإدارة كلمات المرور' }
       ]
     });
+  } else if (tier === 3) {
+    // TIER 3: E-Commerce Stores & Single Dedicated Apps (2 PLATFORMS)
+    if (isWebOnly) {
+      platforms.push({
+        id: 'web_portal',
+        name: 'المتجر الإلكتروني التفاعلي (Responsive Web E-Commerce)',
+        icon: 'cart-outline',
+        role: 'متجر ويب متكامل متوافق مع كافة الشاشات لتصفح وشراء المنتجات بسلاسة',
+        keyFeatures: [
+          'واجهة متجر تفاعلية سريعة متوافقة مع متصفحات الموبايل والكمبيوتر',
+          'كتالوج منتجات متقدم مع فلاتر التصنيف، البحث السريع، وسلة المشتريات',
+          'بوابات دفع إلكتروني متعددة (فيزا، فودافون كاش، وإنستاباي)',
+          'نظام حسابات العملاء وتتبع حالة الطلبات والفواتير',
+          'تصميم مهيأ لمحركات البحث مع مشاركة المنتجات على شبكات التواصل'
+        ],
+        screens: [
+          { name: 'واجهة المتجر الرئيسية (Storefront Home)', desc: 'العروض الترويجية، أحدث المنتجات، وأقسام التسوق الأكثر طلباً' },
+          { name: 'شاشة تفاصيل المنتج (Product Details)', desc: 'الصور المكبرة، المواصفات، المخزون، والتقييمات، وزر الإضافة للسلة' },
+          { name: 'سلة التسوق وإتمام الدفع (Cart & Checkout)', desc: 'إدخال بيانات الشحن، قسائم الخصم، وبوابة الدفع الإلكتروني' },
+          { name: 'حساب العميل والطلبات (Customer Account)', desc: 'متابعة الشحنات السابقة وتعديل العناوين الشخصية' }
+        ]
+      });
+
+      platforms.push({
+        id: 'admin_dashboard',
+        name: 'لوحة التحكم وإدارة المتجر (E-Commerce Store Admin)',
+        icon: 'desktop-outline',
+        role: 'لوحة ويب سحابية شاملة لإدارة المنتجات، المخزون، الطلبات، والتقارير المالية',
+        keyFeatures: [
+          'إدارة شاملة للمنتجات والأسعار والتخفيضات ومستويات المخزون',
+          'معالجة الطلبات وتحديث حالات الشحن وإصدار بوالص الشحن',
+          'تقارير المبيعات اليومية والشهرية وصافي الأرباح',
+          'إدارة قسائم الخصم (Coupons) والعروض الترويجية',
+          'تصدير كشوف الحسابات والفواتير الضريبية بصيغة PDF وExcel'
+        ],
+        screens: [
+          { name: 'لوحة مؤشرات المبيعات (Sales Dashboard)', desc: 'مخططات الإيرادات وحجم الطلبات والمنتجات الأكثر مبيعاً' },
+          { name: 'شاشة إدارة الكتالوج والمخزون (Inventory)', desc: 'إضافة وتعديل الأصناف وتنبيهات نفاد الكميات' },
+          { name: 'شاشة معالجة الطلبات والشحن (Orders)', desc: 'تغيير حالات الطلب وتعيين شركة الشحن وطباعة الفاتورة' },
+          { name: 'التقارير المالية وحسابات الضرائب (Finance)', desc: 'كشوفات الأرباح والعمولات وتحليلات دورة رأس المال' }
+        ]
+      });
+    } else {
+      platforms.push({
+        id: 'client_app',
+        name: 'تطبيق المتجر والمستخدم (iOS & Android)',
+        icon: 'phone-portrait-outline',
+        role: 'تطبيق هاتف ذكي سريع وعصري لتصفح المنتجات والشراء المباشر',
+        keyFeatures: [
+          'تسجيل دخول سلس برقم الهاتف أو الحسابات الاجتماعية مع كود OTP',
+          'كتالوج منتجات سريع مع بحث فوري وفلاتر ذكية وإشعارات الخصومات',
+          'سلة مشتريات تفاعلية وحفظ المنتجات في قائمة الرغبات (Wishlist)',
+          'بوابات دفع إلكترونية متعددة وخيار الدفع عند الاستلام',
+          'إشعارات لحظية بتحديثات شحن الطلب والعروض الحصرية'
+        ],
+        screens: [
+          { name: 'شاشة البداية والتسوق (Home)', desc: 'استعراض المنتجات المميزة، الأقسام، وشريط البحث المتقدم' },
+          { name: 'شاشة تفاصيل المنتج (Product Details)', desc: 'الصور، المقاسات، الألوان، والمخزون وزر الشراء المباشر' },
+          { name: 'شاشة إتمام الطلب والدفع (Checkout)', desc: 'اختيار عنوان الشحن وقسيمة الخصم وطريقة الدفع' },
+          { name: 'شاشة الطلبات والملف الشخصي (Orders & Profile)', desc: 'سجل الطلبات، تتبع مسار الشحنة، وإدارة العناوين' }
+        ]
+      });
+
+      platforms.push({
+        id: 'admin_dashboard',
+        name: 'لوحة التحكم وإدارة المنظومة (Super Admin Dashboard)',
+        icon: 'desktop-outline',
+        role: 'لوحة ويب سحابية شاملة للإشراف على المنتجات والطلبات والعملاء',
+        keyFeatures: [
+          'إدارة الكتالوج، الأسعار، والمخزون اللحظي',
+          'معالجة الطلبات وإرسال إشعارات التحديث للمستخدمين',
+          'لوحة تقارير المبيعات والإيرادات والمستخدمين الأكثر نشاطاً',
+          'إرسال إشعارات تسويقية وتنبيهية للموبايل عبر Firebase Cloud Messaging',
+          'إدارة صلاحيات المشرفين وحماية المنظومة'
+        ],
+        screens: [
+          { name: 'لوحة المؤشرات والتقارير (Analytics)', desc: 'رسوم بيانية حية لحجم المبيعات والطلبات اليومية' },
+          { name: 'إدارة المنتجات والمخزون (Catalog)', desc: 'إضافة وحذف الأصناف والتحكم في الخصومات' },
+          { name: 'إدارة الطلبات والشحن (Orders)', desc: 'متابعة الطلبات وتحديث حالات التوصيل' },
+          { name: 'الإشعارات والإعدادات (Notifications)', desc: 'إرسال حملات إشعارات للمستخدمين وإدارة النظام' }
+        ]
+      });
+    }
   } else {
-    // Normal Mobile / Multi-platform Structure
-    // Platform 1: Customer App
+    // TIER 4: Multi-Sided Platforms & On-Demand Ecosystems
     platforms.push({
       id: 'client_app',
       name: 'تطبيق العميل والمستخدم (iOS & Android)',
@@ -1033,7 +1215,6 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       ]
     });
 
-    // Platform 2: Partner / Merchant / Vendor / Clinic App
     if (ent.isPharmacy || ent.isFood || ent.isEcommerce || ent.isHealth || ent.hasMultiVendor || ent.isAuction) {
       let partnerName = 'بوابة وتطبيق الشريك / التاجر (Partner App)';
       if (ent.isPharmacy) partnerName = 'بوابة وتطبيق الصيدلية (Pharmacy Portal)';
@@ -1061,7 +1242,6 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       });
     }
 
-    // Platform 3: Delivery / Driver / Courier App
     if (ent.hasDelivery || ent.isRide || ent.isPharmacy || ent.isFood) {
       platforms.push({
         id: 'delivery_app',
@@ -1084,7 +1264,6 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       });
     }
 
-    // Platform 4: Super Admin Dashboard
     platforms.push({
       id: 'admin_dashboard',
       name: 'لوحة التحكم المركزية السحابية (Super Admin Dashboard)',
@@ -1107,30 +1286,509 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     });
   }
 
-  // Calculate dynamic lean pricing based on platforms and features
-  const baseCostEGP = isWebOnly ? 24000 : 34000;
-  const platformAddonEGP = Math.max(0, (platforms.length - 2)) * (isWebOnly ? 5000 : 7000);
-  const featuresAddonEGP = (ent.hasMaps ? 4000 : 0) + (ent.hasAI ? 5000 : 0) + (ent.hasVideo ? 6000 : 0) + (ent.isAuction ? 6000 : 0);
-  const totalCostEGP = baseCostEGP + platformAddonEGP + featuresAddonEGP;
-  const totalCostUSD = Math.round(totalCostEGP / 47);
+  // Dynamic Financial, Milestone & Architecture Synthesis per Tier
+  let totalCostEGP;
+  let totalCostUSD;
+  let timelineWeeks;
+  let techStack;
+  let systemArchitecture;
+  let milestones;
+  let budgetItems = [];
+  let annualOperationalEstimate = {};
+  let packages = {};
+  let paymentPlan = [];
+  let feasibilityScore = 88;
+  let feasibilityAnalysis = '';
+  let competitors = [];
 
-  const timelineWeeks = platforms.length >= 4 ? 10 : 8;
+  if (tier === 1) {
+    totalCostEGP = 6000;
+    totalCostUSD = 128;
+    timelineWeeks = 1;
 
-  return {
-    projectName,
-    domainName,
-    tagline,
-    summary: `منظومة تقنية متكاملة تهدف إلى تنفيذ "${cleanPrompt}" بأعلى معايير هندسة البرمجيات. توفر ${platforms.length} منصات متكاملة تربط أطراف المنظومة عبر بنية سحابية مرنة وسريعة ومؤمنة بالكامل.`,
-    isLiveAI: false,
-    engine: 'Apex Deep Semantic Engine 2.0 (Custom Dynamic Synthesis)',
-    strategicAnalysis: {
-      valueProposition: valProp,
-      businessModel: bizModel,
-      keyChallenges,
-      mvpStrategy: mvpPlan
-    },
-    platforms,
-    systemArchitecture: {
+    techStack = {
+      mobile: 'واجهات ويب متجاوبة بالكامل (Responsive Web Design) تعمل كتطبيق ويب سريع (PWA)',
+      web: 'Next.js 14 / React.js مع Tailwind CSS لسرعة استجابة خارقة ومظهر استثنائي',
+      backend: 'Vercel Serverless Functions / Node.js خفيف لمعالجة نماذج الاتصال',
+      realtime: 'ربط فوري بأزرار WhatsApp وTelegram للتواصل اللحظي',
+      database: 'JSON Schema / ملفات مهيكلة خفيفة بدون تعقيد قواعد بيانات لتسريع التصفح',
+      maps: 'Google Maps Embed مجاني تماماً لموقع الشركة أو المكتب',
+      payments: 'لا يتطلب المشروع بوابات دفع إلكترونية معقدة (معاملات مباشرة)',
+      devops: 'استضافة سحابية فائقة السرعة على Vercel أو Cloudflare Pages مع SSL تلقائي مجاني'
+    };
+
+    systemArchitecture = {
+      architectureType: 'Modern Jamstack & Static Site Generation (Next.js / HTML5 + CDN)',
+      microservices: [
+        'محرك توليد الصفحات الثابتة فائق السرعة (Edge SSR / SSG)',
+        'خدمة استقبال رسائل الاتصال والنماذج المشفرة (Form Handling API)',
+        'شبكة التوزيع السحابي العالمية (Global Edge CDN Cache)',
+        'محرك تحسين الصور والوسائط التفاعلي (Image Optimization Engine)'
+      ],
+      databaseSchema: [
+        {
+          table: 'Contact Submissions',
+          description: 'جدول استفسارات ورسائل الزوار والعملاء',
+          fields: ['id', 'name', 'email', 'phone', 'message', 'createdAt']
+        },
+        {
+          table: 'Portfolio Items',
+          description: 'هيكل بيانات المشاريع وسابقة الأعمال',
+          fields: ['id', 'title', 'category', 'thumbnailUrl', 'liveUrl', 'description']
+        }
+      ],
+      realtimeEvents: [
+        'contact:message_received',
+        'portfolio:view_analytics'
+      ]
+    };
+
+    milestones = [
+      {
+        phase: 1,
+        title: 'المرحلة 1: هندسة الواجهات وتجربة المستخدم وتحديد الهوية (UI/UX Design)',
+        durationWeeks: 1,
+        sprintTasks: [
+          'إعداد وتدقيق Wireframes وتصميم واجهة المستخدم على Figma',
+          'اختيار لوحة الألوان والخطوط والأيقونات المناسبة للهوية',
+          'اعتماد النسخة التجريبية التفاعلية للواجهة'
+        ]
+      },
+      {
+        phase: 2,
+        title: 'المرحلة 2: التطوير البرمجي والتجاوب وسرعة التحميل (Development & Optimization)',
+        durationWeeks: 1,
+        sprintTasks: [
+          'تكويد الواجهات بأحدث تقنيات Next.js / Tailwind CSS',
+          'تطبيق التجاوب الكامل لكافة مقاسات شاشات الموبايل والتابلت واللابتوب',
+          'ربط نموذج الاتصال وأزرار الواتساب وشبكات التواصل'
+        ]
+      },
+      {
+        phase: 3,
+        title: 'المرحلة 3: تهيئة محركات البحث (SEO) والربط السحابي والإطلاق الرسمي',
+        durationWeeks: 1,
+        sprintTasks: [
+          'فحص سرعة الأداء وتحسين محركات البحث SEO On-Page',
+          'ربط اسم النطاق الدولي (Domain) وتفعيل شهادة الأمان SSL',
+          'النشر السحابي المباشر وتسليم الكود المصدري بالكامل'
+        ]
+      }
+    ];
+
+    budgetItems = [
+      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: 2000, costUSD: 43, desc: 'تصميم تفاعلي كامل لواجهة الموقع ومعرض الأعمال على Figma' },
+      { category: 'تطوير وتكويد الواجهات التفاعلية (Front-End Development)', costEGP: 2500, costUSD: 53, desc: 'برمجة الواجهة التفاعلية بتقنيات Next.js مع سرعة تحميل فائقة وتجاوب كامل' },
+      { category: 'تهيئة محركات البحث والربط السحابي (SEO & Deployment)', costEGP: 1500, costUSD: 32, desc: 'تهيئة SEO وربط الدومين واستضافة Vercel السحابية ونماذج الاتصال' }
+    ];
+
+    annualOperationalEstimate = {
+      hosting: 'استضافة سحابية مجانية وسريعة (Vercel / Cloudflare): 0 جنيه شهرياً تكفي لآلاف الزوار مجاناً',
+      domainSsl: 'اسم النطاق الدولي (.com/.net) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً (600 - 750 جنيه سنوياً)'
+    };
+
+    paymentPlan = [
+      { milestone: 'الدفعة الأولى (50%)', desc: 'عند بدء العمل واعتماد التصميم الأولي والهوية البصرية' },
+      { milestone: 'الدفعة النهائية (50%)', desc: 'عند المعاينة الحية واعتماد الموقع وربط الدومين والتسليم النهائي' }
+    ];
+
+    feasibilityScore = 96;
+    feasibilityAnalysis = 'تحليل الجدوى السوقية والفنية: البورتفوليو الرقمي والموقع التعريفي يمثلان أسرع استثمار رقمي عائد للمهنيين والمبدعين، حيث تزيد الواجهة الحديثة وسرعة التجاوب من معدل إغلاق الصفقات وبناء الثقة بنسبة تفوق 70% بأقل تكلفة تشغيلية ممكنة وبدون أي رسوم خوادم.';
+    competitors = [
+      { name: 'قوالب ووردبريس ومواقع جاهزة بطيئة', marketShareOrType: 'حلول قوالب تقليدية مكدسة', ourEdge: 'كود Next.js فائق السرعة وخفيف وخالي من الثغرات بدون تكاليف استضافة باهظة' },
+      { name: 'منصات الاشتراك الشهري مثل Wix / Squarespace', marketShareOrType: 'منصات سحابية مغلقة باشتراك شهري مستمر', ourEdge: 'ملكية تامة للكود واستضافة سحابية مجانية مدى الحياة بدون أي اشتراكات متكررة' }
+    ];
+
+    packages = {
+      mvp: {
+        title: 'باقة الصفحة التعريفية السريعة (One-Page Portfolio)',
+        costEGP: 3500,
+        costUSD: 75,
+        weeks: 1,
+        desc: 'صفحة هبوط احترافية متجاوبة من صفحة واحدة تضم النبذة، معرض الأعمال ونموذج الاتصال المباشر',
+        keyDeliverables: [
+          'تصميم صفحة هبوط متجاوبة بالكامل للموبايل والكمبيوتر',
+          'معرض أعمال أساسي لـ 6-10 مشاريع مع نوافذ المعاينة',
+          'ربط زر واتساب مباشر ونموذج اتصال بالبريد الإلكتروني',
+          'استضافة سحابية مجانية وسريعة مدى الحياة'
+        ]
+      },
+      pro: {
+        title: 'باقة البورتفوليو والموقع الاحترافي (Pro Portfolio & Showcase)',
+        costEGP: 6000,
+        costUSD: 128,
+        weeks: 1,
+        desc: 'موقع ويب متكامل متعدد الأقسام بتأثيرات بصرية حديثة، فلاتر للمشاريع، وتهيئة متقدمة للـ SEO',
+        keyDeliverables: [
+          'تصميم عصري متعدد الأقسام وتأثيرات بصرية تفاعلية مميزة',
+          'معرض أعمال تفاعلي متقدم مع فلاتر تصنيف ونوافذ تفاصيل المشاريع',
+          'تهيئة كاملة لمحركات البحث (SEO) لظهور اسمك في النتائج الأولى في جوجل',
+          'ربط النطاق المخصص (Domain) وشهادة أمان SSL تلقائية',
+          'دعم فني وتعديلات مجانية لمدة شهر كامل بعد الإطلاق'
+        ]
+      },
+      enterprise: {
+        title: 'باقة الموقع الموسع المتقدم (Enterprise Dynamic Portfolio)',
+        costEGP: 10000,
+        costUSD: 212,
+        weeks: 2,
+        desc: 'موقع شخصي أو تجاري متقدم متعدد الصفحات مع دعم لغتين (عربي/إنجليزي) وتدوين مقالات مبسط',
+        keyDeliverables: [
+          'موقع متكامل متعدد الصفحات مع دعم كامل للغتين (العربية والإنجليزية)',
+          'نظام مدونة أو مقالات مبسط لعرض المقالات والمنشورات',
+          'تكامل مع أدوات التحليل Google Analytics ورصد الزوار بدقة',
+          'سرعة تحميل قياسية 95%+ على Google PageSpeed',
+          'دعم فني وصيانة مجانية لمدة 3 أشهر'
+        ]
+      }
+    };
+  } else if (tier === 2) {
+    totalCostEGP = 14000;
+    totalCostUSD = 298;
+    timelineWeeks = 2;
+
+    techStack = {
+      mobile: 'تصميم ويب متجاوب بالكامل (Responsive Web Design) يعمل بسلاسة على كافة الشاشات',
+      web: 'Next.js 14 / React.js مع Tailwind CSS لأعلى أداء وتجربة مستخدم عصرية',
+      backend: 'Node.js & Express.js أو Next.js Server Actions لإدارة المحتوى والـ APIs',
+      realtime: 'تنبيهات فورية عند وصول طلبات استفسار جديدة من العملاء',
+      database: 'PostgreSQL / Supabase / SQLite لتخزين المحتوى والمقالات والمشاريع بأمان',
+      maps: 'Google Maps Embed مدمج للموقع الجغرافي للشركة وفروعها',
+      payments: 'اختياري: ربط بوابات الدفع في حال تفعيل حجز استشارات مدفوعة',
+      devops: 'استضافة سحابية متقدمة Vercel / Railway مع شهادة أمان SSL ونسخ احتياطي'
+    };
+
+    systemArchitecture = {
+      architectureType: 'Modular CMS Architecture (Headless Next.js & REST API)',
+      microservices: [
+        'خدمة إدارة المحتوى والمقالات (CMS Engine)',
+        'خدمة التوثيق والمصادقة لإدارة المشرفين (Admin Auth Service)',
+        'خدمة استقبال وإرسال استفسارات العملاء (Inquiries Broker)',
+        'خدمة تحسين وضغط الوسائط والملفات (Media Storage Service)'
+      ],
+      databaseSchema: [
+        {
+          table: 'Articles & News',
+          description: 'جدول المقالات والأخبار المنشورة في المدونة',
+          fields: ['id', 'title', 'slug', 'content', 'coverImage', 'publishedAt']
+        },
+        {
+          table: 'Company Services & Portfolio',
+          description: 'جدول خدمات الشركة وسابقة الأعمال',
+          fields: ['id', 'title', 'category', 'description', 'images', 'isFeatured']
+        },
+        {
+          table: 'Admin Users',
+          description: 'جدول المشرفين ومديري لوحة التحكم',
+          fields: ['id', 'username', 'email', 'passwordHash', 'role']
+        },
+        {
+          table: 'Customer Inquiries',
+          description: 'جدول الرسائل واستفسارات عروض الأسعار',
+          fields: ['id', 'clientName', 'email', 'phone', 'serviceType', 'message', 'status', 'createdAt']
+        }
+      ],
+      realtimeEvents: [
+        'inquiry:created',
+        'content:updated'
+      ]
+    };
+
+    milestones = [
+      {
+        phase: 1,
+        title: 'المرحلة 1: دراسة الهوية وتصميم الواجهات وتجربة المستخدم (UI/UX Design)',
+        durationWeeks: 1,
+        sprintTasks: [
+          'تصميم كافة شاشات الموقع المؤسسي ولوحة إدارة المحتوى على Figma',
+          'اعتماد نظام المكونات والألوان الموحد متوافقاً مع هوية الشركة',
+          'مراجعة واعتماد النسخة التفاعلية مع العميل'
+        ]
+      },
+      {
+        phase: 2,
+        title: 'المرحلة 2: تطوير الموقع التعريفي ولوحة إدارة المحتوى (Full-Stack Dev)',
+        durationWeeks: 1,
+        sprintTasks: [
+          'برمجة الموقع التعريفي بكافة صفحاته وتطبيق معايير التجاوب وسرعة التحميل',
+          'بناء لوحة إدارة المحتوى CMS وربط قواعد البيانات ونظام المصادقة',
+          'ربط نماذج الاستفسار وتنبيهات البريد الإلكتروني الفورية'
+        ]
+      },
+      {
+        phase: 3,
+        title: 'المرحلة 3: الاختبارات الشاملة، تهيئة SEO، والنشر السحابي والتدريب',
+        durationWeeks: 1,
+        sprintTasks: [
+          'فحص سرعة الموقع وأمان لوحة التحكم وتدقيق محركات البحث SEO',
+          'ربط الدومين الرسمي وتفعيل شهادة التشفير وحماية SSL',
+          'تسليم لوحة التحكم وتدريب فريق عمل الشركة على إدارة المحتوى'
+        ]
+      }
+    ];
+
+    budgetItems = [
+      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: 3500, costUSD: 75, desc: 'تصميم هوية وواجهات الموقع التعريفي ولوحة إدارة المحتوى على Figma' },
+      { category: 'تطوير وتكويد واجهات الموقع التفاعلي (Front-End)', costEGP: 5500, costUSD: 117, desc: 'بناء واجهات الموقع والصفحات وتهيئة التجاوب والـ SEO' },
+      { category: 'برمجة لوحة التحكم والباك إند (CMS & Backend)', costEGP: 5000, costUSD: 106, desc: 'لوحة التحكم بإدارة المحتوى، المقالات، الخدمات وقاعدة البيانات' }
+    ];
+
+    annualOperationalEstimate = {
+      hosting: 'استضافة سحابية خفيفة وقاعدة بيانات: تبدأ من $5 - $10 شهرياً وفق الاستهلاك الفعلي',
+      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+      paymentGateways: 'بوابات الدفع الإلكتروني (اختياري في حال تفعيل حجز مدفوع): اقتطاع 2.5% فقط عند العمليات بدون اشتراك شهري'
+    };
+
+    paymentPlan = [
+      { milestone: 'الدفعة الأولى (40%)', desc: 'عند بدء العمل وتصميم واجهات الموقع ولوحة التحكم' },
+      { milestone: 'الدفعة الثانية (30%)', desc: 'عند تسليم المعاينة الحية للموقع واكتمال لوحة إدارة المحتوى' },
+      { milestone: 'الدفعة النهائية (30%)', desc: 'عند اعتماد الموقع وربط الدومين الرسمي وتسليم صلاحيات الإدارة' }
+    ];
+
+    feasibilityScore = 93;
+    feasibilityAnalysis = 'تحليل الجدوى السوقية والمؤسسية: المواقع المؤسسية المدعومة بنظام إدارة محتوى خفيف تمنح الشركات مرونة تسويقية فائقة لعرض خدماتها وأخبارها وبناء المصداقية مع عملاء B2B/B2C بتكلفة تشغيل وتطوير منضبطة.';
+    competitors = [
+      { name: 'المواقع القديمة أو المعتمدة على ووردبريس', marketShareOrType: 'أنظمة بطيئة تحتاج صيانة وتحديثات إضافات مستمرة', ourEdge: 'معمارية Headless حديثة سريعة وآمنة ومحمية من الاختراق مع لوحة تحكم بديهية' },
+      { name: 'شركات البرمجيات الكلاسيكية', marketShareOrType: 'تكاليف مرتفعة وفترات تسليم تتجاوز شهوراً', ourEdge: 'تسليم سريع خلال أسبوعين، تصميم مخصص يعكس الهوية، ودعم فني ممتد' }
+    ];
+
+    packages = {
+      mvp: {
+        title: 'باقة الموقع التعريفي الأساسي (Essential Business Site)',
+        costEGP: 10000,
+        costUSD: 213,
+        weeks: 1,
+        desc: 'موقع تعريفي للشركة من 4-5 صفحات مع لوحة تحكم مصغرة لإدارة البيانات الأساسية',
+        keyDeliverables: [
+          'تصميم موقع مؤسسي متجاوب بالكامل مع الشاشات',
+          'صفحات رئيسية: عن الشركة، الخدمات، سابقة الأعمال، وتواصل معنا',
+          'لوحة إدارة مصغرة لتعديل نصوص وبيانات الموقع',
+          'ربط نموذج الاتصال بالبريد الإلكتروني وأزرار الواتساب'
+        ]
+      },
+      pro: {
+        title: 'باقة المنظومة المؤسسية وإدارة المحتوى (Pro Corporate & CMS)',
+        costEGP: 14000,
+        costUSD: 298,
+        weeks: 2,
+        desc: 'موقع مؤسسي احترافي متكامل مع لوحة إدارة محتوى ديناميكية ومدونة ونظام استفسارات متقدم',
+        keyDeliverables: [
+          'موقع مؤسسي شامل متعدد الأقسام بتصميم فريد عالي الاحترافية',
+          'لوحة تحكم CMS كاملة لإدارة المشاريع والخدمات والمقالات بدون قيود',
+          'نظام مدونة ومركز إعلامي لتحسين الترتيب في محركات البحث SEO',
+          'نظام استقبال وإدارة وتصدير استفسارات العملاء وعروض الأسعار',
+          'دعم فني وصيانة مجانية لمدة شهرين وتدريب كامل لفريق العمل'
+        ]
+      },
+      enterprise: {
+        title: 'باقة المؤسسات متعددة اللغات والفروع (Enterprise Multi-Branch)',
+        costEGP: 22000,
+        costUSD: 468,
+        weeks: 3,
+        desc: 'منظومة مؤسسية موسعة تدعم لغات متعددة (عربي/إنجليزي)، إدارة الفروع، ونظام علاقات عملاء مصغر',
+        keyDeliverables: [
+          'دعم كامل للغتين (العربية والإنجليزية) مع تبديل لحظي سلس',
+          'إدارة فروع الشركة والمواقع الجغرافية المتعددة على الخريطة',
+          'لوحة تحكم بصلاحيات متعددة لفريق العمل ومديري الأقسام',
+          'تكامل مع أدوات التحليل المتقدمة وحماية أمنية مشددة',
+          'دعم فني وصيانة مجانية لمدة 6 أشهر مع اتفاقية SLA'
+        ]
+      }
+    };
+  } else if (tier === 3) {
+    totalCostEGP = 28000;
+    totalCostUSD = 595;
+    timelineWeeks = 4;
+
+    techStack = {
+      mobile: isWebOnly ? 'واجهات ويب متجاوبة بالكامل لمتصفحات الموبايل والتابلت والكمبيوتر' : 'React Native (Expo) - تطبيق موحد عالي السرعة للأندرويد والآيفون',
+      web: 'Next.js 14 / React.js مع Tailwind CSS لأعلى سرعة وأفضل تجربة مستخدم',
+      backend: 'Node.js & Express.js مع بنية معمارية رشيقة وقابلة للتوسع',
+      realtime: 'إشعارات لحظية عبر WebSockets وFirebase Cloud Messaging',
+      database: 'PostgreSQL / SQLite مع Prisma ORM لحماية وسرعة المعاملات',
+      maps: 'خرائط جوجل مدمجة لتحديد مواقع التوصيل والفروع بدقة',
+      payments: 'Paymob / Visa / Mastercard / Vodafone Cash / InstaPay',
+      devops: 'سيرفر سحابي محمي بجدار ناري وشهادة تشفير SSL ونسخ احتياطي دوري'
+    };
+
+    systemArchitecture = {
+      architectureType: 'Modular Commerce Architecture (RESTful API & Event-Driven)',
+      microservices: [
+        'خدمة التوثيق والمصادقة للعملاء (Auth & Identity Service)',
+        'محرك إدارة الكتالوج والمخزون (Catalog & Inventory Engine)',
+        'خدمة السلة وإتمام الطلبات (Cart & Order Processing)',
+        'بوابة المدفوعات والفواتير الرقمية (Payments & Invoicing Service)',
+        'محرك التنبيهات وإشعارات الطلبات (Notification Broker)'
+      ],
+      databaseSchema: [
+        {
+          table: 'Users & Customers',
+          description: 'جدول العملاء والمشترين وحسابات المصادقة',
+          fields: ['id', 'fullName', 'email', 'phone', 'address', 'createdAt']
+        },
+        {
+          table: 'Products & Variants',
+          description: 'جدول المنتجات والأسعار والمخزون والمواصفات',
+          fields: ['id', 'title', 'price', 'discountPrice', 'stock', 'category', 'images']
+        },
+        {
+          table: 'Orders',
+          description: 'جدول الطلبات وتفاصيل الشحن والمدفوعات',
+          fields: ['id', 'customerId', 'totalAmount', 'status', 'paymentMethod', 'shippingAddress', 'createdAt']
+        },
+        {
+          table: 'Order Items',
+          description: 'تفاصيل المنتجات داخل كل طلب',
+          fields: ['id', 'orderId', 'productId', 'quantity', 'unitPrice']
+        }
+      ],
+      realtimeEvents: [
+        'order:created',
+        'order:status_updated',
+        'inventory:low_stock'
+      ]
+    };
+
+    milestones = [
+      {
+        phase: 1,
+        title: 'المرحلة 1: تصميم واجهات وتجربة المستخدم وسلة الشراء (UI/UX Design)',
+        durationWeeks: 1,
+        sprintTasks: [
+          'تصميم كافة شاشات المتجر/التطبيق وتجربة إتمام الطلب على Figma',
+          'اعتماد رحلة المستخدم السلسة من التصفح حتى الدفع',
+          'تصميم لوحة التحكم الإدارية وإدارة المخزون'
+        ]
+      },
+      {
+        phase: 2,
+        title: 'المرحلة 2: تطوير الباك إند وقواعد البيانات وبوابات الدفع (Backend & APIs)',
+        durationWeeks: 1,
+        sprintTasks: [
+          'برمجة REST APIs ونظام التوثيق والمصادقة وسلة المشتريات',
+          'هندسة قواعد البيانات وإدارة المخزون وتتبع الحالات',
+          'ربط وتفعيل بوابات الدفع الإلكتروني (Paymob / البطاقات البنكية والمحافظ)'
+        ]
+      },
+      {
+        phase: 3,
+        title: 'المرحلة 3: برمجة واجهات المتجر / التطبيق ولوحة الإدارة (Development)',
+        durationWeeks: 1,
+        sprintTasks: [
+          'تطوير الواجهات التفاعلية أو تطبيقات الجوال',
+          'ربط التطبيق مع الـ APIs واختبار مسار الشراء والدفع كاملاً',
+          'إتمام لوحة تحكم المشرفين والتقارير المالية'
+        ]
+      },
+      {
+        phase: 4,
+        title: 'المرحلة 4: الاختبارات الشاملة (QA) والإطلاق والتسليم الرسمي',
+        durationWeeks: 1,
+        sprintTasks: [
+          'فحص الأمان وتأمين عمليات الدفع والتأكد من سرعة التصفح',
+          isWebOnly ? 'ربط الدومين والنشر السحابي للمتجر' : 'تجهيز حسابات المتاجر ورفع التطبيقات لـ Google Play & App Store',
+          'تسليم الكود المصدري وتدريب فريق العمل على إدارة المتجر'
+        ]
+      }
+    ];
+
+    budgetItems = [
+      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: 6000, costUSD: 128, desc: 'تصميم احترافي لكافة شاشات المتجر وسلة الشراء ولوحة الإدارة على Figma' },
+      { category: 'تطوير الباك إند وقواعد البيانات وبوابات الدفع', costEGP: 9000, costUSD: 191, desc: 'خوادم الـ APIs، سلة المشتريات، محرك الفواتير والربط مع Paymob' },
+      { category: isWebOnly ? 'برمجة واجهات المتجر التفاعلية' : 'برمجة وتطوير تطبيقات الموبايل (iOS & Android)', costEGP: 8000, costUSD: 170, desc: isWebOnly ? 'واجهة متجر تفاعلية بتقنيات Next.js' : 'تطبيقات الهاتف الذكي بأحدث تقنيات React Native' },
+      { category: 'لوحة التحكم وإدارة المخزون والتقارير', costEGP: 5000, costUSD: 106, desc: 'لوحة تحكم مركزية لإدارة المنتجات، الطلبات، وبوالص الشحن' }
+    ];
+
+    annualOperationalEstimate = isWebOnly ? {
+      hosting: 'استضافة سحابية وقاعدة بيانات: تبدأ من $10 - $15 شهرياً وفق الاستهلاك الفعلي',
+      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+      paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
+    } : {
+      appleDeveloper: 'حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS)',
+      googlePlay: 'حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)',
+      hosting: 'استضافة سحابية وسيرفر: تبدأ من $10 - $15 شهرياً وفق الاستهلاك الفعلي',
+      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+      paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
+    };
+
+    paymentPlan = [
+      { milestone: 'الدفعة الأولى (40%)', desc: 'عند بدء المشروع واعتماد التصاميم وواجهات المستخدم' },
+      { milestone: 'الدفعة الثانية (30%)', desc: 'عند الانتهاء من تطوير الباك إند والمعاينة التجريبية للمتجر' },
+      { milestone: 'الدفعة النهائية (30%)', desc: 'عند الفحص النهائي وتسليم الكود المصدري والإطلاق الرسمي' }
+    ];
+
+    feasibilityScore = 89;
+    feasibilityAnalysis = 'تحليل الجدوى السوقية والتجارية: إطلاق متجر إلكتروني مستقل يمنح العلامة التجارية استقلالية تامة عن منصات الاشتراكات وعمولات المتاجر الخارجية، مع تكامل مباشر مع بوابات الدفع والشحن المحلية لضمان تحقيق أعلى هامش ربح.';
+    competitors = [
+      { name: 'منصات تأجير المتاجر (سلة / زد / Shopify)', marketShareOrType: 'منصات تعتمد على اشتراكات شهرية متزايدة وعمولات إضافية', ourEdge: 'كود مملوك بالكامل 100% بدون أي اشتراكات شهرية، وأداء أسرع، وتخصيص لانهائي' },
+      { name: 'البيع اليدوي عبر وسائل التواصل', marketShareOrType: 'إدارة يدوية للطلبات تسبب أخطاء وضياع للفرص البيعية', ourEdge: 'أتمتة كاملة لإتمام الطلب والدفع وإصدار الفواتير اللحظية وإشعارات الشحن' }
+    ];
+
+    packages = {
+      mvp: {
+        title: 'باقة المتجر الأساسي السريع (Starter Store)',
+        costEGP: 20000,
+        costUSD: 425,
+        weeks: 2,
+        desc: 'النسخة الأساسية لإطلاق متجرك وعرض المنتجات وبدء البيع واستقبال المدفوعات بأقل تكلفة',
+        keyDeliverables: [
+          isWebOnly ? 'متجر ويب متجاوب مع كافة الشاشات' : 'تطبيق موبايل موحد للعملاء (Android & iOS)',
+          'كتالوج منتجات أساسي وسلة مشتريات',
+          'بوابة دفع إلكتروني محلية واحدة بالإضافة للدفع عند الاستلام',
+          'لوحة إدارة مصغرة لمتابعة وتحديث حالات الطلبات'
+        ]
+      },
+      pro: {
+        title: 'باقة المتجر الاحترافي المتكامل (Pro E-Commerce Store)',
+        costEGP: 28000,
+        costUSD: 595,
+        weeks: 4,
+        desc: 'المنظومة الاحترافية المتكاملة مع إدارة متقدمة للمخزون وبوابات دفع متعددة وتقارير مبيعات',
+        keyDeliverables: [
+          isWebOnly ? 'متجر ويب احترافي متقدم فائق السرعة' : 'تطبيقات الجوال (iOS & Android) ولوحة الإدارة المركزية',
+          'إدارة شاملة للمخزون والمنتجات والخصومات والعروض الترويجية',
+          'بوابات دفع متعددة (فيزا، ماستركارد، محافظ إلكترونية، وإنستاباي)',
+          'نظام الفواتير الإلكترونية والربط مع شركات الشحن',
+          'دعم فني وصيانة مجانية لمدة 3 أشهر'
+        ]
+      },
+      enterprise: {
+        title: 'باقة المتاجر الكبرى والنمو السريع (Enterprise Commerce)',
+        costEGP: 45000,
+        costUSD: 957,
+        weeks: 5,
+        desc: 'حلول تجارة رقمية متقدمة بميزات تسويقية ذكية وبرامج ولاء وسيرفرات مخصصة لحجم مبيعات ضخم',
+        keyDeliverables: [
+          'متجر ويب وتطبيقات هاتف ذكي موحدة ومتزامنة بالكامل',
+          'برامج نقاط ومكافآت (Loyalty Points) ومحفظة رصيد للعملاء',
+          'تكامل متقدم مع أنظمة الـ ERP والمخازن المحاسبية',
+          'معمارية سحابية عالية التحمل لآلاف المعاملات المتزامنة',
+          'دعم فني وتطوير مستمر لمدة 6 أشهر مع اتفاقية SLA'
+        ]
+      }
+    };
+  } else {
+    // TIER 4: Multi-Sided Platforms & On-Demand Ecosystems
+    const baseCostEGP = 45000;
+    const platformAddonEGP = Math.max(0, (platforms.length - 2)) * 6000;
+    const featuresAddonEGP = (ent.hasMaps ? 3000 : 0) + (ent.hasAI ? 4000 : 0) + (ent.hasVideo ? 4000 : 0) + (ent.isAuction ? 4000 : 0);
+    totalCostEGP = baseCostEGP + platformAddonEGP + featuresAddonEGP;
+    totalCostUSD = Math.round(totalCostEGP / 47);
+    timelineWeeks = platforms.length >= 4 ? 10 : 8;
+
+    techStack = {
+      mobile: 'React Native (Expo) - كود موحد عالي السرعة للأندرويد والآيفون مع دعم Background Location',
+      web: 'Next.js 14 / React.js مع Tailwind CSS للوحة الإدارة الفائقة',
+      backend: 'Node.js & Express.js مع معمارية Modular سهلة التوسع',
+      realtime: 'Socket.io & Redis Pub/Sub للتتبع والمزامنة اللحظية بالثواني',
+      database: 'PostgreSQL / SQLite مع Prisma ORM للسرعة والأمان العالي',
+      maps: 'Google Maps Platform / Mapbox للتتبع الدقيق وحساب المسافات',
+      payments: 'Paymob / Vodafone Cash / InstaPay للمدفوعات الرقمية',
+      devops: 'سيرفر سحابي محمي بجدار ناري وشهادة SSL كاملة ونسخ احتياطي يومي',
+      aiVision: ent.isPharmacy ? 'محرك Vision OCR الذكي لقراءة وتفسير الروشتات المكتوبة' : null
+    };
+
+    systemArchitecture = {
       architectureType: 'Modular Clean Architecture (RESTful API & Event-Driven)',
       microservices: [
         'خدمة التوثيق والمصادقة الآمنة (Auth & Identity Service)',
@@ -1168,20 +1826,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
         'status:changed',
         'chat:new_message'
       ]
-    },
-    techStack: {
-      mobile: 'React Native (Expo) - كود موحد عالي السرعة للأندرويد والآيفون مع دعم Background Location',
-      web: 'Next.js 14 / React.js مع Tailwind CSS للوحة الإدارة الفائقة',
-      backend: 'Node.js & Express.js مع معمارية Modular سهلة التوسع',
-      realtime: 'Socket.io & Redis Pub/Sub للتتبع والمزامنة اللحظية بالثواني',
-      database: 'PostgreSQL / SQLite مع Prisma ORM للسرعة والأمان العالي',
-      maps: 'Google Maps Platform / Mapbox للتتبع الدقيق وحساب المسافات',
-      payments: 'Paymob / Vodafone Cash / InstaPay للمدفوعات الرقمية',
-      devops: 'سيرفر سحابي محمي بجدار ناري وشهادة SSL كاملة ونسخ احتياطي يومي',
-      aiVision: ent.isPharmacy ? 'محرك Vision OCR الذكي لقراءة وتفسير الروشتات المكتوبة' : null
-    },
-    timelineWeeks,
-    milestones: [
+    };
+
+    milestones = [
       {
         phase: 1,
         title: 'المرحلة 1: هندسة المتطلبات وتصميم الواجهات وتجربة المستخدم (UI/UX Design)',
@@ -1222,37 +1869,33 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
           'تسليم الكود المصدري وتدريب فريق العمل على إدارة المنصة'
         ]
       }
-    ],
-    budgetBreakdown: {
-      currencyEGP: totalCostEGP,
-      currencyUSD: totalCostUSD,
-      items: [
-        { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: Math.round(totalCostEGP * 0.22), costUSD: Math.round(totalCostUSD * 0.22), desc: 'تصميم تفاعلي كامل لكافة شاشات المنصات على Figma' },
-        { category: 'تطوير الباك إند وقواعد البيانات والـ APIs', costEGP: Math.round(totalCostEGP * 0.33), costUSD: Math.round(totalCostUSD * 0.33), desc: 'الخوادم، المقابس اللحظية، محرك الخرائط، وبوابات الدفع' },
-        { category: 'برمجة وتطوير تطبيقات الموبايل الموحدة', costEGP: Math.round(totalCostEGP * 0.30), costUSD: Math.round(totalCostUSD * 0.30), desc: 'تطبيقات أندرويد وآيفون بأحدث تقنيات React Native' },
-        { category: 'لوحة التحكم السحابية المركزية (Super Admin)', costEGP: Math.round(totalCostEGP * 0.15), costUSD: Math.round(totalCostUSD * 0.15), desc: 'لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية' }
-      ],
-      annualOperationalEstimate: isWebOnly ? {
-        hosting: 'استضافة سحابية VPS وسيرفر: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)',
-        domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
-        paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
-      } : {
-        appleDeveloper: 'حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS في متجر التطبيقات)',
-        googlePlay: 'حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)',
-        hosting: 'استضافة سحابية VPS وسيرفر: تبدأ من $10 - $20 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)',
-        domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
-        mapsApi: 'خرائط جوجل وتحديد المواقع: رصيد مجاني شهري $200 من Google Cloud يغطي آلاف العمليات مجاناً',
-        paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
-      }
-    },
-    paymentPlan: [
+    ];
+
+    budgetItems = [
+      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: Math.round(totalCostEGP * 0.22), costUSD: Math.round(totalCostUSD * 0.22), desc: 'تصميم تفاعلي كامل لكافة شاشات المنصات على Figma' },
+      { category: 'تطوير الباك إند وقواعد البيانات والـ APIs', costEGP: Math.round(totalCostEGP * 0.33), costUSD: Math.round(totalCostUSD * 0.33), desc: 'الخوادم، المقابس اللحظية، محرك الخرائط، وبوابات الدفع' },
+      { category: 'برمجة وتطوير تطبيقات الموبايل الموحدة', costEGP: Math.round(totalCostEGP * 0.30), costUSD: Math.round(totalCostUSD * 0.30), desc: 'تطبيقات أندرويد وآيفون بأحدث تقنيات React Native' },
+      { category: 'لوحة التحكم السحابية المركزية (Super Admin)', costEGP: Math.round(totalCostEGP * 0.15), costUSD: Math.round(totalCostUSD * 0.15), desc: 'لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية' }
+    ];
+
+    annualOperationalEstimate = {
+      appleDeveloper: 'حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS في متجر التطبيقات)',
+      googlePlay: 'حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)',
+      hosting: 'استضافة سحابية VPS وسيرفر: تبدأ من $15 - $25 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)',
+      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+      mapsApi: 'خرائط جوجل وتحديد المواقع: رصيد مجاني شهري $200 من Google Cloud يغطي آلاف العمليات مجاناً',
+      paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
+    };
+
+    paymentPlan = [
       { milestone: 'الدفعة الأولى (40%)', desc: 'عند توقيع العقد والبدء في التصميم وهندسة واجهات وتجربة المستخدم' },
       { milestone: 'الدفعة الثانية (30%)', desc: 'عند تسليم النسخة التجريبية الحية (Staging Preview) واكتمال الخوادم' },
       { milestone: 'الدفعة النهائية (30%)', desc: 'عند الاعتماد النهائي، تسليم الكود المصدري ورفع التطبيقات للمتاجر الرسمية' }
-    ],
-    feasibilityScore: ent.isPharmacy ? 92 : ent.isFood ? 86 : ent.isRide ? 84 : ent.isAuction ? 89 : ent.isEcommerce ? 88 : 87,
-    feasibilityAnalysis: 'تحليل الجدوى السوقية والتقنية: فكرة المشروع تتميز بطلب حقيقي ومرتفع في السوق المستهدف. التحدي الأساسي يكمن في سرعة الاستجابة وتجربة المستخدم الموحدة، وهو ما تعالجه معمارية Apex من خلال تقنيات التزامن اللحظي وتقليل التكلفة التشغيلية بنسبة 40% مقارنة بالحلول التقليدية.',
-    competitors: ent.isPharmacy ? [
+    ];
+
+    feasibilityScore = ent.isPharmacy ? 92 : ent.isFood ? 86 : ent.isRide ? 84 : ent.isAuction ? 89 : ent.isEcommerce ? 88 : 87;
+    feasibilityAnalysis = 'تحليل الجدوى السوقية والتقنية: فكرة المشروع تتميز بطلب حقيقي ومرتفع في السوق المستهدف. التحدي الأساسي يكمن في سرعة الاستجابة وتجربة المستخدم الموحدة، وهو ما تعالجه معمارية Apex من خلال تقنيات التزامن اللحظي وتقليل التكلفة التشغيلية بنسبة 40% مقارنة بالحلول التقليدية.';
+    competitors = ent.isPharmacy ? [
       { name: 'فيزيتا (Vezeeta)', marketShareOrType: 'تطبيق رعاية وصيدليات إقليمي', ourEdge: 'محرك OCR فوري للروشتات وقراءة خط الطبيب وتوجيه جغرافي لأقرب صيدلية' },
       { name: 'شفاء (Chefaa)', marketShareOrType: 'منصة أدوية واشتراكات شهرية', ourEdge: 'توصيل فوري بالدقيقة وعمولة أقل للصيدليات بدون وسيط معقد' }
     ] : ent.isFood ? [
@@ -1264,13 +1907,14 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     ] : [
       { name: 'شركات وحلول تقليدية', marketShareOrType: 'تطبيقات قوالب جاهزة غير مخصصة', ourEdge: 'تطبيقات جوال سريعة React Native مخصصة مع ملكية كاملة للكود' },
       { name: 'منصات ومواقع عامة', marketShareOrType: 'أنظمة بطيئة تعتمد على اشتراكات', ourEdge: 'معمارية سحابية مستقلة قابلة للتوسع بدون قيود أو اشتراكات شهرية' }
-    ],
-    packages: {
+    ];
+
+    packages = {
       mvp: {
         title: 'باقة إطلاق النموذج الأولي (MVP - الأقل تكلفة)',
-        costEGP: Math.round(totalCostEGP * 0.48),
-        costUSD: Math.round(totalCostUSD * 0.48),
-        weeks: Math.max(3, Math.round(timelineWeeks * 0.5)),
+        costEGP: Math.round(totalCostEGP * 0.65),
+        costUSD: Math.round(totalCostUSD * 0.65),
+        weeks: Math.max(4, Math.round(timelineWeeks * 0.5)),
         desc: 'النسخة الأساسية الرشيقة للتحقق السريع من السوق واختبار الإقبال بأقل تكلفة ومخاطرة مالية',
         keyDeliverables: [
           'تطبيق موبايل موحد للعملاء (Android & iOS)',
@@ -1307,7 +1951,38 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
           'دعم فني 24/7 مع اتفاقية مستوى خدمة رسمية SLA'
         ]
       }
-    }
+    };
+  }
+
+  return {
+    projectName,
+    domainName,
+    tagline,
+    summary: `منظومة تقنية متكاملة تهدف إلى تنفيذ "${cleanPrompt}" بأعلى معايير هندسة البرمجيات. توفر ${platforms.length} منصات متكاملة تربط أطراف المنظومة عبر بنية سحابية مرنة وسريعة ومؤمنة بالكامل.`,
+    isLiveAI: false,
+    engine: 'Apex Deep Semantic Engine 2.0 (Custom Dynamic Synthesis)',
+    strategicAnalysis: {
+      valueProposition: valProp,
+      businessModel: bizModel,
+      keyChallenges,
+      mvpStrategy: mvpPlan
+    },
+    platforms,
+    systemArchitecture,
+    techStack,
+    timelineWeeks,
+    milestones,
+    budgetBreakdown: {
+      currencyEGP: totalCostEGP,
+      currencyUSD: totalCostUSD,
+      items: budgetItems,
+      annualOperationalEstimate
+    },
+    paymentPlan,
+    feasibilityScore,
+    feasibilityAnalysis,
+    competitors,
+    packages
   };
 }
 
