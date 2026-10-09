@@ -8,8 +8,14 @@ export default function Footer() {
   const { t, lang } = useLanguage();
   
   return (
-    <footer className="py-12 px-5 md:px-10 bg-[#050505] border-t border-border-glass">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+    <footer className="py-14 px-5 md:px-10 bg-gradient-to-b from-[#060812] to-[#030408] border-t border-white/10 relative overflow-hidden">
+      {/* Ambient subtle top laser glow and background light */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[70vw] h-[1px] bg-gradient-to-r from-transparent via-accent-radium/40 to-transparent" />
+        <div className="absolute bottom-[-15%] left-1/2 -translate-x-1/2 w-[60vw] h-[25vh] bg-accent-radium/[0.025] blur-[130px] rounded-full" />
+      </div>
+
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
         <Logo />
         
         {/* Copyright & Direct APK Download */}
