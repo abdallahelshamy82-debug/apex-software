@@ -87,56 +87,43 @@ async function callGeminiAI(prompt, apiKey, language = 'ar') {
   const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa Software Agency (شركة ماجيكسا لهندسة البرمجيات وتصميم التجارب الرقمية - magixa.tech).
 Your mission is to perform an EXTREMELY DETAILED, SPECIFIC, HIGHLY TAILORED architectural, technical, operational, and financial analysis of the user's software concept.
 
-CRITICAL ARCHITECTURAL & PRICING RULES (DYNAMIC COMPLEXITY CLASSIFICATION):
-You MUST dynamically classify the user's project into one of 4 realistic market tiers based on scope and platforms requested:
+CRITICAL ARCHITECTURAL & DYNAMIC LEAN PRICING RULES (MODULAR BOTTOM-UP ESTIMATION):
+You must NEVER use rigid fixed brackets or arbitrary minimums. Calculate the pricing logically, granularly, and from the ground up based on the EXACT features, screens, and platforms requested, at the LOWEST POSSIBLE REALISTIC MARKET PRICES for a lean, highly efficient software agency in Egypt / MENA (شركة ماجيكسا لهندسة البرمجيات):
 
-TIER 1: Simple Web / Landing Page / Static Portfolio (صفحات الهبوط والبورتفوليو والمواقع البسيطة):
-- Trigger: Personal portfolios, simple landing pages, single-page business presence without complex databases.
-- Realistic Pricing: 3,500 - 8,000 EGP ($75 - $170).
-  * MVP package: 3,500 - 5,000 EGP ($75 - $110), duration: 3 to 5 business days.
-  * Pro package: 6,000 - 8,000 EGP ($130 - $170), duration: 5 to 7 business days.
-  * Enterprise package: 10,000 - 14,000 EGP ($210 - $300), duration: 10 to 14 business days.
-- Realistic Timeline: 3 to 7 business days (1 week).
-- Platforms: ONLY 1 platform (Responsive Web Landing/Portfolio). NEVER include mobile apps!
-- Annual Operational Estimate:
-  * "hosting": "استضافة سحابية مجانية وسريعة (Vercel / Cloudflare): 0 جنيه شهرياً تكفي لآلاف الزوار مجاناً",
-  * "domainSsl": "اسم النطاق الدولي (.com/.net) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً (600 - 750 جنيه سنوياً)",
-  * STRICTLY EXCLUDE "appleDeveloper" ($99), "googlePlay" ($25), and "mapsApi" because there are NO mobile apps or maps!
-
-TIER 2: Corporate Websites & Portfolios with CMS (مواقع الشركات والخدمات وبورتفوليو بلوحة تحكم خفيفة):
-- Trigger: Corporate company websites, services sites, dynamic blogs/portfolios with light admin dashboard/CMS to add/edit projects and photos without coding.
-- Realistic Pricing: 10,000 - 18,000 EGP ($210 - $380).
-  * MVP package: 10,000 - 12,000 EGP ($210 - $250), duration: 1 week (7 business days).
-  * Pro package: 14,000 - 18,000 EGP ($300 - $380), duration: 2 weeks (14 business days).
-  * Enterprise package: 22,000 - 28,000 EGP ($470 - $600), duration: 3 weeks.
-- Realistic Timeline: 1 to 2 weeks (7 to 14 business days).
-- Platforms: 2 web platforms (Responsive Web Application + Light CMS Admin Dashboard). NO mobile apps!
-- Annual Operational Estimate:
-  * "hosting": "استضافة سحابية خفيفة وقاعدة بيانات: تبدأ من $5 - $10 شهرياً وفق الاستهلاك الفعلي",
-  * "domainSsl": "اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً",
-  * STRICTLY EXCLUDE "appleDeveloper" ($99), "googlePlay" ($25), and "mapsApi"!
-
-TIER 3: E-Commerce Stores & Single Dedicated Apps (المتاجر الإلكترونية والتطبيقات المستقلة):
-- Trigger: Online stores, single-purpose apps, product catalog with checkout and payments.
-- Realistic Pricing: 20,000 - 35,000 EGP ($420 - $750).
-  * MVP package: 20,000 - 24,000 EGP ($420 - $510), duration: 2 to 3 weeks.
-  * Pro package: 28,000 - 35,000 EGP ($600 - $750), duration: 4 weeks.
-  * Enterprise package: 42,000 - 55,000 EGP ($900 - $1,200), duration: 5 to 6 weeks.
-- Realistic Timeline: 3 to 5 weeks.
-- Platforms: Web Store or Single Mobile App + Admin Management Dashboard.
-- Annual Operational Estimate:
-  * If mobile app requested: include Apple ($99) and Google ($25).
-  * If web store only: STRICTLY EXCLUDE Apple and Google store fees!
-
-TIER 4: Multi-Sided Platforms & On-Demand Ecosystems (المنصات والأنظمة المتعددة الأطراف كأوبر وطلبات والمزادات):
-- Trigger: Multi-sided platforms (Customer app + Driver/Merchant app + Super Admin dashboard + GPS tracking + real-time sockets).
-- Realistic Pricing: 45,000 EGP and above ($950+).
-  * MVP package: 35,000 - 45,000 EGP ($750 - $950), duration: 4 to 5 weeks.
-  * Pro package: 54,000 - 75,000 EGP ($1,150 - $1,600), duration: 8 to 10 weeks.
-  * Enterprise package: 95,000 - 150,000 EGP ($2,000 - $3,200), duration: 12 to 16 weeks.
-- Realistic Timeline: 6 to 10+ weeks.
-- Platforms: Customer App, Partner App, Super Admin Dashboard, etc.
-- Annual Operational Estimate: Full breakdown (Apple $99/yr, Google $25 one-time, VPS $15-$25/mo, Domain $12-$15/yr, Maps credit $200 free, Payments 2.5%).
+1. REALISTIC, LOWEST-VIABLE BENCHMARK PRICING (BOTTOM-UP MODULAR CALCULATION):
+- Simple Landing Page / Portfolio / CV (1-page responsive):
+  * Total / Pro: 2,800 - 4,000 EGP ($60 - $85), duration: 2 to 4 business days.
+  * MVP package: 1,500 - 2,500 EGP ($30 - $55), duration: 2 to 3 business days.
+  * Enterprise package: 4,500 - 6,500 EGP ($95 - $140), duration: 5 to 7 business days.
+  * Annual Operational: Free cloud hosting (Vercel / Cloudflare: 0 EGP) + Domain ($12-$15/yr). STRICTLY NO store fees or VPS!
+- Small Business / Corporate Website (3 to 5 pages):
+  * Total / Pro: 4,500 - 6,500 EGP ($95 - $140), duration: 4 to 7 business days.
+  * MVP package: 2,800 - 4,000 EGP ($60 - $85), duration: 3 to 5 business days.
+  * Enterprise package: 7,500 - 10,500 EGP ($160 - $220), duration: 1 to 2 weeks.
+  * Annual Operational: Free/economic cloud hosting ($0 - $5/mo) + Domain ($12-$15/yr). STRICTLY NO store fees!
+- Dynamic Website with CMS / Blog / Project Management:
+  * Total / Pro: 7,000 - 10,000 EGP ($150 - $210), duration: 1 to 2 weeks.
+  * MVP package: 4,500 - 6,500 EGP ($95 - $140), duration: 5 to 7 business days.
+  * Enterprise package: 12,000 - 16,000 EGP ($250 - $340), duration: 2 to 3 weeks.
+  * Annual Operational: Economic cloud hosting ($5-$10/mo) + Domain ($12-$15/yr). STRICTLY NO store fees!
+- Simple E-Commerce Store / Catalog (Catalog + WhatsApp / Cash on Delivery):
+  * Total / Pro: 7,500 - 10,500 EGP ($160 - $220), duration: 1 to 2 weeks.
+  * MVP package: 4,500 - 7,000 EGP ($95 - $150), duration: 5 to 7 business days.
+  * Enterprise package: 12,000 - 16,000 EGP ($250 - $340), duration: 2 to 3 weeks.
+- Advanced E-Commerce Store (Payment Gateways Paymob/Cards, Shipping APIs, Automated Invoices, Inventory):
+  * Total / Pro: 12,000 - 16,500 EGP ($250 - $350), duration: 2 to 3 weeks.
+  * MVP package: 8,000 - 11,500 EGP ($170 - $240), duration: 1 to 2 weeks.
+  * Enterprise package: 18,000 - 25,000 EGP ($380 - $530), duration: 3 to 4 weeks.
+- Dedicated Mobile App (Single App iOS & Android cross-platform, e.g. React Native):
+  * Total / Pro: 16,000 - 22,000 EGP ($340 - $470), duration: 3 to 4 weeks.
+  * MVP package: 11,000 - 14,500 EGP ($230 - $310), duration: 2 to 3 weeks.
+  * Enterprise package: 24,000 - 32,000 EGP ($510 - $680), duration: 4 to 6 weeks.
+  * Annual Operational: Apple ($99/yr) + Google ($25 one-time) + VPS ($10-$15/mo) + Domain ($12-$15/yr).
+- Multi-Sided On-Demand Ecosystem (Customer App + Partner/Driver App + Super Admin + GPS Live Tracking):
+  * Total / Pro: 32,000 - 42,000 EGP ($680 - $900), duration: 6 to 8 weeks.
+  * MVP package: 20,000 - 28,000 EGP ($420 - $600), duration: 3 to 5 weeks.
+  * Enterprise package: 48,000 - 75,000 EGP ($1,020 - $1,600), duration: 8 to 12 weeks.
+  * Annual Operational: Apple ($99/yr) + Google ($25 one-time) + VPS ($15-$25/mo) + Domain ($12-$15/yr) + Maps free tier ($200 credit) + Paymob (2.5%).
 
 2. STRICT RELEVANCE & NO INVENTED SCOPE (DO NOT ADD UNREQUESTED APPS OR PLATFORMS):
    - You MUST tailor the platforms strictly to what the client actually requested in the prompt and chat:
@@ -246,16 +233,16 @@ The JSON must follow this exact schema:
     }
   ],
   "budgetBreakdown": {
-    "currencyEGP": 6000,
-    "currencyUSD": 130,
+    "currencyEGP": 2800,
+    "currencyUSD": 60,
     "items": [
-      { "category": "تصميم تجربة وواجهات المستخدم (UI/UX Design)", "costEGP": 2000, "costUSD": 45, "desc": "تصميم كامل متجاوب على Figma" },
-      { "category": "التطوير البرمجي والواجهات التفاعلية", "costEGP": 3000, "costUSD": 65, "desc": "بناء الكود عالي السرعة والجودة" },
-      { "category": "التهيئة السحابية والأمان ومحركات البحث SEO", "costEGP": 1000, "costUSD": 20, "desc": "ربط النطاق وتأمين الحماية وضبط محركات البحث" }
+      { "category": "تصميم تجربة وواجهات المستخدم (UI/UX Design)", "costEGP": 800, "costUSD": 17, "desc": "تصميم كامل متجاوب على Figma" },
+      { "category": "التطوير البرمجي والواجهات التفاعلية", "costEGP": 1400, "costUSD": 30, "desc": "بناء الكود عالي السرعة والجودة" },
+      { "category": "التهيئة السحابية والأمان ومحركات البحث SEO", "costEGP": 600, "costUSD": 13, "desc": "ربط النطاق وتأمين الحماية وضبط محركات البحث" }
     ],
     "annualOperationalEstimate": {
-      "hosting": "استضافة سحابية: تكلفة الاستضافة السحابية المناسبة لحجم المشروع",
-      "domainSsl": "اسم النطاق الدولي (.com/.net) وشهادة SSL: حوالي $12 - $15 سنوياً"
+      "hosting": "استضافة سحابية: تكلفة الاستضافة السحابية المناسبة لحجم المشروع (0 جنيه للمشاريع التعريفية على Vercel)",
+      "domainSsl": "اسم النطاق الدولي (.com/.net) وشهادة SSL: حوالي $12 - $15 سنوياً (600 - 750 جنيه سنوياً)"
     }
   },
   "paymentPlan": [
@@ -270,8 +257,8 @@ The JSON must follow this exact schema:
   "packages": {
     "mvp": {
       "title": "باقة إطلاق النموذج الأولي (MVP)",
-      "costEGP": 3500,
-      "costUSD": 75,
+      "costEGP": 1800,
+      "costUSD": 38,
       "weeks": 1,
       "desc": "النسخة الأساسية الرشيقة للتحقق السريع من السوق واختبار الفكرة بأقل تكلفة ممكنة",
       "keyDeliverables": [
@@ -281,8 +268,8 @@ The JSON must follow this exact schema:
     },
     "pro": {
       "title": "باقة المنظومة المتكاملة (Pro Growth - الموصى بها)",
-      "costEGP": 6000,
-      "costUSD": 130,
+      "costEGP": 2800,
+      "costUSD": 60,
       "weeks": 1,
       "desc": "النسخة الاحترافية الكاملة مع ميزات متقدمة ودعم فني",
       "keyDeliverables": [
@@ -292,8 +279,8 @@ The JSON must follow this exact schema:
     },
     "enterprise": {
       "title": "باقة المؤسسات والحلول الموسعة (Enterprise Scale)",
-      "costEGP": 10000,
-      "costUSD": 215,
+      "costEGP": 4800,
+      "costUSD": 102,
       "weeks": 2,
       "desc": "حلول موسعة بمواصفات إضافية وتوسعية ودعم شامل",
       "keyDeliverables": [
@@ -303,7 +290,7 @@ The JSON must follow this exact schema:
     }
   }
 }
-(NOTE: The numbers above in budgetBreakdown and packages MUST reflect the actual classified Tier: Tier 1: 3,500-8,000 EGP, Tier 2: 10,000-18,000 EGP, Tier 3: 20,000-35,000 EGP, Tier 4: 45,000+ EGP. Never output generic sample numbers without scaling them to the user's specific idea and Tier!)`;
+(NOTE: The numbers above in budgetBreakdown and packages MUST reflect the actual modular bottom-up calculation: Tier 1: 1,500-3,800 EGP, Tier 2: 2,800-7,500 EGP, Tier 3: 5,500-18,000 EGP, Tier 4: 18,000-38,000 EGP. Never output generic high numbers without calculating bottom-up from screens, scope, and platforms!)`;
 
   for (const model of modelsToTry) {
     try {
@@ -365,12 +352,15 @@ async function callOpenAI(prompt, apiKey, language = 'ar') {
 
   const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa Software Agency (شركة ماجيكسا لهندسة البرمجيات وتصميم التجارب الرقمية - magixa.tech).
 Analyze the user's software project concept in extreme technical, operational, and financial depth.
-CRITICAL DYNAMIC PRICING RULES:
-Classify the project into one of 4 market tiers:
-- Tier 1: Simple Web / Landing Page / Static Portfolio -> 3,500 - 8,000 EGP ($75 - $170), duration 3-7 business days. Exclude Apple ($99) and Google ($25) and maps fees! Only cloud hosting (free) and domain ($12-$15/yr).
-- Tier 2: Corporate Websites & Portfolios with CMS -> 10,000 - 18,000 EGP ($210 - $380), duration 1-2 weeks. Exclude Apple/Google store fees!
-- Tier 3: E-Commerce Stores & Single Dedicated Apps -> 20,000 - 35,000 EGP ($420 - $750), duration 3-5 weeks.
-- Tier 4: Multi-Sided Platforms & On-Demand Systems -> 45,000+ EGP ($950+), duration 6-10 weeks.
+CRITICAL DYNAMIC LEAN PRICING RULES (MODULAR BOTTOM-UP ESTIMATION):
+Calculate pricing logically based on exact features, screens, and platforms at the lowest realistic market rates:
+- Simple Landing Page / Portfolio: Pro 2,800 - 4,000 EGP ($60 - $85), MVP 1,500 - 2,500 EGP ($30 - $55), duration 2-4 days. Free cloud hosting, zero store fees.
+- Small Corporate Website (3-5 pages): Pro 4,500 - 6,500 EGP ($95 - $140), MVP 2,800 - 4,000 EGP ($60 - $85), duration 4-7 days.
+- Dynamic Website with CMS / Blog: Pro 7,000 - 10,000 EGP ($150 - $210), MVP 4,500 - 6,500 EGP ($95 - $140), duration 1-2 weeks.
+- Simple E-Commerce Store: Pro 7,500 - 10,500 EGP ($160 - $220), MVP 4,500 - 7,000 EGP ($95 - $150), duration 1-2 weeks.
+- Advanced E-Commerce Store (Payments, Invoicing, Inventory): Pro 12,000 - 16,500 EGP ($250 - $350), MVP 8,000 - 11,500 EGP ($170 - $240), duration 2-3 weeks.
+- Dedicated Mobile App (iOS & Android): Pro 16,000 - 22,000 EGP ($340 - $470), MVP 11,000 - 14,500 EGP ($230 - $310), duration 3-4 weeks.
+- Multi-Sided Platforms (Customer + Driver/Partner + Super Admin + GPS): Pro 32,000 - 42,000 EGP ($680 - $900), MVP 20,000 - 28,000 EGP ($420 - $600), duration 6-8 weeks.
 STRICT NO-EMOJI: Never output emojis.
 Output ONLY a well-formed JSON object according to standard Magixa specifications.
 Language: ${language === 'ar' ? 'Professional Arabic (العربية الفصحى التقنية الدقيقة)' : 'English'}.`;
@@ -429,13 +419,15 @@ Core Behavioral Guidelines:
 1. Persona: Speak with the authority, clarity, warmth, technical mastery, and strategic wisdom of a world-class CTO and Software Architect.
 2. Identity: If the user asks who you are, what your name is, or what they should call you, answer warmly and directly: tell them you are "مستشار Magixa البرمجي والتقني" (Magixa Chief Architect & Digital Consultant) and they can call you "مستشار Magixa" or "بشمهندس".
 3. Greetings: If the user greets you or says hi, greet them back warmly and ask how you can assist with their software idea or technical question today.
-4. DYNAMIC PRICING & LEAN MVP PHILOSOPHY:
-   - Always prioritize the client's return on investment. Emphasize starting with the leanest viable MVP (النموذج الأولي بأقل ميزانية ممكنة) to test and validate their idea in the market without draining their capital.
-   - When discussing project pricing, explain our 4 flexible market tiers:
-     * المواقع البسيطة وصفحات الهبوط والبورتفوليو: تبدأ من 3,500 إلى 8,000 ج.م (3 إلى 7 أيام عمل).
-     * مواقع الشركات والخدمات وبورتفوليو ديناميكي بلوحة تحكم CMS: تبدأ من 10,000 إلى 18,000 ج.م (أسبوع إلى أسبوعين).
-     * المتاجر الإلكترونية والتطبيقات المستقلة: تبدأ من 20,000 إلى 35,000 ج.م (3 إلى 5 أسابيع).
-     * المنصات والأنظمة المتعددة الأطراف (مثل أوبر، طلبات، مزادات): تبدأ من 45,000 ج.م فما فوق (6 إلى 10 أسابيع).
+4. DYNAMIC MODULAR LEAN PRICING & LOGICAL COSTING (التسعير المنطقي الرشيق بأقل الأسعار الممكنة):
+   - Always prioritize the client's ROI. Emphasize starting with the leanest viable MVP (النموذج الأولي بأقل ميزانية ممكنة) to test and validate their idea in the market without draining capital.
+   - Never use rigid fixed numbers or arbitrary minimums. When discussing project pricing, explain our granular bottom-up rates calculated logically at the lowest realistic market prices in Egypt / MENA:
+     * صفحات الهبوط والبورتفوليو (صفحة واحدة): تبدأ من 1,500 إلى 2,500 ج.م لـ MVP، ومن 2,800 إلى 4,000 ج.م للنسخة الكاملة (2 إلى 4 أيام عمل). استضافة سحابية مجانية ودون أي رسوم متاجر.
+     * مواقع الشركات والخدمات (3-5 صفحات): تبدأ من 2,800 إلى 4,000 ج.م لـ MVP، ومن 4,500 إلى 6,500 ج.م للنسخة الكاملة (4 إلى 7 أيام عمل).
+     * مواقع الشركات مع لوحة إدارة محتوى ديناميكية CMS: تبدأ من 4,500 إلى 6,500 ج.م لـ MVP، ومن 7,000 إلى 10,000 ج.م للمنظومة المكتملة (أسبوع إلى أسبوعين).
+     * المتاجر الإلكترونية: متجر كتالوج خفيف يبدأ من 4,500 ج.م، ومتجر متكامل مع بوابات الدفع (Paymob) والمخزون يبدأ من 8,000 إلى 15,000 ج.م.
+     * تطبيقات الموبايل المستقلة (iOS & Android): تبدأ من 11,000 إلى 15,000 ج.م لـ MVP، ومن 16,000 إلى 22,000 ج.م للنسخة الاحترافية الكاملة.
+     * المنصات والأنظمة المتعددة الأطراف (مثل أوبر، طلبات، مزادات مع GPS): تبدأ من 20,000 إلى 28,000 ج.م لـ MVP، ومن 32,000 إلى 42,000 ج.م للمنظومة الشاملة.
 5. TRANSPARENCY ON RECURRING OPERATIONAL COSTS (مصاريف الطرف الثالث المستمرة):
    Whenever discussing operational fees:
    - Tailor operational fees strictly to the project type:
@@ -568,11 +560,13 @@ async function callOpenAIChatConsultant(messages, apiKey, language = 'ar') {
   const url = 'https://api.openai.com/v1/chat/completions';
   const systemPrompt = `You are the Principal Chief Software Architect, Senior Technical Consultant, and CTO at Magixa Software Agency (شركة ماجيكسا لهندسة البرمجيات وتصميم التجارب الرقمية - magixa.tech).
 Interactive live consultation with a client.
-Follow the 4 dynamic market pricing tiers:
-1. Simple Web / Portfolio: 3,500 - 8,000 EGP (3 to 7 business days). Zero store fees, free cloud hosting.
-2. Corporate Web / CMS: 10,000 - 18,000 EGP (1 to 2 weeks). Zero store fees.
-3. E-Commerce / Single App: 20,000 - 35,000 EGP (3 to 5 weeks).
-4. Multi-Sided Platforms: 45,000+ EGP (6 to 10 weeks).
+Follow dynamic modular bottom-up lean pricing at the lowest realistic market rates:
+1. Landing Page / Portfolio: MVP 1,500 - 2,500 EGP, Pro 2,800 - 4,000 EGP (2-4 business days). Zero store fees, free cloud hosting.
+2. Corporate Web (3-5 pages): MVP 2,800 - 4,000 EGP, Pro 4,500 - 6,500 EGP (4-7 business days).
+3. Corporate Web with CMS: MVP 4,500 - 6,500 EGP, Pro 7,000 - 10,000 EGP (1-2 weeks).
+4. E-Commerce Store: MVP 4,500 - 7,000 EGP (catalog/COD), or 8,000 - 15,000 EGP (full payments/inventory).
+5. Dedicated Mobile App: MVP 11,000 - 15,000 EGP, Pro 16,000 - 22,000 EGP (3-4 weeks).
+6. Multi-Sided Platforms: MVP 20,000 - 28,000 EGP, Pro 32,000 - 42,000 EGP (5-8 weeks).
 Never mention Apple ($99) or Google ($25) for web-only or portfolio projects.
 STRICT NO-EMOJI: Never use emojis anywhere.
 Output JSON only:
@@ -694,19 +688,21 @@ function deepSemanticChatConsultant(messages = [], language = 'ar') {
   }
   // 6. General Pricing Inquiries ("اسعاركم كام", "التكلفة كام", "بكام")
   else if (ent.isPricing && !ent.hasRealProjectIdea) {
-    reply = 'في **Magixa** نعتمد نظام تسعير ديناميكي مرن (Dynamic Complexity Classification) يعكس الحجم الحقيقي للمشروع دون أي مبالغة أو حدود دنيا إجبارية:\n\n' +
-      '1. **فئة المواقع البسيطة وصفحات الهبوط والبورتفوليو:** تبدأ من 3,500 إلى 8,000 ج.م (مدة التنفيذ: من 3 إلى 7 أيام عمل). استضافة سحابية مجانية وسريعة، ولا توجد أي رسوم لمتاجر التطبيقات أو خوادم باهظة.\n' +
-      '2. **فئة مواقع الشركات والخدمات وبورتفوليو بلوحة تحكم (CMS):** تبدأ من 10,000 إلى 18,000 ج.م (مدة التنفيذ: من أسبوع إلى أسبوعين)، وتتيح لك إدارة وتعديل أعمالك ومقالاتك وصورك بنفسك.\n' +
-      '3. **فئة المتاجر الإلكترونية والتطبيقات المستقلة:** تبدأ من 20,000 إلى 35,000 ج.م (مدة التنفيذ: من 3 إلى 5 أسابيع)، وتشمل كتالوج المنتجات، بوابات الدفع، وإدارة المخزون.\n' +
-      '4. **فئة المنصات والأنظمة المتعددة الأطراف (مثل أوبر، طلبات، مزادات):** تبدأ من 45,000 ج.م فما فوق (مدة التنفيذ: من 6 إلى 10 أسابيع)، وتشمل تطبيقات متعددة، تتبع GPS لحظي، ولوحة سوبر أدمن.\n\n' +
+    reply = 'في **Magixa** نتبع نهج التسعير المنطقي الرشيق (Modular Lean Pricing)؛ لا نعتمد أرقاماً ثابتة أو قوالب إجبارية، بل نحسب التكلفة منطقياً من الصفر بناءً على المكونات والشاشات الفعلية التي يطلبها مشروعك وبأقل سعر تنافسي في السوق:\n\n' +
+      '1. **صفحات الهبوط والبورتفوليو (صفحة واحدة متجاوبة):** تبدأ من 1,500 إلى 2,500 ج.م للنسخة الأولية (MVP)، ومن 2,800 إلى 4,000 ج.م للموقع المكتمل مع المؤثرات ونموذج الاتصال (مدة التنفيذ: من 2 إلى 4 أيام عمل). استضافة مجانية سحابية، ودون أي رسوم سيرفرات أو متاجر.\n' +
+      '2. **مواقع الشركات والأنشطة التجارية (3 إلى 5 صفحات):** تبدأ من 2,800 إلى 4,000 ج.م لـ MVP، ومن 4,500 إلى 6,500 ج.م للنسخة الكاملة (مدة التنفيذ: من 4 إلى 7 أيام عمل).\n' +
+      '3. **مواقع الشركات مع لوحة إدارة محتوى ديناميكية (CMS):** تبدأ من 4,500 إلى 6,500 ج.م لـ MVP، ومن 7,000 إلى 10,000 ج.م للمنظومة الكاملة لإدارة المقالات وسابقة الأعمال.\n' +
+      '4. **المتاجر الإلكترونية:** متجر كتالوج خفيف يبدأ من 4,500 ج.م، ومتجر متكامل مع بوابات الدفع (Paymob) وإدارة المخزون يبدأ من 8,000 إلى 15,000 ج.م.\n' +
+      '5. **تطبيقات الموبايل المستقلة (Android & iOS كود موحد):** تبدأ من 11,000 إلى 15,000 ج.م لـ MVP، ومن 16,000 إلى 22,000 ج.م للمنظومة الاحترافية الكاملة.\n' +
+      '6. **المنصات التشاركية والمتعددة الأطراف (مثل أوبر، طلبات، مزادات مع GPS):** تبدأ من 20,000 إلى 28,000 ج.م لـ MVP، ومن 32,000 إلى 42,000 ج.م للمنظومة الشاملة.\n\n' +
       '**الشفافية في التكاليف التشغيلية (الطرف الثالث):**\n' +
-      '- لمشاريع الويب والبورتفوليو: النطاق الدولي فقط (~$12 - $15 سنوياً) مع استضافة سحابية مجانية أو اقتصادية.\n' +
-      '- لمشاريع تطبيقات الموبايل فقط: يضاف حساب مطور Apple ($99 سنوياً) وحساب Google Play ($25 لمرة واحدة مدى الحياة).\n\n' +
-      'ما هو نوع المشروع الذي ترغب في تنفيذه لنحدد لك تكلفته ومدته بدقة؟';
+      '- لمشاريع الويب: النطاق الدولي فقط (~$12 - $15 سنوياً) مع استضافة سحابية مجانية أو اقتصادية دون أي رسوم متاجر.\n' +
+      '- لتطبيقات الموبايل فقط: حساب مطور Apple ($99 سنوياً) وحساب Google Play ($25 لمرة واحدة مدى الحياة).\n\n' +
+      'ما هي الميزات الأساسية التي تود البدء بها لنحسب لك التكلفة المنطقية الأدنى فوراً؟';
     suggestions = [
-      'موقع بورتفوليو أو صفحة هبوط سريعة',
-      'موقع شركة أو خدمات بلوحة تحكم CMS',
-      'متجر إلكتروني متكامل للبيع والشراء',
+      'صفحة هبوط أو بورتفوليو سريع (1,500 - 3,000 ج.م)',
+      'موقع شركة أو خدمات تعريفي (3,000 - 5,500 ج.م)',
+      'متجر إلكتروني للبيع والطلب (5,000 - 12,000 ج.م)',
       'تطبيق موبايل أو منصة متعددة الأطراف'
     ];
     readyForSpec = false;
@@ -873,7 +869,8 @@ function matchAnyInText(text, words) {
   const p = String(text).toLowerCase();
   return words.some(word => {
     try {
-      const regex = new RegExp(`(?:^|[^\\p{L}\\p{N}])${word}(?:[^\\p{L}\\p{N}]|$)`, 'iu');
+      const escaped = String(word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:ال|وال|فال|بال|كال|لل|و|ف|ب|ل)?${escaped}(?:[^\\p{L}\\p{N}]|$)`, 'iu');
       return regex.test(p);
     } catch {
       return p.includes(String(word).toLowerCase());
@@ -1286,10 +1283,17 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     });
   }
 
-  // Dynamic Financial, Milestone & Architecture Synthesis per Tier
+  // Dynamic Modular Bottom-Up Financial Engine
+  const totalScreensCount = platforms.reduce((acc, p) => acc + (p.screens ? p.screens.length : 0), 0);
+  const isSinglePage = matchAny(['صفحة واحدة', 'one page', 'single page', 'landing page', 'صفحة هبوط', 'لاندنج بيج', 'cv', 'سيرة ذاتية']);
+
   let totalCostEGP;
   let totalCostUSD;
+  let mvpCostEGP;
+  let enterpriseCostEGP;
   let timelineWeeks;
+  let mvpWeeks;
+  let enterpriseWeeks;
   let techStack;
   let systemArchitecture;
   let milestones;
@@ -1302,9 +1306,23 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
   let competitors = [];
 
   if (tier === 1) {
-    totalCostEGP = 6000;
-    totalCostUSD = 128;
-    timelineWeeks = 1;
+    if (isSinglePage) {
+      totalCostEGP = 2800;
+      mvpCostEGP = 1800;
+      enterpriseCostEGP = 4800;
+      timelineWeeks = 1;
+      mvpWeeks = 1;
+      enterpriseWeeks = 2;
+    } else {
+      const extraScreens = Math.max(0, totalScreensCount - 3);
+      totalCostEGP = 3200 + extraScreens * 300;
+      mvpCostEGP = Math.max(1800, Math.round(totalCostEGP * 0.65 / 100) * 100);
+      enterpriseCostEGP = Math.round(totalCostEGP * 1.6 / 100) * 100;
+      timelineWeeks = 1;
+      mvpWeeks = 1;
+      enterpriseWeeks = 2;
+    }
+    totalCostUSD = Math.round(totalCostEGP / 47);
 
     techStack = {
       mobile: 'واجهات ويب متجاوبة بالكامل (Responsive Web Design) تعمل كتطبيق ويب سريع (PWA)',
@@ -1376,10 +1394,14 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       }
     ];
 
+    const uiCost = Math.round(totalCostEGP * 0.30 / 50) * 50;
+    const devCost = Math.round(totalCostEGP * 0.45 / 50) * 50;
+    const deployCost = totalCostEGP - uiCost - devCost;
+
     budgetItems = [
-      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: 2000, costUSD: 43, desc: 'تصميم تفاعلي كامل لواجهة الموقع ومعرض الأعمال على Figma' },
-      { category: 'تطوير وتكويد الواجهات التفاعلية (Front-End Development)', costEGP: 2500, costUSD: 53, desc: 'برمجة الواجهة التفاعلية بتقنيات Next.js مع سرعة تحميل فائقة وتجاوب كامل' },
-      { category: 'تهيئة محركات البحث والربط السحابي (SEO & Deployment)', costEGP: 1500, costUSD: 32, desc: 'تهيئة SEO وربط الدومين واستضافة Vercel السحابية ونماذج الاتصال' }
+      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: uiCost, costUSD: Math.round(uiCost / 47), desc: 'تصميم تفاعلي كامل لواجهة الموقع ومعرض الأعمال على Figma' },
+      { category: 'تطوير وتكويد الواجهات التفاعلية (Front-End Development)', costEGP: devCost, costUSD: Math.round(devCost / 47), desc: 'برمجة الواجهة التفاعلية بتقنيات Next.js مع سرعة تحميل فائقة وتجاوب كامل' },
+      { category: 'تهيئة محركات البحث والربط السحابي (SEO & Deployment)', costEGP: deployCost, costUSD: Math.round(deployCost / 47), desc: 'تهيئة SEO وربط الدومين واستضافة Vercel السحابية ونماذج الاتصال' }
     ];
 
     annualOperationalEstimate = {
@@ -1401,11 +1423,11 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
 
     packages = {
       mvp: {
-        title: 'باقة الصفحة التعريفية السريعة (One-Page Portfolio)',
-        costEGP: 3500,
-        costUSD: 75,
-        weeks: 1,
-        desc: 'صفحة هبوط احترافية متجاوبة من صفحة واحدة تضم النبذة، معرض الأعمال ونموذج الاتصال المباشر',
+        title: isSinglePage ? 'باقة صفحة الهبوط السريعة (One-Page MVP)' : 'باقة البورتفوليو الأساسي (Basic Portfolio)',
+        costEGP: mvpCostEGP,
+        costUSD: Math.round(mvpCostEGP / 47),
+        weeks: mvpWeeks,
+        desc: 'صفحة تعريفية رشيقة متجاوبة بالكامل مع معرض أعمال ونموذج اتصال مباشر بأقل تكلفة انطلاق',
         keyDeliverables: [
           'تصميم صفحة هبوط متجاوبة بالكامل للموبايل والكمبيوتر',
           'معرض أعمال أساسي لـ 6-10 مشاريع مع نوافذ المعاينة',
@@ -1415,9 +1437,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       },
       pro: {
         title: 'باقة البورتفوليو والموقع الاحترافي (Pro Portfolio & Showcase)',
-        costEGP: 6000,
-        costUSD: 128,
-        weeks: 1,
+        costEGP: totalCostEGP,
+        costUSD: totalCostUSD,
+        weeks: timelineWeeks,
         desc: 'موقع ويب متكامل متعدد الأقسام بتأثيرات بصرية حديثة، فلاتر للمشاريع، وتهيئة متقدمة للـ SEO',
         keyDeliverables: [
           'تصميم عصري متعدد الأقسام وتأثيرات بصرية تفاعلية مميزة',
@@ -1429,9 +1451,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       },
       enterprise: {
         title: 'باقة الموقع الموسع المتقدم (Enterprise Dynamic Portfolio)',
-        costEGP: 10000,
-        costUSD: 212,
-        weeks: 2,
+        costEGP: enterpriseCostEGP,
+        costUSD: Math.round(enterpriseCostEGP / 47),
+        weeks: enterpriseWeeks,
         desc: 'موقع شخصي أو تجاري متقدم متعدد الصفحات مع دعم لغتين (عربي/إنجليزي) وتدوين مقالات مبسط',
         keyDeliverables: [
           'موقع متكامل متعدد الصفحات مع دعم كامل للغتين (العربية والإنجليزية)',
@@ -1443,9 +1465,18 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       }
     };
   } else if (tier === 2) {
-    totalCostEGP = 14000;
-    totalCostUSD = 298;
+    const baseCorporatePro = 4800;
+    const extraScreens = Math.max(0, totalScreensCount - 4);
+    const screensCost = extraScreens * 350;
+    const cmsEngineCost = 1400;
+
+    totalCostEGP = baseCorporatePro + screensCost + cmsEngineCost;
+    mvpCostEGP = Math.round((totalCostEGP * 0.65) / 100) * 100;
+    enterpriseCostEGP = Math.round((totalCostEGP * 1.6) / 100) * 100;
+    totalCostUSD = Math.round(totalCostEGP / 47);
     timelineWeeks = 2;
+    mvpWeeks = 1;
+    enterpriseWeeks = 3;
 
     techStack = {
       mobile: 'تصميم ويب متجاوب بالكامل (Responsive Web Design) يعمل بسلاسة على كافة الشاشات',
@@ -1527,15 +1558,19 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       }
     ];
 
+    const uiCost2 = Math.round(totalCostEGP * 0.25 / 50) * 50;
+    const feCost2 = Math.round(totalCostEGP * 0.45 / 50) * 50;
+    const cmsCost2 = totalCostEGP - uiCost2 - feCost2;
+
     budgetItems = [
-      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: 3500, costUSD: 75, desc: 'تصميم هوية وواجهات الموقع التعريفي ولوحة إدارة المحتوى على Figma' },
-      { category: 'تطوير وتكويد واجهات الموقع التفاعلي (Front-End)', costEGP: 5500, costUSD: 117, desc: 'بناء واجهات الموقع والصفحات وتهيئة التجاوب والـ SEO' },
-      { category: 'برمجة لوحة التحكم والباك إند (CMS & Backend)', costEGP: 5000, costUSD: 106, desc: 'لوحة التحكم بإدارة المحتوى، المقالات، الخدمات وقاعدة البيانات' }
+      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: uiCost2, costUSD: Math.round(uiCost2 / 47), desc: 'تصميم هوية وواجهات الموقع التعريفي ولوحة إدارة المحتوى على Figma' },
+      { category: 'تطوير وتكويد واجهات الموقع التفاعلي (Front-End)', costEGP: feCost2, costUSD: Math.round(feCost2 / 47), desc: 'بناء واجهات الموقع والصفحات وتهيئة التجاوب والـ SEO' },
+      { category: 'برمجة لوحة التحكم والباك إند (CMS & Backend)', costEGP: cmsCost2, costUSD: Math.round(cmsCost2 / 47), desc: 'لوحة التحكم بإدارة المحتوى، المقالات، الخدمات وقاعدة البيانات' }
     ];
 
     annualOperationalEstimate = {
-      hosting: 'استضافة سحابية خفيفة وقاعدة بيانات: تبدأ من $5 - $10 شهرياً وفق الاستهلاك الفعلي',
-      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+      hosting: 'استضافة سحابية خفيفة وقاعدة بيانات: تبدأ من $5 شهرياً (أو باقة مجانية) وفق الاستهلاك الفعلي',
+      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً (600 - 750 جنيه سنوياً)',
       paymentGateways: 'بوابات الدفع الإلكتروني (اختياري في حال تفعيل حجز مدفوع): اقتطاع 2.5% فقط عند العمليات بدون اشتراك شهري'
     };
 
@@ -1555,10 +1590,10 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     packages = {
       mvp: {
         title: 'باقة الموقع التعريفي الأساسي (Essential Business Site)',
-        costEGP: 10000,
-        costUSD: 213,
-        weeks: 1,
-        desc: 'موقع تعريفي للشركة من 4-5 صفحات مع لوحة تحكم مصغرة لإدارة البيانات الأساسية',
+        costEGP: mvpCostEGP,
+        costUSD: Math.round(mvpCostEGP / 47),
+        weeks: mvpWeeks,
+        desc: 'موقع تعريفي للشركة من 3-4 صفحات مع لوحة تحكم مصغرة لإدارة البيانات الأساسية',
         keyDeliverables: [
           'تصميم موقع مؤسسي متجاوب بالكامل مع الشاشات',
           'صفحات رئيسية: عن الشركة، الخدمات، سابقة الأعمال، وتواصل معنا',
@@ -1568,9 +1603,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       },
       pro: {
         title: 'باقة المنظومة المؤسسية وإدارة المحتوى (Pro Corporate & CMS)',
-        costEGP: 14000,
-        costUSD: 298,
-        weeks: 2,
+        costEGP: totalCostEGP,
+        costUSD: totalCostUSD,
+        weeks: timelineWeeks,
         desc: 'موقع مؤسسي احترافي متكامل مع لوحة إدارة محتوى ديناميكية ومدونة ونظام استفسارات متقدم',
         keyDeliverables: [
           'موقع مؤسسي شامل متعدد الأقسام بتصميم فريد عالي الاحترافية',
@@ -1582,9 +1617,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       },
       enterprise: {
         title: 'باقة المؤسسات متعددة اللغات والفروع (Enterprise Multi-Branch)',
-        costEGP: 22000,
-        costUSD: 468,
-        weeks: 3,
+        costEGP: enterpriseCostEGP,
+        costUSD: Math.round(enterpriseCostEGP / 47),
+        weeks: enterpriseWeeks,
         desc: 'منظومة مؤسسية موسعة تدعم لغات متعددة (عربي/إنجليزي)، إدارة الفروع، ونظام علاقات عملاء مصغر',
         keyDeliverables: [
           'دعم كامل للغتين (العربية والإنجليزية) مع تبديل لحظي سلس',
@@ -1596,9 +1631,32 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       }
     };
   } else if (tier === 3) {
-    totalCostEGP = 28000;
-    totalCostUSD = 595;
-    timelineWeeks = 4;
+    if (isWebOnly) {
+      // E-Commerce Web Store / Web App
+      const baseWebStorePro = 7500;
+      const extraScreens = Math.max(0, totalScreensCount - 6);
+      const screensCost = extraScreens * 350;
+      const paymentGatewayCost = ent.hasPayment ? 1800 : 800; // Paymob vs COD/WhatsApp
+      totalCostEGP = baseWebStorePro + screensCost + paymentGatewayCost;
+      mvpCostEGP = Math.round((totalCostEGP * 0.65) / 100) * 100;
+      enterpriseCostEGP = Math.round((totalCostEGP * 1.6) / 100) * 100;
+      timelineWeeks = 3;
+      mvpWeeks = 2;
+      enterpriseWeeks = 4;
+    } else {
+      // Dedicated Mobile App (iOS & Android)
+      const baseMobileAppPro = 13500;
+      const extraScreens = Math.max(0, totalScreensCount - 6);
+      const screensCost = extraScreens * 450;
+      const paymentCost = ent.hasPayment ? 2000 : 1000;
+      totalCostEGP = baseMobileAppPro + screensCost + paymentCost;
+      mvpCostEGP = Math.round((totalCostEGP * 0.65) / 100) * 100;
+      enterpriseCostEGP = Math.round((totalCostEGP * 1.6) / 100) * 100;
+      timelineWeeks = 4;
+      mvpWeeks = 2;
+      enterpriseWeeks = 5;
+    }
+    totalCostUSD = Math.round(totalCostEGP / 47);
 
     techStack = {
       mobile: isWebOnly ? 'واجهات ويب متجاوبة بالكامل لمتصفحات الموبايل والتابلت والكمبيوتر' : 'React Native (Expo) - تطبيق موحد عالي السرعة للأندرويد والآيفون',
@@ -1692,16 +1750,21 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       }
     ];
 
+    const uiCost3 = Math.round(totalCostEGP * 0.20 / 50) * 50;
+    const backendCost3 = Math.round(totalCostEGP * 0.35 / 50) * 50;
+    const clientAppCost3 = Math.round(totalCostEGP * 0.30 / 50) * 50;
+    const adminCost3 = totalCostEGP - uiCost3 - backendCost3 - clientAppCost3;
+
     budgetItems = [
-      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: 6000, costUSD: 128, desc: 'تصميم احترافي لكافة شاشات المتجر وسلة الشراء ولوحة الإدارة على Figma' },
-      { category: 'تطوير الباك إند وقواعد البيانات وبوابات الدفع', costEGP: 9000, costUSD: 191, desc: 'خوادم الـ APIs، سلة المشتريات، محرك الفواتير والربط مع Paymob' },
-      { category: isWebOnly ? 'برمجة واجهات المتجر التفاعلية' : 'برمجة وتطوير تطبيقات الموبايل (iOS & Android)', costEGP: 8000, costUSD: 170, desc: isWebOnly ? 'واجهة متجر تفاعلية بتقنيات Next.js' : 'تطبيقات الهاتف الذكي بأحدث تقنيات React Native' },
-      { category: 'لوحة التحكم وإدارة المخزون والتقارير', costEGP: 5000, costUSD: 106, desc: 'لوحة تحكم مركزية لإدارة المنتجات، الطلبات، وبوالص الشحن' }
+      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: uiCost3, costUSD: Math.round(uiCost3 / 47), desc: 'تصميم احترافي لكافة شاشات المتجر وسلة الشراء ولوحة الإدارة على Figma' },
+      { category: 'تطوير الباك إند وقواعد البيانات وبوابات الدفع', costEGP: backendCost3, costUSD: Math.round(backendCost3 / 47), desc: 'خوادم الـ APIs، سلة المشتريات، محرك الفواتير والربط مع Paymob' },
+      { category: isWebOnly ? 'برمجة واجهات المتجر التفاعلية' : 'برمجة وتطوير تطبيقات الموبايل (iOS & Android)', costEGP: clientAppCost3, costUSD: Math.round(clientAppCost3 / 47), desc: isWebOnly ? 'واجهة متجر تفاعلية بتقنيات Next.js' : 'تطبيقات الهاتف الذكي بأحدث تقنيات React Native' },
+      { category: 'لوحة التحكم وإدارة المخزون والتقارير', costEGP: adminCost3, costUSD: Math.round(adminCost3 / 47), desc: 'لوحة تحكم مركزية لإدارة المنتجات، الطلبات، وبوالص الشحن' }
     ];
 
     annualOperationalEstimate = isWebOnly ? {
-      hosting: 'استضافة سحابية وقاعدة بيانات: تبدأ من $10 - $15 شهرياً وفق الاستهلاك الفعلي',
-      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+      hosting: 'استضافة سحابية وقاعدة بيانات: تبدأ من $5 - $10 شهرياً وفق الاستهلاك الفعلي',
+      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً (600 - 750 جنيه سنوياً)',
       paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
     } : {
       appleDeveloper: 'حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS)',
@@ -1727,9 +1790,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     packages = {
       mvp: {
         title: 'باقة المتجر الأساسي السريع (Starter Store)',
-        costEGP: 20000,
-        costUSD: 425,
-        weeks: 2,
+        costEGP: mvpCostEGP,
+        costUSD: Math.round(mvpCostEGP / 47),
+        weeks: mvpWeeks,
         desc: 'النسخة الأساسية لإطلاق متجرك وعرض المنتجات وبدء البيع واستقبال المدفوعات بأقل تكلفة',
         keyDeliverables: [
           isWebOnly ? 'متجر ويب متجاوب مع كافة الشاشات' : 'تطبيق موبايل موحد للعملاء (Android & iOS)',
@@ -1740,9 +1803,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       },
       pro: {
         title: 'باقة المتجر الاحترافي المتكامل (Pro E-Commerce Store)',
-        costEGP: 28000,
-        costUSD: 595,
-        weeks: 4,
+        costEGP: totalCostEGP,
+        costUSD: totalCostUSD,
+        weeks: timelineWeeks,
         desc: 'المنظومة الاحترافية المتكاملة مع إدارة متقدمة للمخزون وبوابات دفع متعددة وتقارير مبيعات',
         keyDeliverables: [
           isWebOnly ? 'متجر ويب احترافي متقدم فائق السرعة' : 'تطبيقات الجوال (iOS & Android) ولوحة الإدارة المركزية',
@@ -1754,9 +1817,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       },
       enterprise: {
         title: 'باقة المتاجر الكبرى والنمو السريع (Enterprise Commerce)',
-        costEGP: 45000,
-        costUSD: 957,
-        weeks: 5,
+        costEGP: enterpriseCostEGP,
+        costUSD: Math.round(enterpriseCostEGP / 47),
+        weeks: enterpriseWeeks,
         desc: 'حلول تجارة رقمية متقدمة بميزات تسويقية ذكية وبرامج ولاء وسيرفرات مخصصة لحجم مبيعات ضخم',
         keyDeliverables: [
           'متجر ويب وتطبيقات هاتف ذكي موحدة ومتزامنة بالكامل',
@@ -1769,12 +1832,16 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     };
   } else {
     // TIER 4: Multi-Sided Platforms & On-Demand Ecosystems
-    const baseCostEGP = 45000;
-    const platformAddonEGP = Math.max(0, (platforms.length - 2)) * 6000;
-    const featuresAddonEGP = (ent.hasMaps ? 3000 : 0) + (ent.hasAI ? 4000 : 0) + (ent.hasVideo ? 4000 : 0) + (ent.isAuction ? 4000 : 0);
+    const baseCostEGP = 22000;
+    const platformAddonEGP = Math.max(0, (platforms.length - 2)) * 3500;
+    const featuresAddonEGP = (ent.hasMaps ? 2200 : 0) + (ent.hasAI ? 2500 : 0) + (ent.hasVideo ? 2500 : 0) + (ent.isAuction ? 2500 : 0) + (ent.hasChat ? 1500 : 0);
     totalCostEGP = baseCostEGP + platformAddonEGP + featuresAddonEGP;
     totalCostUSD = Math.round(totalCostEGP / 47);
-    timelineWeeks = platforms.length >= 4 ? 10 : 8;
+    mvpCostEGP = Math.round((totalCostEGP * 0.65) / 100) * 100;
+    enterpriseCostEGP = Math.round((totalCostEGP * 1.55) / 100) * 100;
+    timelineWeeks = platforms.length >= 4 ? 6 : 5;
+    mvpWeeks = Math.max(3, Math.round(timelineWeeks * 0.6));
+    enterpriseWeeks = Math.round(timelineWeeks * 1.3);
 
     techStack = {
       mobile: 'React Native (Expo) - كود موحد عالي السرعة للأندرويد والآيفون مع دعم Background Location',
@@ -1832,7 +1899,7 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       {
         phase: 1,
         title: 'المرحلة 1: هندسة المتطلبات وتصميم الواجهات وتجربة المستخدم (UI/UX Design)',
-        durationWeeks: 2,
+        durationWeeks: 1,
         sprintTasks: [
           'إعداد وتدقيق Wireframes التفاعلية لكافة المنصات والشاشات',
           'تصميم نظام المكونات والألوان الموحدة Design System',
@@ -1842,7 +1909,7 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       {
         phase: 2,
         title: 'المرحلة 2: تطوير خوادم الباك إند وقواعد البيانات والربط اللحظي والخرائط',
-        durationWeeks: timelineWeeks > 8 ? 3 : 2,
+        durationWeeks: timelineWeeks > 5 ? 2 : 1,
         sprintTasks: [
           'بناء RESTful APIs ونظام التوثيق والمصادقة المشفر JWT',
           'هندسة قواعد البيانات وربط الـ Sockets للمزامنة اللحظية',
@@ -1852,7 +1919,7 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       {
         phase: 3,
         title: 'المرحلة 3: بناء وتطوير تطبيقات الموبايل ولوحة التحكم المركزية',
-        durationWeeks: timelineWeeks > 8 ? 3 : 2,
+        durationWeeks: timelineWeeks > 5 ? 2 : 2,
         sprintTasks: [
           'برمجة شاشات التطبيقات لكافة أطراف المنظومة',
           'ربط التطبيقات مع الـ APIs واختبار مسار العمليات الكامل End-to-End',
@@ -1862,7 +1929,7 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       {
         phase: 4,
         title: 'المرحلة 4: الاختبارات الشاملة (QA) والإطلاق الرسمي في Google Play & App Store',
-        durationWeeks: 2,
+        durationWeeks: 1,
         sprintTasks: [
           'فحص الأمان ومقاومة الضغط والتأكد من الأداء السلس',
           'تجهيز حسابات المطورين ورفع التطبيقات للمتاجر الرسمية',
@@ -1871,18 +1938,23 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       }
     ];
 
+    const uiCost4 = Math.round(totalCostEGP * 0.20 / 50) * 50;
+    const backendCost4 = Math.round(totalCostEGP * 0.35 / 50) * 50;
+    const appsCost4 = Math.round(totalCostEGP * 0.30 / 50) * 50;
+    const adminCost4 = totalCostEGP - uiCost4 - backendCost4 - appsCost4;
+
     budgetItems = [
-      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: Math.round(totalCostEGP * 0.22), costUSD: Math.round(totalCostUSD * 0.22), desc: 'تصميم تفاعلي كامل لكافة شاشات المنصات على Figma' },
-      { category: 'تطوير الباك إند وقواعد البيانات والـ APIs', costEGP: Math.round(totalCostEGP * 0.33), costUSD: Math.round(totalCostUSD * 0.33), desc: 'الخوادم، المقابس اللحظية، محرك الخرائط، وبوابات الدفع' },
-      { category: 'برمجة وتطوير تطبيقات الموبايل الموحدة', costEGP: Math.round(totalCostEGP * 0.30), costUSD: Math.round(totalCostUSD * 0.30), desc: 'تطبيقات أندرويد وآيفون بأحدث تقنيات React Native' },
-      { category: 'لوحة التحكم السحابية المركزية (Super Admin)', costEGP: Math.round(totalCostEGP * 0.15), costUSD: Math.round(totalCostUSD * 0.15), desc: 'لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية' }
+      { category: 'تصميم تجربة وواجهات المستخدم (UI/UX Design)', costEGP: uiCost4, costUSD: Math.round(uiCost4 / 47), desc: 'تصميم تفاعلي كامل لكافة شاشات المنصات على Figma' },
+      { category: 'تطوير الباك إند وقواعد البيانات والـ APIs', costEGP: backendCost4, costUSD: Math.round(backendCost4 / 47), desc: 'الخوادم، المقابس اللحظية، محرك الخرائط، وبوابات الدفع' },
+      { category: 'برمجة وتطوير تطبيقات الموبايل الموحدة', costEGP: appsCost4, costUSD: Math.round(appsCost4 / 47), desc: 'تطبيقات أندرويد وآيفون بأحدث تقنيات React Native' },
+      { category: 'لوحة التحكم السحابية المركزية (Super Admin)', costEGP: adminCost4, costUSD: Math.round(adminCost4 / 47), desc: 'لوحة ويب سحابية شاملة للتحكم في العمليات والتقارير المالية' }
     ];
 
     annualOperationalEstimate = {
       appleDeveloper: 'حساب مطور Apple App Store: $99 سنوياً (يدفع لشركة Apple مباشرة لرفع وتحديث تطبيق iOS في متجر التطبيقات)',
       googlePlay: 'حساب مطور Google Play Console: $25 تدفع لمرة واحدة مدى الحياة (لشركة Google لنشر تطبيقات أندرويد)',
       hosting: 'استضافة سحابية VPS وسيرفر: تبدأ من $15 - $25 شهرياً (تدفع لمزود السحابة وفق الاستهلاك الفعلي)',
-      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً',
+      domainSsl: 'اسم النطاق الدولي (.com) وشهادة التشفير SSL: حوالي $12 - $15 سنوياً (600 - 750 جنيه سنوياً)',
       mapsApi: 'خرائط جوجل وتحديد المواقع: رصيد مجاني شهري $200 من Google Cloud يغطي آلاف العمليات مجاناً',
       paymentGateways: 'بوابات الدفع الإلكتروني (Paymob / فيزا): 0 رسوم تأسيس أو اشتراك، اقتطاع 2.5% فقط عند العمليات الناجحة'
     };
@@ -1912,9 +1984,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
     packages = {
       mvp: {
         title: 'باقة إطلاق النموذج الأولي (MVP - الأقل تكلفة)',
-        costEGP: Math.round(totalCostEGP * 0.65),
-        costUSD: Math.round(totalCostUSD * 0.65),
-        weeks: Math.max(4, Math.round(timelineWeeks * 0.5)),
+        costEGP: mvpCostEGP,
+        costUSD: Math.round(mvpCostEGP / 47),
+        weeks: mvpWeeks,
         desc: 'النسخة الأساسية الرشيقة للتحقق السريع من السوق واختبار الإقبال بأقل تكلفة ومخاطرة مالية',
         keyDeliverables: [
           'تطبيق موبايل موحد للعملاء (Android & iOS)',
@@ -1939,9 +2011,9 @@ function deepSemanticAnalysis(prompt = '', language = 'ar') {
       },
       enterprise: {
         title: 'باقة المؤسسات والأنظمة الكبرى (Enterprise Scale)',
-        costEGP: Math.round(totalCostEGP * 1.7),
-        costUSD: Math.round(totalCostUSD * 1.7),
-        weeks: Math.round(timelineWeeks * 1.4),
+        costEGP: enterpriseCostEGP,
+        costUSD: Math.round(enterpriseCostEGP / 47),
+        weeks: enterpriseWeeks,
         desc: 'حلول برمجية ضخمة بمواصفات مخصصة، معمارية Microservices، خوادم مخصصة وميزات ذكاء اصطناعي',
         keyDeliverables: [
           'كافة تطبيقات ومنصات المنظومة (عميل، كابتن، شركاء، لوحة سوبر أدمن)',
