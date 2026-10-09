@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd apex-web && pnpm build",
-  "outputDirectory": "apex-web/.next",
-  "installCommand": "pnpm install",
-  "framework": "nextjs"
-}
