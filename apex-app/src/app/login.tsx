@@ -429,24 +429,22 @@ export default function LoginScreen() {
 
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const executeGoogleLogin = async (idToken: string) => {
+  const executeGoogleLogin = async (credentials: { idToken?: string; accessToken?: string } | string) => {
     try {
       setGoogleLoading(true);
-      if (!idToken) {
-        throw new Error('Google did not return a verified ID token.');
-      }
-
-      const res = await api.googleLogin(idToken);
+      const res = await api.googleLogin(credentials);
       setGoogleLoading(false);
 
-      if (res.success) {
+      if (res.success && res.user) {
         await haptics.success();
         await offlineCache.clearAll();
         offlineCache.setScope(res.user.id);
         await AsyncStorage.removeItem('userToken').catch(() => {});
         await offlineCache.set(offlineCache.keys.USER, res.user);
         await AsyncStorage.setItem('userData', JSON.stringify(res.user));
-        await saveSecureToken(res.token);
+        if (res.token) {
+          await saveSecureToken(res.token);
+        }
         setCurrentUser(res.user);
         if (await biometrics.isBiometricLoginEnabled()) {
           await biometrics.setBiometricUser(res.user, res.token);
@@ -457,19 +455,22 @@ export default function LoginScreen() {
         );
         notifications.registerForPushNotifications().catch(() => {});
 
-        if (res.user.role === 'admin') {
+        if (res.user.role === 'admin' || res.user.isAdmin) {
           router.push('/admin');
         } else {
           router.push('/dashboard');
         }
       } else {
         await haptics.error();
-        Alert.alert('Login Failed', res.message || 'Could not log in.');
+        Alert.alert(
+          isRTL ? 'تعذر تسجيل الدخول' : 'Login Failed',
+          res.message || (isRTL ? 'تعذر إتمام الدخول عبر Google. يمكنك الدخول ببريدك الإلكتروني مباشرة.' : 'Could not log in via Google.')
+        );
       }
     } catch (e: any) {
       setGoogleLoading(false);
       await haptics.error();
-      Alert.alert('Error', e.message || 'Authentication error');
+      Alert.alert(isRTL ? 'خطأ' : 'Error', e.message || 'Authentication error');
     }
   };
 
@@ -478,33 +479,96 @@ export default function LoginScreen() {
 
     // 1. Web Flow
     if (Platform.OS === 'web') {
-      const googleIdentity = (window as any).google?.accounts?.id;
-      if (!googleIdentity) {
-        Alert.alert('Google Sign-In', 'Google Identity Services is not available. Please try again.');
-        return;
+      setGoogleLoading(true);
+
+      // Watchdog timeout: ensures button NEVER hangs indefinitely
+      const watchdog = setTimeout(() => {
+        setGoogleLoading(false);
+      }, 9000);
+
+      // Strategy A: Standard Google OAuth 2.0 Popup (Token Client)
+      if (typeof (window as any).google?.accounts?.oauth2?.initTokenClient === 'function') {
+        try {
+          const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_WEB_CLIENT_ID,
+            scope: 'email profile openid',
+            callback: async (response: any) => {
+              clearTimeout(watchdog);
+              if (response?.error) {
+                setGoogleLoading(false);
+                if (response.error === 'popup_closed_by_user') {
+                  return;
+                }
+                Alert.alert(
+                  isRTL ? 'تنبيه تسجيل الدخول عبر Google' : 'Google Sign-In Alert',
+                  isRTL
+                    ? 'يرجى التأكد من تسجيل النطاق في Google Cloud Console، أو تسجيل الدخول بالبريد وكلمة المرور مباشرة.'
+                    : 'Google Sign-In error. Please try email login.'
+                );
+                return;
+              }
+              if (response?.access_token) {
+                await executeGoogleLogin({ accessToken: response.access_token });
+              } else {
+                setGoogleLoading(false);
+              }
+            },
+            error_callback: (err: any) => {
+              clearTimeout(watchdog);
+              setGoogleLoading(false);
+              console.warn('Google OAuth error:', err);
+            }
+          });
+
+          tokenClient.requestAccessToken({ prompt: 'select_account' });
+          return;
+        } catch (tokenClientErr) {
+          console.warn('Token client failed, falling back to One Tap:', tokenClientErr);
+        }
       }
 
-      setGoogleLoading(true);
-      googleIdentity.initialize({
-        client_id: GOOGLE_WEB_CLIENT_ID,
-        callback: (response: any) => {
-          if (response?.credential) {
-            executeGoogleLogin(response.credential);
-          } else {
-            setGoogleLoading(false);
-            Alert.alert('Google Sign-In', 'Google did not return an ID token.');
-          }
-        },
-      });
-      googleIdentity.prompt((notification: any) => {
-        if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
+      // Strategy B: Google One Tap / Identity Services
+      const googleIdentity = (window as any).google?.accounts?.id;
+      if (googleIdentity) {
+        try {
+          googleIdentity.initialize({
+            client_id: GOOGLE_WEB_CLIENT_ID,
+            callback: (response: any) => {
+              clearTimeout(watchdog);
+              if (response?.credential) {
+                executeGoogleLogin({ idToken: response.credential });
+              } else {
+                setGoogleLoading(false);
+              }
+            },
+          });
+          googleIdentity.prompt((notification: any) => {
+            if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
+              clearTimeout(watchdog);
+              setGoogleLoading(false);
+            }
+          });
+          return;
+        } catch (idErr) {
+          clearTimeout(watchdog);
           setGoogleLoading(false);
+          console.warn('Google ID prompt error:', idErr);
         }
-      });
+      }
+
+      // Strategy C: Google SDK not loaded yet
+      clearTimeout(watchdog);
+      setGoogleLoading(false);
+      Alert.alert(
+        isRTL ? 'خدمات Google' : 'Google Services',
+        isRTL
+          ? 'جاري تحميل خدمات Google أو تم حجبها بواسطة مانع الإعلانات. يمكنك تسجيل الدخول فوراً ببريدك الإلكتروني وكلمة المرور.'
+          : 'Google services are loading or blocked. Please sign in using email and password.'
+      );
       return;
     }
 
-    // 2.  Check if Native Google Play Services module is compiled in binary
+    // 2. Native Mobile Flow (Android / iOS)
     let hasNative = false;
     try {
       const { TurboModuleRegistry, NativeModules } = require('react-native');
@@ -520,7 +584,7 @@ export default function LoginScreen() {
 
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-        //  Force Android to show Google account picker
+        // Force Android to show Google account picker
         try {
           await GoogleSignin.signOut();
         } catch (signOutErr) {}
@@ -530,7 +594,7 @@ export default function LoginScreen() {
         const idToken = signInResult.data?.idToken || (await GoogleSignin.getTokens()).idToken;
 
         if (user && idToken) {
-          await executeGoogleLogin(idToken);
+          await executeGoogleLogin({ idToken });
         } else {
           throw new Error('Google did not return a verified ID token.');
         }

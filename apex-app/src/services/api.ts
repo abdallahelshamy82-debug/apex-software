@@ -225,8 +225,9 @@ export const api = {
     } catch (e) { return { success: false, message: 'Network error.' }; }
   },
 
-  async googleLogin(idToken: string) {
+  async googleLogin(params: { idToken?: string; accessToken?: string } | string) {
     try {
+      const payload = typeof params === 'string' ? { idToken: params } : params;
       const deviceId = await getDeviceId();
       const response = await fetch(`${API_URL}/auth/google`, {
         method: 'POST',
@@ -234,7 +235,7 @@ export const api = {
           'Content-Type': 'application/json',
           'X-Client-Platform': Platform.OS
         },
-        body: JSON.stringify({ idToken, deviceId, platform: Platform.OS })
+        body: JSON.stringify({ ...payload, deviceId, platform: Platform.OS })
       });
       return await response.json();
     } catch (e) { return { success: false, message: 'Google Auth network error.' }; }

@@ -368,30 +368,61 @@ const GOOGLE_CLIENT_IDS = [
 ].filter(Boolean);
 const googleClient = new OAuth2Client(PRIMARY_GOOGLE_CLIENT_ID);
 
-const getVerifiedGoogleUser = async ({ idToken }) => {
-  if (!idToken) {
-    throw new Error('Google ID token is required.');
+const getVerifiedGoogleUser = async ({ idToken, accessToken }) => {
+  if (!idToken && !accessToken) {
+    throw new Error('Google ID token or Access token is required.');
   }
 
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: GOOGLE_CLIENT_IDS
-    });
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
-      throw new Error('Google token is invalid or missing email.');
+  // 1. Try verifying ID Token first if provided
+  if (idToken) {
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: GOOGLE_CLIENT_IDS
+      });
+      const payload = ticket.getPayload();
+      if (payload && payload.email) {
+        return {
+          email: payload.email.trim().toLowerCase(),
+          fullName: payload.name || payload.email.split('@')[0],
+          picture: payload.picture || null,
+          googleId: payload.sub || null
+        };
+      }
+    } catch (verifyErr) {
+      console.warn('Google verifyIdToken failed, checking accessToken fallback:', verifyErr.message);
+      if (!accessToken) {
+        throw new Error('Google authentication failed: invalid ID token.');
+      }
     }
-
-    return {
-      email: payload.email.trim().toLowerCase(),
-      fullName: payload.name || payload.email.split('@')[0],
-      picture: payload.picture || null,
-      googleId: payload.sub || null
-    };
-  } catch (verifyErr) {
-    throw new Error('Google authentication failed: invalid ID token.');
   }
+
+  // 2. Verify Access Token via Google OAuth2 UserInfo API
+  if (accessToken) {
+    try {
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (!response.ok) {
+        throw new Error(`Google API returned status ${response.status}`);
+      }
+      const data = await response.json();
+      if (!data || !data.email) {
+        throw new Error('Google token response missing email.');
+      }
+      return {
+        email: data.email.trim().toLowerCase(),
+        fullName: data.name || data.email.split('@')[0],
+        picture: data.picture || null,
+        googleId: data.sub || null
+      };
+    } catch (tokenErr) {
+      console.error('Google userinfo verification error:', tokenErr.message);
+      throw new Error('Google authentication failed: invalid Access token.');
+    }
+  }
+
+  throw new Error('Google authentication failed: could not verify identity.');
 };
 
 // Database Config
